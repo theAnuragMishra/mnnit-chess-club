@@ -1,8 +1,6 @@
 package socket
 
 import (
-	"errors"
-
 	"log"
 	"net/http"
 	"sync"
@@ -21,33 +19,35 @@ type Manager struct {
 
 	sync.RWMutex
 
-	handlers map[string]EventHandler
+	OnMessage func(event Event, client *Client) error
+
+	//handlers map[string]EventHandler
 }
 
 func NewManager() *Manager {
 	m := &Manager{
-		clients:  make(ClientList),
-		handlers: make(map[string]EventHandler),
+		clients: make(ClientList),
+		//handlers: make(map[string]EventHandler),
 	}
-	m.setupEventHandlers()
+	//m.setupEventHandlers()
 	return m
 }
 
 // setting up event handlers
-func (m *Manager) setupEventHandlers() {
-	m.handlers[EventSendMessage] = SendMessage
-}
+//func (m *Manager) setupEventHandlers() {
+//	m.handlers[EventSendMessage] = SendMessage
+//}
 
-func (m *Manager) routeEvent(event Event, c *Client) error {
-	if handler, ok := m.handlers[event.Type]; ok {
-		if err := handler(event, c); err != nil {
-			return err
-		}
-		return nil
-	} else {
-		return errors.New("there is no event of this type")
-	}
-}
+//func (m *Manager) routeEvent(event Event, c *Client) error {
+//	if handler, ok := m.handlers[event.Type]; ok {
+//		if err := handler(event, c); err != nil {
+//			return err
+//		}
+//		return nil
+//	} else {
+//		return errors.New("there is no event of this type")
+//	}
+//}
 
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("new connection")

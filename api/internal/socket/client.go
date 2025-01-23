@@ -47,8 +47,12 @@ func (c *Client) readMessages() {
 			log.Printf("error marshalling event %v", err)
 			break
 		}
-		if err := c.manager.routeEvent(request, c); err != nil {
-			log.Println("error handling message: ", err)
+		//if err := c.manager.routeEvent(request, c); err != nil {
+		//	log.Println("error handling message: ", err)
+		//}
+
+		if err := c.manager.OnMessage(request, c); err != nil {
+			log.Printf("error on message %v", err)
 		}
 
 	}
@@ -84,7 +88,7 @@ func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map
 	defer m.RUnlock()
 
-	for client, _ := range m.clients {
+	for client := range m.clients {
 		select {
 		case client.egress <- event:
 			// Successfully enqueued the event

@@ -1,9 +1,7 @@
 package game
 
 import (
-	"encoding/json"
 	"github.com/notnil/chess"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"log"
 )
 
@@ -17,30 +15,28 @@ const (
 
 type Game struct {
 	GameId    string
-	Player1   *socket.Client
-	Player2   *socket.Client
+	Player1Id string
+	Player2Id string
 	Board     *chess.Game
 	moveCount int
 	Result    Result
-	Socket    *socket.Manager
 }
 
-func NewGame(gameId string, player1 *socket.Client, player2 *socket.Client, manager *socket.Manager) *Game {
+func NewGame(gameId string, player1 string, player2 string) *Game {
 	var board *chess.Game
 	return &Game{
-		GameId:  gameId,
-		Player1: player1,
-		Player2: player2,
-		Board:   board,
-		Socket:  manager,
+		GameId:    gameId,
+		Player1Id: player1,
+		Player2Id: player2,
+		Board:     board,
 	}
 }
 
-func (g *Game) MakeMove(client *socket.Client, move string) {
-	if g.Board.Position().Turn() == chess.White && client != g.Player1 {
+func (g *Game) MakeMove(player string, move string) {
+	if g.Board.Position().Turn() == chess.White && player != g.Player1Id {
 		return
 	}
-	if g.Board.Position().Turn() == chess.Black && client != g.Player2 {
+	if g.Board.Position().Turn() == chess.Black && player != g.Player2Id {
 		return
 	}
 
@@ -53,10 +49,10 @@ func (g *Game) MakeMove(client *socket.Client, move string) {
 		return
 	}
 
-	moveStr := "{\"move\": " + move + "}"
+	//moveStr := "{\"move\": " + move + "}"
 
-	g.Socket.Broadcast(socket.Event{
-		Type:    socket.EventMove,
-		Payload: json.RawMessage(moveStr),
-	})
+	//g.Socket.Broadcast(socket.Event{
+	//	Type:    socket.EventMove,
+	//	Payload: json.RawMessage(moveStr),
+	//})
 }
