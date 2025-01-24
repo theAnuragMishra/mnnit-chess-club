@@ -2,6 +2,7 @@ package socket
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
 )
@@ -13,7 +14,7 @@ type ClientList map[*Client]bool
 type Client struct {
 	// the websocket connection
 	connection *websocket.Conn
-
+	UserId     string
 	// manager is the manager used to manage the client
 	manager *Manager
 	egress  chan Event
@@ -22,6 +23,7 @@ type Client struct {
 // NewClient is used to initialize a new Client with all required values initialized
 func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 	return &Client{
+		UserId:     uuid.New().String(),
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
