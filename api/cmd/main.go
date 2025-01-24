@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
 	"log"
 	"net/http"
 )
@@ -12,6 +12,7 @@ func main() {
 }
 
 func setupAPI() {
-	manager := socket.NewManager()
-	http.HandleFunc("/ws", manager.ServeWS)
+	controller := control.NewController()
+
+	http.HandleFunc("/ws", controller.SocketManager.ServeWS)
 }

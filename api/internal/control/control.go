@@ -6,12 +6,13 @@ import (
 )
 
 type Controller struct {
-	socketManager *socket.Manager
+	SocketManager *socket.Manager
 }
 
 func NewController() *Controller {
 	c := Controller{}
-	c.socketManager = &socket.Manager{OnMessage: c.HandleEvent}
+	c.SocketManager = socket.NewManager(c.HandleEvent)
+	
 	return &c
 }
 func (c *Controller) HandleEvent(event socket.Event, client *socket.Client) error {

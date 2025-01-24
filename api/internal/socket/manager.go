@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -9,7 +10,7 @@ import (
 )
 
 var webSocketUpgrader = websocket.Upgrader{
-	CheckOrigin:     checkOrigin,
+	//CheckOrigin:     checkOrigin,
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
@@ -24,9 +25,10 @@ type Manager struct {
 	//handlers map[string]EventHandler
 }
 
-func NewManager() *Manager {
+func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 	m := &Manager{
-		clients: make(ClientList),
+		clients:   make(ClientList),
+		OnMessage: onMessage,
 		//handlers: make(map[string]EventHandler),
 	}
 	//m.setupEventHandlers()
@@ -71,7 +73,7 @@ func (m *Manager) addClient(client *Client) {
 	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
-
+	fmt.Println("adding client")
 	// Add Client
 	m.clients[client] = true
 }
