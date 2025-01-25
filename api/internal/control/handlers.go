@@ -90,7 +90,18 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	foundGame.MakeMove(client.UserId, move.MoveStr)
+	moveResult := foundGame.MakeMove(client.UserId, move.MoveStr)
+
+	payload, err := json.Marshal(map[string]interface{}{"Result": moveResult})
+	if err != nil {
+		log.Println("error marshalling new game payload")
+		return nil
+	}
+	e := socket.Event{
+		Type:    "Result_Alert",
+		Payload: json.RawMessage(payload),
+	}
+	c.SocketManager.Broadcast(e)
 
 	return nil
 }

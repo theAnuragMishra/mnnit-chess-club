@@ -10,12 +10,6 @@ import (
 
 type Result string
 
-const (
-	WhiteWins Result = "WHITE_WINS"
-	BlackWins Result = "BLACK_WINS"
-	Draw      Result = "DRAW"
-)
-
 type Game struct {
 	ID        string
 	Player1Id string
@@ -34,28 +28,34 @@ func NewGame(player1 string) *Game {
 	}
 }
 
-func (g *Game) MakeMove(player string, move string) {
-
+func (g *Game) MakeMove(player string, move string) Result {
 	if g.Board.Position().Turn() == chess.White && player != g.Player1Id {
-		return
+		return "not your turn"
 	}
 	if g.Board.Position().Turn() == chess.Black && player != g.Player2Id {
-		return
+		return "not your turn"
 	}
 
-	if g.Board.Outcome() != "*" {
+	if g.Result != "" {
 		log.Println("Trying to make a move after game has finished")
-		return
+		return g.Result
 	}
 	if err := g.Board.MoveStr(move); err != nil {
 		log.Println(err)
-		return
+		return "error making move"
 	}
 
-	//fmt.Println(g.Board.Position())
-	//fmt.Println(g.Board.Position().Board())
-	//fmt.Println(g.Board)
+	if g.Board.Outcome() != "*" {
+		g.Result = Result(g.Board.Outcome())
+		return Result(g.Board.Outcome())
+	}
+
+	// fmt.Println(g.Board.Position())
+	// fmt.Println(g.Board.Position().Board())
+	// fmt.Println(g.Board)
 	fmt.Println(g.Board.Position().Board().Draw())
+
+	return "move successful"
 
 	// moveStr := "{\"move\": " + move + "}"
 
