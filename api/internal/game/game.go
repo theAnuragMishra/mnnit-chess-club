@@ -17,7 +17,7 @@ const (
 )
 
 type Game struct {
-	Id        string
+	ID        string
 	Player1Id string
 	Player2Id string
 	Board     *chess.Game
@@ -25,17 +25,17 @@ type Game struct {
 	Result    Result
 }
 
-func NewGame(player1 string, player2 string) *Game {
-	var board *chess.Game
+func NewGame(player1 string) *Game {
+	board := chess.NewGame()
 	return &Game{
-		Id:        uuid.New().String(),
+		ID:        uuid.New().String(),
 		Player1Id: player1,
-		Player2Id: player2,
 		Board:     board,
 	}
 }
 
 func (g *Game) MakeMove(player string, move string) {
+
 	if g.Board.Position().Turn() == chess.White && player != g.Player1Id {
 		return
 	}
@@ -52,9 +52,10 @@ func (g *Game) MakeMove(player string, move string) {
 		return
 	}
 
-	fmt.Println(g.Board.Position())
-	fmt.Println(g.Board.Position().Board())
-	fmt.Println(g.Board)
+	//fmt.Println(g.Board.Position())
+	//fmt.Println(g.Board.Position().Board())
+	//fmt.Println(g.Board)
+	fmt.Println(g.Board.Position().Board().Draw())
 
 	// moveStr := "{\"move\": " + move + "}"
 

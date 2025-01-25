@@ -1,6 +1,6 @@
 package control
 
 type movePayload struct {
-	MoveStr string
-	GameID  string
+	MoveStr string `json:"MoveStr"`
+	GameID  string `json:"GameId"`
 }

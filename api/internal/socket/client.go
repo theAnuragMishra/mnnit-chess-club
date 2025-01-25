@@ -2,9 +2,10 @@ package socket
 
 import (
 	"encoding/json"
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"log"
 )
 
 // ClientList is a map used to help manage a map of clients
@@ -84,6 +85,10 @@ func (c *Client) writeMessages() {
 			log.Println("sent message")
 		}
 	}
+}
+
+func (c *Client) Send(event Event) {
+	c.egress <- event
 }
 
 func (m *Manager) Broadcast(event Event) {
