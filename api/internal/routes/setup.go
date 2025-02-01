@@ -22,10 +22,10 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 	}))
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
-		router.Post("/register", authHandler.HandleRegister)
-		router.Post("/login", authHandler.HandleLogin)
 		router.Post("/logout", authHandler.HandleLogout)
 	})
+	router.Post("/register", authHandler.HandleRegister)
+	router.Post("/login", authHandler.HandleLogin)
 
 	return router
 }
