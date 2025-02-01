@@ -2,12 +2,17 @@ package auth
 
 import (
 	"context"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
 
 func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -67,8 +72,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			log.Println("error updating csrf token, ", err)
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", session.UserID)
+		ctx := context.WithValue(r.Context(), UserIDKey, session.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
-
 	})
 }
