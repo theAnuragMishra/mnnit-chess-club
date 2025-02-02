@@ -101,6 +101,9 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+
+	//fmt.Println("into handle logout")
+
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())

@@ -22,6 +22,8 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		//fmt.Println("sessionTokenCookie", sessionTokenCookie)
+
 		session, err := h.queries.GetSession(r.Context(), sessionTokenCookie.Value)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Session not found")
@@ -47,32 +49,35 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		csrf := r.Header.Get("X-CSRF-Token")
+		//csrf := r.Header.Get("X-CSRF-Token")
 
-		csrfToken, err := h.queries.GetCSRFTokenBySession(r.Context(), sessionTokenCookie.Value)
+		//csrfToken, err := h.queries.GetCSRFTokenBySession(r.Context(), sessionTokenCookie.Value)
 
-		if err != nil || csrf != csrfToken.Token || csrfToken.ExpiresAt.Before(time.Now()) {
-			utils.RespondWithError(w, http.StatusUnauthorized, "invalid csrf token")
-		}
+		//if err != nil || csrf != csrfToken.Token || csrfToken.ExpiresAt.Before(time.Now()) {
+		//	utils.RespondWithError(w, http.StatusUnauthorized, "invalid csrf token")
+		//}
 
-		newCSRFToken := generateToken(32)
+		// newCSRFToken := generateToken(32)
 
-		http.SetCookie(w, &http.Cookie{
-			Name:     "csrf_token",
-			Value:    newCSRFToken,
-			Expires:  time.Now().Add(time.Hour),
-			HttpOnly: false,
-		})
-
-		err = h.queries.UpdateCSRFToken(r.Context(), database.UpdateCSRFTokenParams{
-			Token:     newCSRFToken,
-			SessionID: sessionTokenCookie.Value,
-		})
-		if err != nil {
-			log.Println("error updating csrf token, ", err)
-		}
+		//http.SetCookie(w, &http.Cookie{
+		//	Name:     "csrf_token",
+		//	Value:    newCSRFToken,
+		//	Expires:  time.Now().Add(time.Hour),
+		//	HttpOnly: false,
+		//})
+		//
+		//err = h.queries.UpdateCSRFToken(r.Context(), database.UpdateCSRFTokenParams{
+		//	Token:     newCSRFToken,
+		//	SessionID: sessionTokenCookie.Value,
+		//})
+		//if err != nil {
+		//	log.Println("error updating csrf token, ", err)
+		//}
 
 		ctx := context.WithValue(r.Context(), UserIDKey, session.UserID)
+
+		//fmt.Println("passed middleware check")
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

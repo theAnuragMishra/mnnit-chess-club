@@ -32,7 +32,7 @@ func setupAPI() {
 		log.Fatal("PORT is not found in the environment")
 	}
 
-	dbURL := os.Getenv("DB_URL")
+	dbURL := os.Getenv("PG_BREW_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL is not found in the environment")
 	}
