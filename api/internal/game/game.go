@@ -12,27 +12,27 @@ type Result string
 
 type Game struct {
 	ID        string
-	Player1Id string
-	Player2Id string
+	Player1Id uuid.UUID
+	Player2Id uuid.UUID
 	Board     *chess.Game
 	moveCount int
 	Result    Result
 }
 
-func NewGame(player1 string) *Game {
+func NewGame(player1ID uuid.UUID) *Game {
 	board := chess.NewGame()
 	return &Game{
 		ID:        uuid.New().String(),
-		Player1Id: player1,
+		Player1Id: player1ID,
 		Board:     board,
 	}
 }
 
-func (g *Game) MakeMove(player string, move string) Result {
-	if g.Board.Position().Turn() == chess.White && player != g.Player1Id {
+func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
+	if g.Board.Position().Turn() == chess.White && playerID != g.Player1Id {
 		return "not your turn"
 	}
-	if g.Board.Position().Turn() == chess.Black && player != g.Player2Id {
+	if g.Board.Position().Turn() == chess.Black && playerID != g.Player2Id {
 		return "not your turn"
 	}
 

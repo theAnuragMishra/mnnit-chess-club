@@ -16,7 +16,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	// if there's no pending game, create one, else, add the player to the game
 	if c.GameManager.PendingGameId == "" {
 		fmt.Println("no pending game, creating...")
-		newGame := game.NewGame(client.UserId)
+		newGame := game.NewGame(client.UserID)
 		c.GameManager.PendingGameId = newGame.ID
 		c.GameManager.Games = append(c.GameManager.Games, newGame)
 		payload := map[string]interface{}{
@@ -44,9 +44,26 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if foundGame == nil {
 			return errors.New("game not found")
 		}
+		if foundGame.Player1Id == client.UserID {
+			payload := map[string]interface{}{
+				"Message": "you can't play both sides",
+			}
+			rawPayload, err := json.Marshal(payload)
+			if err != nil {
+				log.Println("error marshalling new game payload")
+				return nil
+			}
 
+			e := socket.Event{
+				Type:    "Game_Alert",
+				Payload: json.RawMessage(rawPayload),
+			}
+
+			client.Send(e)
+			return errors.New("you can't play both sides")
+		}
 		fmt.Println("found pending game, ", c.GameManager.PendingGameId)
-		foundGame.Player2Id = client.UserId
+		foundGame.Player2Id = client.UserID
 		c.GameManager.PendingGameId = ""
 		payload := map[string]interface{}{
 			"GameID": foundGame.ID,
@@ -89,7 +106,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	moveResult := foundGame.MakeMove(client.UserId, move.MoveStr)
+	moveResult := foundGame.MakeMove(client.UserID, move.MoveStr)
 
 	payload, err := json.Marshal(map[string]interface{}{"Result": moveResult})
 	if err != nil {
