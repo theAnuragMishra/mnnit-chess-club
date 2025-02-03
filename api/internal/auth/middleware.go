@@ -47,7 +47,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		// 	}
 		// }
 
-		session, err := h.validateSession(r.Context(), sessionTokenCookie.Value)
+		session, err := h.ValidateSession(r.Context(), sessionTokenCookie.Value)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
 			return

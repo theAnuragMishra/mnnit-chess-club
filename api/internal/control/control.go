@@ -2,6 +2,7 @@ package control
 
 import (
 	"errors"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
@@ -11,9 +12,9 @@ type Controller struct {
 	GameManager   *game.Manager
 }
 
-func NewController() *Controller {
+func NewController(authHandler *auth.Handler) *Controller {
 	c := Controller{}
-	c.SocketManager = socket.NewManager(c.HandleEvent)
+	c.SocketManager = socket.NewManager(c.HandleEvent, authHandler)
 	c.GameManager = game.NewManager()
 
 	return &c

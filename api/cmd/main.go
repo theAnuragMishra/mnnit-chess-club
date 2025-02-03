@@ -65,7 +65,7 @@ func setupAPI() {
 	}
 
 	//ws setup
-	controller := control.NewController()
+	controller := control.NewController(authHandler)
 
 	router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 

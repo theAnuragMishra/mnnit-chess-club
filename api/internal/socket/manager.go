@@ -5,33 +5,37 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
 var webSocketUpgrader = websocket.Upgrader{
-	//CheckOrigin:     checkOrigin,
+	// CheckOrigin:     checkOrigin,
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
 type Manager struct {
-	clients ClientList
-
+	clients     ClientList
+	authHandler *auth.Handler
 	sync.RWMutex
 
 	OnMessage func(event Event, client *Client) error
 
-	//handlers map[string]EventHandler
+	// handlers map[string]EventHandler
 }
 
-func NewManager(onMessage func(event Event, client *Client) error) *Manager {
+func NewManager(onMessage func(event Event, client *Client) error, authHandler *auth.Handler) *Manager {
 	m := &Manager{
-		clients:   make(ClientList),
-		OnMessage: onMessage,
-		//handlers: make(map[string]EventHandler),
+		clients:     make(ClientList),
+		OnMessage:   onMessage,
+		authHandler: authHandler,
+		// handlers: make(map[string]EventHandler),
 	}
-	//m.setupEventHandlers()
+	// m.setupEventHandlers()
 	return m
 }
 
@@ -52,7 +56,32 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 //}
 
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
-	log.Println("new connection")
+	log.Println("new connection request")
+
+	// authentication
+	sessionTokenCookie, err := r.Cookie("session_token")
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	session, err := m.authHandler.ValidateSession(r.Context(), sessionTokenCookie.Value)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    sessionTokenCookie.Value,
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		HttpOnly: true,
+	})
+
+	fmt.Println(session)
+
+	// upgrading http to websocket connection
+
 	conn, err := webSocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -94,8 +123,8 @@ func (m *Manager) removeClient(client *Client) {
 		delete(m.clients, client)
 	}
 }
-func checkOrigin(r *http.Request) bool {
 
+func checkOrigin(r *http.Request) bool {
 	// Grab the request origin
 	origin := r.Header.Get("Origin")
 
