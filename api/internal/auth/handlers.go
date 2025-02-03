@@ -1,12 +1,14 @@
 package auth
 
 import (
-	"github.com/google/uuid"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
 type Handler struct {
@@ -18,9 +20,15 @@ func NewHandler(queries *database.Queries) *Handler {
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-	//email := r.FormValue("email")
+	var registerRequest RegisterRequest
+	err := json.NewDecoder(r.Body).Decode(&registerRequest)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	username := registerRequest.Username
+	password := registerRequest.Password
+	// email := r.FormValue("email")
 	if len(username) < 4 {
 		utils.RespondWithError(w, http.StatusBadRequest, "Username and password must be at least 6 characters long")
 		return
@@ -46,12 +54,18 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 }
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	password := r.FormValue("password")
+	var loginRequest LoginRequest
+	err := json.NewDecoder(r.Body).Decode(&loginRequest)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	username := loginRequest.Username
+	password := loginRequest.Password
 
 	user, err := h.queries.GetUser(r.Context(), username)
 
@@ -91,18 +105,15 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Token:     csrfToken,
 		ExpiresAt: time.Now().UTC().Add(24 * time.Hour * 30),
 	})
-
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "couldn't create CSRF token")
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, "Login successful")
-
+	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": username})
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-
-	//fmt.Println("into handle logout")
+	// fmt.Println("into handle logout")
 
 	sessionTokenCookie, err := r.Cookie("session_token")
 	if err != nil {
@@ -128,5 +139,4 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error deleting session: %v", err)
 		return
 	}
-
 }
