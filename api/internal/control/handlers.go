@@ -12,11 +12,10 @@ import (
 
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(event)
+
+	// if there's no pending game, create one, else, add the player to the game
 	if c.GameManager.PendingGameId == "" {
 		fmt.Println("no pending game, creating...")
-		// newGame := &game.Game{
-		// 	Player1Id: client.UserId,
-		// }
 		newGame := game.NewGame(client.UserId)
 		c.GameManager.PendingGameId = newGame.ID
 		c.GameManager.Games = append(c.GameManager.Games, newGame)

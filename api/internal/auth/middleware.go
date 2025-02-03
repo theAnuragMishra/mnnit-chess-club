@@ -85,6 +85,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		//	log.Println("error updating csrf token, ", err)
 		//}
 
+		// setting session context for use by the handler
 		ctx := context.WithValue(r.Context(), middlewareSentSession, session)
 
 		// fmt.Println("passed middleware check")

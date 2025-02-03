@@ -87,10 +87,12 @@ func (c *Client) writeMessages() {
 	}
 }
 
+// Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
 	c.egress <- event
 }
 
+// Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map
 	defer m.RUnlock()

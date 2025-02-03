@@ -21,6 +21,8 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	// authenticated routes
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
 		router.Post("/logout", authHandler.HandleLogout)
@@ -28,6 +30,8 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 			utils.RespondWithJSON(w, http.StatusOK, "ok")
 		})
 	})
+
+	// routes that don't need authentication
 	router.Post("/register", authHandler.HandleRegister)
 	router.Post("/login", authHandler.HandleLogin)
 

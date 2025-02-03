@@ -26,7 +26,6 @@ func main() {
 func setupAPI() {
 
 	// database setup
-
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
@@ -45,14 +44,13 @@ func setupAPI() {
 		log.Fatal("can't connect to database")
 	}
 
+	// making sure connection closes when the server stops
 	defer func(conn *pgx.Conn, ctx context.Context) {
 		err := conn.Close(ctx)
 		if err != nil {
 			log.Fatal("can't close connection")
 		}
 	}(conn, ctx)
-
-	// server listening
 
 	queries := database.New(conn)
 
@@ -70,6 +68,8 @@ func setupAPI() {
 	router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 
 	log.Printf("Server starting on port: %v", portString)
+
+	// server listening
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
