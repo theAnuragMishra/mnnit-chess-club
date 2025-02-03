@@ -88,7 +88,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Create New Client
-	client := NewClient(conn, m)
+	client := NewClient(conn, m, session.UserID)
 	// Add the newly created client to the manager
 	m.addClient(client)
 

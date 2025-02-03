@@ -22,9 +22,9 @@ type Client struct {
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
-func NewClient(conn *websocket.Conn, manager *Manager) *Client {
+func NewClient(conn *websocket.Conn, manager *Manager, userID uuid.UUID) *Client {
 	return &Client{
-		//UserID:     "",
+		UserID:     userID,
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
