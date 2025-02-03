@@ -5,7 +5,6 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
-	"net/http"
 )
 
 // SetUP chi routes
@@ -26,9 +25,7 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
 		router.Post("/logout", authHandler.HandleLogout)
-		router.Get("/check", func(w http.ResponseWriter, r *http.Request) {
-			utils.RespondWithJSON(w, http.StatusOK, "ok")
-		})
+		router.Get("/me", authHandler.HandleMe)
 	})
 
 	// routes that don't need authentication

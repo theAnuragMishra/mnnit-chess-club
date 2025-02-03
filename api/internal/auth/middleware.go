@@ -10,7 +10,7 @@ import (
 
 type contextKey string
 
-const middlewareSentSession contextKey = "user_id"
+const middlewareSentSession contextKey = "session"
 
 func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

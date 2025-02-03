@@ -67,7 +67,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	username := loginRequest.Username
 	password := loginRequest.Password
 
-	user, err := h.queries.GetUser(r.Context(), username)
+	user, err := h.queries.GetUserByUsername(r.Context(), username)
 
 	if err != nil || !checkPasswordHash(password, user.PasswordHash) {
 		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid username or password")
@@ -139,4 +139,19 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error deleting session: %v", err)
 		return
 	}
+}
+
+// a "/me" route to send userdata on app load
+
+func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
+
+	session := r.Context().Value("session").(database.Session)
+	user, err := h.queries.GetUserByUserID(r.Context(), session.UserID)
+
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting user")
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": user.Username})
 }
