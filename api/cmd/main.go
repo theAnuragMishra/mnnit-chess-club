@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
@@ -38,21 +38,16 @@ func setupAPI() {
 
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, dbURL)
+	pool, err := pgxpool.New(ctx, dbURL)
 
 	if err != nil {
 		log.Fatal("can't connect to database")
 	}
 
 	// making sure connection closes when the server stops
-	defer func(conn *pgx.Conn, ctx context.Context) {
-		err := conn.Close(ctx)
-		if err != nil {
-			log.Fatal("can't close connection")
-		}
-	}(conn, ctx)
+	defer pool.Close()
 
-	queries := database.New(conn)
+	queries := database.New(pool)
 
 	authHandler := auth.NewHandler(queries)
 
