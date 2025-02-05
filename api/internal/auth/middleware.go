@@ -16,7 +16,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionTokenCookie, err := r.Cookie("session_token")
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondWithError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
