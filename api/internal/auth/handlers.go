@@ -75,7 +75,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionToken := generateToken(32)
-	csrfToken := generateToken(32)
+	// csrfToken := generateToken(32)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -83,12 +83,12 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
 	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    csrfToken,
-		Expires:  time.Now().Add(time.Hour),
-		HttpOnly: false,
-	})
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:     "csrf_token",
+	// 	Value:    csrfToken,
+	// 	Expires:  time.Now().Add(time.Hour),
+	// 	HttpOnly: false,
+	// })
 
 	err = h.queries.CreateSession(r.Context(), database.CreateSessionParams{
 		ID:        sessionToken,
@@ -100,14 +100,14 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.queries.CreateCSRFToken(r.Context(), database.CreateCSRFTokenParams{
-		SessionID: sessionToken,
-		Token:     csrfToken,
-		ExpiresAt: time.Now().UTC().Add(24 * time.Hour * 30),
-	})
-	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, "couldn't create CSRF token")
-	}
+	// err = h.queries.CreateCSRFToken(r.Context(), database.CreateCSRFTokenParams{
+	// 	SessionID: sessionToken,
+	// 	Token:     csrfToken,
+	// 	ExpiresAt: time.Now().UTC().Add(24 * time.Hour * 30),
+	// })
+	// if err != nil {
+	// 	utils.RespondWithError(w, http.StatusInternalServerError, "couldn't create CSRF token")
+	// }
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": username})
 }
@@ -127,12 +127,12 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(-time.Hour),
 		HttpOnly: true,
 	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "csrf_token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HttpOnly: false,
-	})
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:     "csrf_token",
+	// 	Value:    "",
+	// 	Expires:  time.Now().Add(-time.Hour),
+	// 	HttpOnly: false,
+	// })
 
 	err = h.queries.DeleteSession(r.Context(), sessionTokenCookie.Value)
 	if err != nil {

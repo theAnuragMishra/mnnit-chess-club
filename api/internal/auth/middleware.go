@@ -55,12 +55,12 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 				Expires:  time.Now().Add(-time.Hour),
 				HttpOnly: true,
 			})
-			http.SetCookie(w, &http.Cookie{
-				Name:     "csrf_token",
-				Value:    "",
-				Expires:  time.Now().Add(-time.Hour),
-				HttpOnly: false,
-			})
+			// http.SetCookie(w, &http.Cookie{
+			// 	Name:     "csrf_token",
+			// 	Value:    "",
+			// 	Expires:  time.Now().Add(-time.Hour),
+			// 	HttpOnly: false,
+			// })
 
 			utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
 			return
