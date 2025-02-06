@@ -49,6 +49,19 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 
 		session, err := h.ValidateSession(r.Context(), sessionTokenCookie.Value)
 		if err != nil {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_token",
+				Value:    "",
+				Expires:  time.Now().Add(-time.Hour),
+				HttpOnly: true,
+			})
+			http.SetCookie(w, &http.Cookie{
+				Name:     "csrf_token",
+				Value:    "",
+				Expires:  time.Now().Add(-time.Hour),
+				HttpOnly: false,
+			})
+
 			utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
 			return
 		}
@@ -58,7 +71,6 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			Value:    sessionTokenCookie.Value,
 			Expires:  time.Now().Add(time.Hour * 24 * 30),
 			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
 		})
 
 		// csrf := r.Header.Get("X-CSRF-Token")
