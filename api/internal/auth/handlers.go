@@ -82,12 +82,14 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionToken,
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf_token",
 		Value:    csrfToken,
 		Expires:  time.Now().Add(time.Hour),
 		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	err = h.queries.CreateSession(r.Context(), database.CreateSessionParams{
@@ -126,12 +128,14 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf_token",
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	err = h.queries.DeleteSession(r.Context(), sessionTokenCookie.Value)

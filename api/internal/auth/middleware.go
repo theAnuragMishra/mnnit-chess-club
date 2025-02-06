@@ -58,6 +58,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			Value:    sessionTokenCookie.Value,
 			Expires:  time.Now().Add(time.Hour * 24 * 30),
 			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		// csrf := r.Header.Get("X-CSRF-Token")

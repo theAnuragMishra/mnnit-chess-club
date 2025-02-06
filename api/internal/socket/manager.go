@@ -76,6 +76,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionTokenCookie.Value,
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	fmt.Println(session)
