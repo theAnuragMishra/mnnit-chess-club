@@ -3,6 +3,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import useAuthStore from "../store/authStore.ts";
 import {useNavigate} from "react-router";
+import {useEffect} from "react";
 
 // Define the schema for the signup form
 const signupFormSchema = z.object({
@@ -15,6 +16,8 @@ type SignupFormInputs = z.infer<typeof signupFormSchema>;
 
 export default function Signup() {
   const navigate = useNavigate();
+  const user = useAuthStore(state=>state.user)
+  const loading = useAuthStore(state=>state.loading)
 const signup = useAuthStore(state => state.register);
   const {
     register,
@@ -23,6 +26,12 @@ const signup = useAuthStore(state => state.register);
   } = useForm<SignupFormInputs>({
     resolver: zodResolver(signupFormSchema),
   });
+
+  useEffect(() => {
+    if (user) {
+      navigate("/profile");
+    }
+  }, [user, navigate]);
 
   const onSubmit: SubmitHandler<SignupFormInputs> = async (data) => {
     //console.log("Signup Data:", data);
@@ -39,15 +48,19 @@ console.log("Signed up successfully");
     }
   };
 
+  if (loading){
+    return <div>Loading</div>
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center mt-30">
       <h1 className="text-2xl font-bold mb-4">Signup</h1>
       <form
-        className="bg-white p-6 rounded shadow-md w-full max-w-sm"
+        className="bg-gray-800 p-6 rounded shadow-md w-full max-w-sm"
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Email</label>
+          <label className="block font-medium mb-2">Email</label>
           <input
             {...register("email")}
             type="email"
@@ -59,7 +72,7 @@ console.log("Signed up successfully");
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Username</label>
+          <label className="block font-medium mb-2">Username</label>
           <input
             {...register("username")}
             type="text"
@@ -71,7 +84,7 @@ console.log("Signed up successfully");
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2">Password</label>
+          <label className="block font-medium mb-2">Password</label>
           <input
             {...register("password")}
             type="password"

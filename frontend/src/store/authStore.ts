@@ -10,11 +10,14 @@ interface AuthState{
     login: (username: string, password: string) => Promise<void>;
     register: (username: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    checkAuth: ()=> Promise <void>
+    loading: boolean
 }
 
 // Create Zustand store
 const useAuthStore = create<AuthState>()((set) => ({
     user: null,
+    loading: true,
     login: async (username:string, password:string) => {
         const res = await fetch(`${getBaseURL()}/login`, {
             method: "POST",
@@ -23,11 +26,11 @@ const useAuthStore = create<AuthState>()((set) => ({
             body: JSON.stringify({ username, password }),
         });
 
-        if (!res.ok) throw new Error("Login failed");
+        if (!res.ok) {throw new Error("Login failed");}
 
         const user = await res.json();
-        console.log(user);
-        set({ user });
+        // console.log(user);
+        set({ user, loading:false });
     },
     register: async (username: string, password: string) => {
 
@@ -46,17 +49,25 @@ const useAuthStore = create<AuthState>()((set) => ({
             credentials: "include",
         });
 
-        set({ user: null });
+        set({ user: null, loading: false });
     },
     checkAuth: async () => {
+set({loading:true});
+        // await delay(10000);
 
             const res = await fetch(`${getBaseURL()}/me`, { credentials: "include" });
-            if (!res.ok) throw new Error("Not authenticated");
 
 
-            set({ user:null });
+if(!res.ok){
+    set({ user: null, loading: false });
+    return;
+}
+        const user = await res.json();
+        set({ user, loading: false });
 
     },
 }));
+
+
 
 export default useAuthStore;
