@@ -33,13 +33,15 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID uuid.UUID) *Client
 
 func (c *Client) readMessages() {
 	defer func() {
+		log.Println("client disconnected ", c.UserID)
 		c.manager.removeClient(c)
+		c.connection.Close()
 	}()
 	for {
 		_, payload, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Fatal("error")
+				log.Println("error", err)
 			}
 			break
 		}
@@ -63,7 +65,9 @@ func (c *Client) readMessages() {
 
 func (c *Client) writeMessages() {
 	defer func() {
+		log.Println("Closing write connection for client:", c.UserID)
 		c.manager.removeClient(c)
+		c.connection.Close()
 	}()
 	for {
 		select {
