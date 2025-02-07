@@ -19,6 +19,7 @@ const useAuthStore = create<AuthState>()((set) => ({
     user: null,
     loading: true,
     login: async (username:string, password:string) => {
+
         const res = await fetch(`${getBaseURL()}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import useAuthStore from "../store/authStore.ts";
-import {useNavigate} from "react-router";
+import {Link, useNavigate, useSearchParams} from "react-router";
+import Loading from "../components/Loading";
 import {useEffect} from "react";
 
 const loginFormSchema = z.object({
@@ -17,7 +18,9 @@ export default function Login() {
   const loading = useAuthStore(state=>state.loading)
   const login = useAuthStore(state=>state.login)
 
-  // const {login: lg} = useAuthStore();
+const [searchParams] = useSearchParams();
+  const message = searchParams.get("message");
+
   const {
     register,
     handleSubmit,
@@ -32,6 +35,8 @@ export default function Login() {
     }
   }, [user, navigate, loading]);
 
+  if(loading)return <Loading/>;
+
 
   const onSubmit: SubmitHandler<z.infer<typeof loginFormSchema>> = async (data) =>
   {
@@ -45,13 +50,11 @@ export default function Login() {
   }
 
 
-  if (loading){
-    return <div>Loading</div>
-  }
 
   return (
     <div className="flex flex-col items-center justify-center h-full mt-30">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
+      <h1 className="text-2xl font-bold mb-2">Login</h1>
+      {message=="registered" && <p className="mb-2 text-xl text-green-600">Account created successfully, now log in!</p>}
       <form
         className="bg-gray-800 p-6 rounded shadow-md w-full max-w-sm"
         onSubmit={handleSubmit(onSubmit)}
@@ -82,11 +85,13 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600 cursor-pointer"
         >
           Submit
         </button>
+        <Link className="w-full text-center block mt-2 text-blue-400 hover:underline" to={"/signup"}>New here? Signup!</Link>
       </form>
+
     </div>
   );
 }

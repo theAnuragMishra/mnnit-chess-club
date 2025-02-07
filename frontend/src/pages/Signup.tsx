@@ -2,7 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import useAuthStore from "../store/authStore.ts";
-import {useNavigate} from "react-router";
+import {Link, useNavigate} from "react-router";
+import Loading from "../components/Loading.tsx";
 import {useEffect} from "react";
 
 // Define the schema for the signup form
@@ -28,10 +29,14 @@ const signup = useAuthStore(state => state.register);
   });
 
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       navigate("/profile");
     }
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
+
+  if(loading)return <Loading/>;
+
+
 
   const onSubmit: SubmitHandler<SignupFormInputs> = async (data) => {
     //console.log("Signup Data:", data);
@@ -48,12 +53,9 @@ console.log("Signed up successfully");
     }
   };
 
-  if (loading){
-    return <div>Loading</div>
-  }
 
   return (
-    <div className="flex flex-col items-center justify-center mt-30">
+    <div className="flex flex-col items-center justify-center mt-20">
       <h1 className="text-2xl font-bold mb-4">Signup</h1>
       <form
         className="bg-gray-800 p-6 rounded shadow-md w-full max-w-sm"
@@ -97,10 +99,11 @@ console.log("Signed up successfully");
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600 cursor-pointer"
         >
           Signup
         </button>
+        <Link className="w-full text-center block mt-2 text-blue-400 hover:underline" to={"/login"}>Already registered? Login!</Link>
       </form>
     </div>
   );

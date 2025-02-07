@@ -28,6 +28,7 @@
     "@tanstack/eslint-plugin-query": "^5.66.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/websocket": "^1.0.10",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.0.0",
