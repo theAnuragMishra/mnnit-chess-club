@@ -13,6 +13,8 @@ import (
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(event)
 
+	fmt.Println("inside init game :)")
+
 	// if there's no pending game, create one, else, add the player to the game
 	if c.GameManager.PendingGameId == "" {
 		fmt.Println("no pending game, creating...")

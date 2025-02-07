@@ -2,6 +2,7 @@ package control
 
 import (
 	"errors"
+
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
@@ -19,6 +20,7 @@ func NewController(authHandler *auth.Handler) *Controller {
 
 	return &c
 }
+
 func (c *Controller) HandleEvent(event socket.Event, client *socket.Client) error {
 	if handler, ok := handlers[event.Type]; ok {
 		if err := handler(c, event, client); err != nil {

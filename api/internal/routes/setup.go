@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
@@ -31,6 +34,10 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 	// routes that don't need authentication
 	router.Post("/register", authHandler.HandleRegister)
 	router.Post("/login", authHandler.HandleLogin)
+	router.Post("/meow", func(w http.ResponseWriter, r *http.Request) {
+		username := r.FormValue("username")
+		fmt.Println(username)
+	})
 
 	return router
 }
