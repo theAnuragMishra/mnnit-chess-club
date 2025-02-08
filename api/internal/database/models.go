@@ -8,12 +8,32 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CsrfToken struct {
 	SessionID string
 	Token     string
 	ExpiresAt time.Time
+}
+
+type Game struct {
+	ID            int32
+	WhitePlayerID pgtype.UUID
+	BlackPlayerID pgtype.UUID
+	Result        pgtype.Text
+	CreatedAt     pgtype.Timestamp
+	EndedAt       pgtype.Timestamp
+}
+
+type Move struct {
+	ID           int32
+	GameID       pgtype.Int4
+	MoveNumber   int32
+	PlayerID     pgtype.UUID
+	MoveNotation string
+	MoveFen      string
+	CreatedAt    pgtype.Timestamp
 }
 
 type Session struct {
