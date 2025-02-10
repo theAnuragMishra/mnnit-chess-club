@@ -9,7 +9,7 @@ import (
 )
 
 // ClientList is a map used to help manage a map of clients
-type ClientList map[*Client]bool
+type ClientList map[uuid.UUID]*Client
 
 // Client is a websocket client, basically a frontend visitor
 type Client struct {
@@ -34,7 +34,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID uuid.UUID) *Client
 func (c *Client) readMessages() {
 	defer func() {
 		log.Println("client disconnected ", c.UserID)
-		c.manager.removeClient(c)
+		c.manager.removeClient(c.UserID)
 		c.connection.Close()
 	}()
 	for {
@@ -66,7 +66,7 @@ func (c *Client) readMessages() {
 func (c *Client) writeMessages() {
 	defer func() {
 		log.Println("Closing write connection for client:", c.UserID)
-		c.manager.removeClient(c)
+		c.manager.removeClient(c.UserID)
 		c.connection.Close()
 	}()
 	for {
@@ -101,7 +101,7 @@ func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map
 	defer m.RUnlock()
 
-	for client := range m.clients {
+	for _, client := range m.clients {
 		select {
 		case client.egress <- event:
 			// Successfully enqueued the event

@@ -109,7 +109,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// 	utils.RespondWithError(w, http.StatusInternalServerError, "couldn't create CSRF token")
 	// }
 
-	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": username})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": username, "userID": user.ID})
 }
 
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
@@ -152,5 +152,5 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": user.Username})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": user.Username, "userID": user.ID})
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
@@ -22,7 +23,9 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		c.GameManager.PendingGameId = newGame.ID
 		c.GameManager.Games = append(c.GameManager.Games, newGame)
 		payload := map[string]interface{}{
-			"GameID": newGame.ID,
+			"GameID":  newGame.ID,
+			"player1": client.UserID,
+			"player2": "",
 		}
 		rawPayload, err := json.Marshal(payload)
 		if err != nil {
@@ -31,7 +34,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 
 		e := socket.Event{
-			Type:    "Game_Alert",
+			Type:    "Init_Game",
 			Payload: json.RawMessage(rawPayload),
 		}
 		client.Send(e)
@@ -57,7 +60,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 			}
 
 			e := socket.Event{
-				Type:    "Game_Alert",
+				Type:    "Bad_Request_Warning",
 				Payload: json.RawMessage(rawPayload),
 			}
 
@@ -67,8 +70,16 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		fmt.Println("found pending game, ", c.GameManager.PendingGameId)
 		foundGame.Player2Id = client.UserID
 		c.GameManager.PendingGameId = ""
+
+		otherClient := c.SocketManager.FindClientByUserID(foundGame.Player1Id)
+		if otherClient == nil {
+			return errors.New("player1 not found")
+		}
+
 		payload := map[string]interface{}{
-			"GameID": foundGame.ID,
+			"GameID":  foundGame.ID,
+			"player1": otherClient.UserID,
+			"player2": client.UserID,
 		}
 		rawPayload, err := json.Marshal(payload)
 		if err != nil {
@@ -77,10 +88,13 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 
 		e := socket.Event{
-			Type:    "Game_Alert",
+			Type:    "Init_Game",
 			Payload: json.RawMessage(rawPayload),
 		}
 		client.Send(e)
+
+		otherClient.Send(e)
+
 	}
 
 	// fmt.Println(c.GameManager)
@@ -106,6 +120,10 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if foundGame == nil {
 		return errors.New("game not found")
+	}
+
+	if foundGame.Player1Id == uuid.Nil || foundGame.Player2Id == uuid.Nil {
+		return errors.New("game not started")
 	}
 
 	moveResult := foundGame.MakeMove(client.UserID, move.MoveStr)

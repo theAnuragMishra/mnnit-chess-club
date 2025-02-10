@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
@@ -91,7 +92,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	// Create New Client
 	client := NewClient(conn, m, session.UserID)
 	// Add the newly created client to the manager
-	m.addClient(client)
+	m.addClient(session.UserID, client)
 
 	// Start the read / write processes
 	go client.readMessages()
@@ -99,29 +100,29 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 // addClient will add clients to our clientList
-func (m *Manager) addClient(client *Client) {
+func (m *Manager) addClient(id uuid.UUID, client *Client) {
 	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
 	fmt.Println("adding client")
 	// Add Client
-	m.clients[client] = true
+	m.clients[id] = client
 }
 
 // removeClient will remove the client and clean up
-func (m *Manager) removeClient(client *Client) {
+func (m *Manager) removeClient(id uuid.UUID) {
 	m.Lock()
 	defer m.Unlock()
 
 	// Check if Client exists, then delete it
-	if _, ok := m.clients[client]; ok {
+	if client, ok := m.clients[id]; ok {
 		// close connection
 		err := client.connection.Close()
 		if err != nil {
 			return
 		}
 		// remove
-		delete(m.clients, client)
+		delete(m.clients, id)
 	}
 }
 
