@@ -8,7 +8,8 @@ import {useEffect} from "react";
 import RootLayout from "./layouts/RootLayout.tsx";
 import Home from "./pages/Home.tsx";
 import Loading from "./components/Loading";
-import SocketTest from "./pages/SocketTest.tsx";
+
+import Play from "./pages/Play.tsx";
 
 function App() {
     const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -28,7 +29,8 @@ function App() {
       <Route path="/profile" element={<Profile/>}/>
       <Route path="/login" element={<Login/>}/>
       <Route path="/signup" element={<Signup/>}/>
-            <Route path="/socket-test" element={<SocketTest/>}/>
+
+            <Route path="/play/:gameID" element={<Play/>}/>
         </Route>
     </Routes>
   )

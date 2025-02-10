@@ -3,6 +3,7 @@ import {getBaseURL} from "../utils/urlUtils.ts";
 
 interface User{
     username:string;
+    userID: string;
 }
 
 interface AuthState{
