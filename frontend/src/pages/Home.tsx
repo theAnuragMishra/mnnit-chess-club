@@ -27,7 +27,7 @@ const navigate = useNavigate();
 
     function handleInitGame(){
 
-sendMessage({type:"init_game"})
+sendMessage({type:"init_game", payload:{username: user?.username}});
     }
 
     if(loading) return <Loading />;

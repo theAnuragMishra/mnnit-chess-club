@@ -4,8 +4,8 @@ import { Chess } from "chess.js";
 interface ChessState {
     board: Chess;
     gameID: string;
-    player1: string;
-    player2: string;
+    player1username: string;
+    player2username: string;
     turn: "white" | "black";
     moveHistory: string[];
     makeMove: (move: string) => boolean;  // Returns true if move is valid
@@ -13,8 +13,8 @@ interface ChessState {
 }
 
 const useChessStore = create<ChessState>((set, get) => ({
-    player1: "",
-    player2: "",
+    player1username: "",
+    player2username: "",
     gameID: "",
     board: new Chess(), // Keep a single Chess instance
     turn: "white",

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import useChessStore from "./gameStore.ts";
-import useAuthStore from "./authStore.ts";
 
 interface Move {
     MoveStr: string;
@@ -10,7 +9,7 @@ interface Move {
 // Define WebSocket message type
 interface Message {
     type: string;
-    payload?: Move;
+    payload?: any;
 }
 
 // Zustand store type definition
@@ -39,11 +38,11 @@ const useWebSocketStore = create<WebSocketState>((set, get) => {
                     useChessStore.getState().makeMove(data.move);
                 }
                 if (data.type === "Init_Game") {
-                    console.log("Game ID:", data);
+                    console.log(data);
                     useChessStore.setState((state) => ({
                         gameID: data.payload.GameID,
-                        player1: data.payload.player1,
-                        player2: data.payload.player2,
+                        player1username: data.payload.player1username,
+                        player2username: data.payload.player2username,
                     }));
                 }
             };

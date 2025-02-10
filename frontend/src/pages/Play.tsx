@@ -9,7 +9,7 @@ const params = useParams();
 const {connect} = useWebSocketStore();
         const [move, setMove] = useState("");
         const { sendMessage} = useWebSocketStore();
-        const {player1, player2, gameID} = useChessStore();
+        const {player1username, player2username, gameID} = useChessStore();
 
     //     useEffect(() => {
     //     connect(); // Connect WebSocket on mount
@@ -35,7 +35,7 @@ const {connect} = useWebSocketStore();
             <h2>Play</h2>
 
 
-            <div>White: {player1} Black: {player2}</div>
+            <div>White: {player1username} Black: {player2username}</div>
             <div>Game ID: {gameID}</div>
 
             Move:
