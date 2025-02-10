@@ -11,20 +11,23 @@ import (
 type Result string
 
 type Game struct {
-	ID        string
-	Player1Id uuid.UUID
-	Player2Id uuid.UUID
-	Board     *chess.Game
-	moveCount int
-	Result    Result
+	ID              string
+	Player1Id       uuid.UUID
+	Player2Id       uuid.UUID
+	Player1Username string
+	Player2Username string
+	Board           *chess.Game
+	moveCount       int
+	Result          Result
 }
 
-func NewGame(player1ID uuid.UUID) *Game {
+func NewGame(player1ID uuid.UUID, player1Username string) *Game {
 	board := chess.NewGame()
 	return &Game{
-		ID:        uuid.New().String(),
-		Player1Id: player1ID,
-		Board:     board,
+		ID:              uuid.New().String(),
+		Player1Id:       player1ID,
+		Player1Username: player1Username,
+		Board:           board,
 	}
 }
 
