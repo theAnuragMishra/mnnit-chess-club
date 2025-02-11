@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 
 interface ChessState {
     board: Chess;
+    result: string | null;
     gameID: string;
     player1username: string;
     player2username: string;
@@ -16,10 +17,12 @@ const useChessStore = create<ChessState>((set, get) => ({
     player1username: "",
     player2username: "",
     gameID: "",
+    result: null,
     board: new Chess(), // Keep a single Chess instance
     turn: "white",
     moveHistory: [],
 
+    setResult: (result:string) => set({result: result}),
     makeMove: (move: string) => {
         const currentBoard = get().board;  // Get the current board (mutable)
         const moveResult = currentBoard.move(move); // Try making the move

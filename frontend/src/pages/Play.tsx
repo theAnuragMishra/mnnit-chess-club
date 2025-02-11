@@ -3,13 +3,14 @@ import useWebSocketStore from "../store/socketStore"; // Import the Zustand stor
 import {useParams} from "react-router";
 import useChessStore from "../store/gameStore.ts";
 import {useEffect} from "react";
+import ResultModal from "../components/ResultModal.tsx";
 
 export default function Play() {
 const params = useParams();
 const {connect} = useWebSocketStore();
         const [move, setMove] = useState("");
         const { sendMessage} = useWebSocketStore();
-        const {player1username, player2username, gameID} = useChessStore();
+        const {player1username, player2username, gameID, result} = useChessStore();
 
     //     useEffect(() => {
     //     connect(); // Connect WebSocket on mount
@@ -32,6 +33,7 @@ const {connect} = useWebSocketStore();
 
         return (
         <div>
+            {result && <ResultModal/>}
             <h2>Play</h2>
 
 

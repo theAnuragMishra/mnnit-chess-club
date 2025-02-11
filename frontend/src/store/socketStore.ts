@@ -45,6 +45,12 @@ const useWebSocketStore = create<WebSocketState>((set, get) => {
                         player2username: data.payload.player2username,
                     }));
                 }
+                if(data.type==="Result_Alert"){
+
+                    if(data.payload.Result === "1-0")useChessStore.setState((state) => ({result: "1-0"}))
+                    else if(data.payload.Result === "0-1") useChessStore.setState((state) => ({result: "0-1"}))
+                    else if (data.payload.Result === "1/2-1/2")useChessStore.setState((state) => ({result: "1/2-1/2"}))
+                }
             };
         },
 
