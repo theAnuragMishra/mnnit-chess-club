@@ -47,6 +47,7 @@ func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
 		log.Println(err)
 		return "error making move"
 	}
+	fmt.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {
 		g.Result = Result(g.Board.Outcome())
