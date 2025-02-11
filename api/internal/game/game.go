@@ -57,7 +57,6 @@ func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
 	// fmt.Println(g.Board.Position())
 	// fmt.Println(g.Board.Position().Board())
 	// fmt.Println(g.Board)
-	fmt.Println(g.Board.Position().Board().Draw())
 
 	return "move successful"
 
