@@ -5,12 +5,11 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 )
 
 var webSocketUpgrader = websocket.Upgrader{
@@ -21,8 +20,7 @@ var webSocketUpgrader = websocket.Upgrader{
 }
 
 type Manager struct {
-	clients     ClientList
-	authHandler *auth.Handler
+	clients ClientList
 	sync.RWMutex
 
 	OnMessage func(event Event, client *Client) error
@@ -30,11 +28,10 @@ type Manager struct {
 	// handlers map[string]EventHandler
 }
 
-func NewManager(onMessage func(event Event, client *Client) error, authHandler *auth.Handler) *Manager {
+func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 	m := &Manager{
-		clients:     make(ClientList),
-		OnMessage:   onMessage,
-		authHandler: authHandler,
+		clients:   make(ClientList),
+		OnMessage: onMessage,
 		// handlers: make(map[string]EventHandler),
 	}
 	// m.setupEventHandlers()
@@ -60,27 +57,7 @@ func NewManager(onMessage func(event Event, client *Client) error, authHandler *
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("new connection request")
 
-	// authentication
-	sessionTokenCookie, err := r.Cookie("session_token")
-	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	session, err := m.authHandler.ValidateSession(r.Context(), sessionTokenCookie.Value)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionTokenCookie.Value,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		HttpOnly: true,
-	})
-
-	fmt.Println(session)
+	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
 
 	// upgrading http to websocket connection
 

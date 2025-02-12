@@ -3,7 +3,6 @@ package control
 import (
 	"errors"
 
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
@@ -15,9 +14,9 @@ type Controller struct {
 	Queries       *database.Queries
 }
 
-func NewController(queries *database.Queries, authHandler *auth.Handler) *Controller {
+func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
-	c.SocketManager = socket.NewManager(c.HandleEvent, authHandler)
+	c.SocketManager = socket.NewManager(c.HandleEvent)
 	c.GameManager = game.NewManager()
 	c.Queries = queries
 

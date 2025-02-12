@@ -7,12 +7,13 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
 // SetUP chi routes
 
-func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
+func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(utils.RecoveryMiddleware)
 	router.Use(cors.Handler(cors.Options{
@@ -29,6 +30,9 @@ func NewChiRouter(authHandler *auth.Handler) *chi.Mux {
 		router.Use(authHandler.AuthMiddleware)
 		router.Post("/logout", authHandler.HandleLogout)
 		router.Get("/me", authHandler.HandleMe)
+		router.Get("/game/{gameID}", func(w http.ResponseWriter, r *http.Request) {})
+
+		router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 	})
 
 	// routes that don't need authentication

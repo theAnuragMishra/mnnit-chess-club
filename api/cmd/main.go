@@ -50,16 +50,15 @@ func setupAPI() {
 
 	authHandler := auth.NewHandler(queries)
 
-	router := routes.NewChiRouter(authHandler)
+	controller := control.NewController(queries)
+
+	router := routes.NewChiRouter(authHandler, controller)
 	srv := &http.Server{
 		Handler: router,
 		Addr:    ":" + portString,
 	}
 
 	// ws setup
-	controller := control.NewController(queries, authHandler)
-
-	router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 
 	log.Printf("Server starting on port: %v", portString)
 

@@ -10,7 +10,7 @@ import (
 
 type contextKey string
 
-const middlewareSentSession contextKey = "session"
+const MiddlewareSentSession contextKey = "session"
 
 func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		//}
 
 		// setting session context for use by the handler
-		ctx := context.WithValue(r.Context(), middlewareSentSession, session)
+		ctx := context.WithValue(r.Context(), MiddlewareSentSession, session)
 
 		// fmt.Println("passed middleware check")
 

@@ -144,7 +144,7 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 // a "/me" route to send userdata on app load
 
 func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(middlewareSentSession).(database.Session)
+	session := r.Context().Value(MiddlewareSentSession).(database.Session)
 
 	user, err := h.queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
