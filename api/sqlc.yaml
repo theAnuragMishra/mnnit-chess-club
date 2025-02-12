@@ -16,3 +16,16 @@ sql:
             go_type:
               import: "time"
               type: "Time"
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+            nullable: true
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              import: "time"
+              type: "Time"
+            nullable: true
+          - db_type: "pg_catalog.varchar"
+            go_type: "string"
+            nullable: true
