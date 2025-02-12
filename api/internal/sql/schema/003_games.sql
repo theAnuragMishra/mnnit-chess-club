@@ -19,5 +19,5 @@ CREATE TABLE moves (
 );
 
 -- +goose Down
-DROP TABLE games;
 DROP TABLE moves;
+DROP TABLE games;
