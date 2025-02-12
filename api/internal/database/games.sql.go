@@ -7,19 +7,20 @@ package database
 
 import (
 	"context"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const createGame = `-- name: CreateGame :one
 INSERT INTO games (white_player_id, black_player_id)
 VALUES ($1, $2)
-    RETURNING id
+RETURNING id
 `
 
 type CreateGameParams struct {
-	WhitePlayerID pgtype.UUID
-	BlackPlayerID pgtype.UUID
+	WhitePlayerID uuid.UUID
+	BlackPlayerID uuid.UUID
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, error) {
@@ -53,7 +54,7 @@ type GetGameMovesRow struct {
 	MoveFen      string
 }
 
-func (q *Queries) GetGameMoves(ctx context.Context, gameID pgtype.Int4) ([]GetGameMovesRow, error) {
+func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMovesRow, error) {
 	rows, err := q.db.Query(ctx, getGameMoves, gameID)
 	if err != nil {
 		return nil, err
@@ -104,10 +105,10 @@ ORDER BY ended_at DESC
 
 type GetPlayerGamesRow struct {
 	ID            int32
-	WhitePlayerID pgtype.UUID
-	BlackPlayerID pgtype.UUID
-	Result        pgtype.Text
-	EndedAt       pgtype.Timestamp
+	WhitePlayerID uuid.UUID
+	BlackPlayerID uuid.UUID
+	Result        string
+	EndedAt       time.Time
 }
 
 func (q *Queries) GetPlayerGames(ctx context.Context) ([]GetPlayerGamesRow, error) {
@@ -142,9 +143,9 @@ VALUES ($1,$2, $3, $4, $5)
 `
 
 type InsertMoveParams struct {
-	GameID       pgtype.Int4
+	GameID       int32
 	MoveNumber   int32
-	PlayerID     pgtype.UUID
+	PlayerID     uuid.UUID
 	MoveNotation string
 	MoveFen      string
 }

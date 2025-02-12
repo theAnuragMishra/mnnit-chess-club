@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CsrfToken struct {
@@ -19,21 +18,21 @@ type CsrfToken struct {
 
 type Game struct {
 	ID            int32
-	WhitePlayerID pgtype.UUID
-	BlackPlayerID pgtype.UUID
-	Result        pgtype.Text
-	CreatedAt     pgtype.Timestamp
-	EndedAt       pgtype.Timestamp
+	WhitePlayerID uuid.UUID
+	BlackPlayerID uuid.UUID
+	Result        string
+	CreatedAt     time.Time
+	EndedAt       time.Time
 }
 
 type Move struct {
 	ID           int32
-	GameID       pgtype.Int4
+	GameID       int32
 	MoveNumber   int32
-	PlayerID     pgtype.UUID
+	PlayerID     uuid.UUID
 	MoveNotation string
 	MoveFen      string
-	CreatedAt    pgtype.Timestamp
+	CreatedAt    time.Time
 }
 
 type Session struct {

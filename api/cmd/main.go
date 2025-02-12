@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/routes"
-	"log"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -24,7 +25,6 @@ func main() {
 }
 
 func setupAPI() {
-
 	// database setup
 	portString := os.Getenv("PORT")
 	if portString == "" {
@@ -39,7 +39,6 @@ func setupAPI() {
 	ctx := context.Background()
 
 	pool, err := pgxpool.New(ctx, dbURL)
-
 	if err != nil {
 		log.Fatal("can't connect to database")
 	}
@@ -57,8 +56,8 @@ func setupAPI() {
 		Addr:    ":" + portString,
 	}
 
-	//ws setup
-	controller := control.NewController(authHandler)
+	// ws setup
+	controller := control.NewController(queries, authHandler)
 
 	router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 

@@ -11,31 +11,33 @@ import (
 type Result string
 
 type Game struct {
-	ID              string
-	Player1Id       uuid.UUID
-	Player2Id       uuid.UUID
-	Player1Username string
-	Player2Username string
-	Board           *chess.Game
-	moveCount       int
-	Result          Result
+	ID                  int32
+	WhitePlayerID       uuid.UUID
+	BlackPlayerID       uuid.UUID
+	WhitePlayerUsername string
+	BlackPlayerUsername string
+	Board               *chess.Game
+	moveCount           int
+	Result              Result
 }
 
-func NewGame(player1ID uuid.UUID, player1Username string) *Game {
+func NewGame(id int32, player1ID uuid.UUID, player1Username string, player2ID uuid.UUID, player2Username string) *Game {
 	board := chess.NewGame()
 	return &Game{
-		ID:              uuid.New().String(),
-		Player1Id:       player1ID,
-		Player1Username: player1Username,
-		Board:           board,
+		ID:                  id,
+		WhitePlayerID:       player1ID,
+		WhitePlayerUsername: player1Username,
+		BlackPlayerID:       player2ID,
+		BlackPlayerUsername: player2Username,
+		Board:               board,
 	}
 }
 
 func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
-	if g.Board.Position().Turn() == chess.White && playerID != g.Player1Id {
+	if g.Board.Position().Turn() == chess.White && playerID != g.WhitePlayerID {
 		return "not your turn"
 	}
-	if g.Board.Position().Turn() == chess.Black && playerID != g.Player2Id {
+	if g.Board.Position().Turn() == chess.Black && playerID != g.BlackPlayerID {
 		return "not your turn"
 	}
 
