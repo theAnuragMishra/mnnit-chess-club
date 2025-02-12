@@ -1,7 +1,7 @@
 -- name: CreateGame :one
 INSERT INTO games (white_player_id, black_player_id)
 VALUES ($1, $2)
-    RETURNING id;
+RETURNING id;
 
 -- name: InsertMove :exec
 INSERT INTO moves (game_id, move_number, player_id, move_notation, move_fen)

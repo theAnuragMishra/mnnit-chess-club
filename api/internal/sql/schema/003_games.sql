@@ -10,7 +10,7 @@ CREATE TABLE games (
 
 CREATE TABLE moves (
     id SERIAL PRIMARY KEY ,
-    game_id INT REFERENCES games(id) ON DELETE CASCADE,
+    game_id INT REFERENCES games(id) ON DELETE CASCADE NOT NULL,
     move_number INT NOT NULL,
     player_id UUID REFERENCES users(id) ON DELETE CASCADE,
     move_notation VARCHAR(10) NOT NULL,
