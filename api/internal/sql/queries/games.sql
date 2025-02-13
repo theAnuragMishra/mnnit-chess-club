@@ -7,6 +7,9 @@ RETURNING id;
 INSERT INTO moves (game_id, move_number, player_id, move_notation, move_fen)
 VALUES ($1,$2, $3, $4, $5);
 
+-- name: GetGameInfo :one
+SELECT * FROM games WHERE id = $1;
+
 -- name: GetGameMoves :many
 SELECT move_number, move_notation, move_fen
 FROM moves

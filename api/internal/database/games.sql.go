@@ -41,6 +41,24 @@ func (q *Queries) EndGameWithResult(ctx context.Context) error {
 	return err
 }
 
+const getGameInfo = `-- name: GetGameInfo :one
+SELECT id, white_player_id, black_player_id, result, created_at, ended_at FROM games WHERE id = $1
+`
+
+func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
+	row := q.db.QueryRow(ctx, getGameInfo, id)
+	var i Game
+	err := row.Scan(
+		&i.ID,
+		&i.WhitePlayerID,
+		&i.BlackPlayerID,
+		&i.Result,
+		&i.CreatedAt,
+		&i.EndedAt,
+	)
+	return i, err
+}
+
 const getGameMoves = `-- name: GetGameMoves :many
 SELECT move_number, move_notation, move_fen
 FROM moves
