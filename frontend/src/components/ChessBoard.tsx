@@ -11,6 +11,7 @@ const ChessBoard: React.FC = () => {
   const chess = useChessStore((state) => state.board);
   const updateHistory = useChessStore((state) => state.updateHistory);
   const setGround = useChessStore((state) => state.setGround);
+  const updateGround = useChessStore((state) => state.updateGround);
 
   useEffect(() => {
     if (!boardRef.current) return;
@@ -28,11 +29,7 @@ const ChessBoard: React.FC = () => {
             const move = chess.move({ from: orig, to: dest });
             updateHistory(move.san);
             // sendMessage({ type: "move", payload: { MoveStr: moveStr } });
-            ground.set({
-              fen: chess.fen(),
-              turnColor: chess.turn() === "w" ? "white" : "black",
-              movable: { dests: getValidMoves(chess) },
-            });
+            updateGround();
           },
         },
       },
