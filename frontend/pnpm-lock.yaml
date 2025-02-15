@@ -23,6 +23,9 @@ importers:
       chess.js:
         specifier: ^1.0.0
         version: 1.0.0
+      chessground:
+        specifier: ^9.1.1
+        version: 9.1.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -744,6 +747,9 @@ packages:
 
   chess.js@1.0.0:
     resolution: {integrity: sha512-zHaSRub6xkUXxvX9lqgovwRiBvbOmVCTh47rZ0I/HVyCiNc0T5bVLwzshL5X6JtrP+rN/CTmIxdpFr943eP97Q==}
+
+  chessground@9.1.1:
+    resolution: {integrity: sha512-X4xrBICrixaLATCn+jGEzk58UXcas+9QqJnwVq9nT7AaX2M1CJLMA0vC7noG0s6Tr2zoAHZ1FOviE5b05MgduQ==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -1958,6 +1964,8 @@ snapshots:
       supports-color: 7.2.0
 
   chess.js@1.0.0: {}
+
+  chessground@9.1.1: {}
 
   color-convert@2.0.1:
     dependencies:

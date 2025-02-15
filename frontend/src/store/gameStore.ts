@@ -1,50 +1,40 @@
 import { create } from "zustand";
 import { Chess } from "chess.js";
+import { Api } from "chessground/api";
 
 interface ChessState {
     board: Chess;
+    ground: Api | null;
     result: string | null;
     gameID: string;
     player1username: string;
     player2username: string;
-    turn: "white" | "black";
     moveHistory: string[];
-    makeMove: (move: string) => boolean;  // Returns true if move is valid
+    updateHistory: (move: string) => void;
+    setGround: (ground: Api) => void;
     resetGame: () => void;
 }
 
 const useChessStore = create<ChessState>((set, get) => ({
     player1username: "",
     player2username: "",
+    ground: null,
     gameID: "",
     result: null,
-    board: new Chess(), // Keep a single Chess instance
-    turn: "white",
+    board: new Chess(),
     moveHistory: [],
 
-    setResult: (result:string) => set({result: result}),
-    makeMove: (move: string) => {
-        const currentBoard = get().board;  // Get the current board (mutable)
-        const moveResult = currentBoard.move(move); // Try making the move
+    setGround: (ground: Api) => set({ ground }),
 
-        if (moveResult) {
-            set((state) => ({
-                board: currentBoard, // Reuse existing instance
-                turn: state.turn === "white" ? "black" : "white",
-                moveHistory: [...state.moveHistory, move],
-            }));
-            return true;
-        } else {
-            console.warn("Invalid move:", move);
-            return false;
-        }
+    updateHistory: (move: string) => {
+        set((state) => ({ moveHistory: [...state.moveHistory, move] }));
+        console.log(get().moveHistory);
     },
-
-    resetGame: () => set(() => ({
-        board: new Chess(), // Reset with a new instance only when needed
-        turn: "white",
-        moveHistory: [],
-    })),
+    resetGame: () =>
+        set(() => ({
+            board: new Chess(),
+            moveHistory: [],
+        })),
 }));
 
 export default useChessStore;

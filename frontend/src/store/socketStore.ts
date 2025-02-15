@@ -1,11 +1,6 @@
 import { create } from "zustand";
 import useChessStore from "./gameStore.ts";
 
-interface Move {
-  MoveStr: string;
-  GameID: string;
-}
-
 // Define WebSocket message type
 interface Message {
   type: string;
