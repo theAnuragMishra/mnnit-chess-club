@@ -6,15 +6,12 @@ import (
 	"github.com/notnil/chess"
 )
 
-type Result string
-
 type Game struct {
 	ID        int32
 	WhiteID   int32
 	BlackID   int32
 	Board     *chess.Game
 	moveCount int
-	Result    Result
 }
 
 func NewGame(player1 int32, player2 int32) *Game {
@@ -27,34 +24,34 @@ func NewGame(player1 int32, player2 int32) *Game {
 	}
 }
 
-func (g *Game) MakeMove(player int32, move string) Result {
+func (g *Game) MakeMove(player int32, move string) (string, string) {
 	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
-		return "not your turn"
+		return "not your turn", ""
 	}
 	if g.Board.Position().Turn() == chess.Black && player != g.BlackID {
-		return "not your turn"
+		return "not your turn", ""
 	}
 
-	if g.Result != "" {
-		log.Println("Trying to make a move after game has finished")
-		return g.Result
+	if g.Board.Outcome() != "*" {
+
+		return "game has ended", string(g.Board.Outcome())
 	}
+
 	if err := g.Board.MoveStr(move); err != nil {
 		log.Println(err)
-		return "error making move"
+		return "error making move", ""
 	}
 	log.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {
-		g.Result = Result(g.Board.Outcome())
-		return Result(g.Board.Outcome())
+		return "game over with result", string(g.Board.Outcome())
 	}
 
 	// fmt.Println(g.Board.Position())
 	// fmt.Println(g.Board.Position().Board())
 	// fmt.Println(g.Board)
 
-	return "move successful"
+	return "move successful", ""
 
 	// moveStr := "{\"move\": " + move + "}"
 

@@ -190,3 +190,19 @@ func (q *Queries) InsertMove(ctx context.Context, arg InsertMoveParams) error {
 	)
 	return err
 }
+
+const updateGameFEN = `-- name: UpdateGameFEN :exec
+UPDATE games
+SET fen = $1
+WHERE id = $2
+`
+
+type UpdateGameFENParams struct {
+	Fen string
+	ID  int32
+}
+
+func (q *Queries) UpdateGameFEN(ctx context.Context, arg UpdateGameFENParams) error {
+	_, err := q.db.Exec(ctx, updateGameFEN, arg.Fen, arg.ID)
+	return err
+}

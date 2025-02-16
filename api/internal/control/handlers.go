@@ -143,7 +143,17 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not started")
 	}
 
-	moveResult := foundGame.MakeMove(client.UserID, move.MoveStr)
+	message, result := foundGame.MakeMove(client.UserID, move.MoveStr)
+
+	if message == "game over with result" {
+		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
+			Result: result,
+			ID:     foundGame.ID,
+		})
+		if err != nil {
+			log.Println("error ending game with result", err)
+		}
+	}
 	var x int32
 	if foundGame.Board.Position().Turn() == 'w' {
 		x = foundGame.BlackID
@@ -160,15 +170,23 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		log.Println(err)
 	}
 
+	err := c.Queries.UpdateGameFEN(context.Background(), database.UpdateGameFENParams{
+		Fen: foundGame.Board.FEN(),
+		ID:  foundGame.ID,
+	})
+	if err != nil {
+		log.Println("error updating game fen", err)
+	}
+
 	//log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]interface{}{"Result": moveResult})
+	payload, err := json.Marshal(map[string]interface{}{"fen": foundGame.Board.FEN(), "Result": result, "message": message})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
 	}
 	e := socket.Event{
-		Type:    "Result_Alert",
+		Type:    "Move_Response",
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.Broadcast(e)

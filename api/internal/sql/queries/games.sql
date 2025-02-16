@@ -16,6 +16,11 @@ FROM moves
 WHERE game_id = $1
 ORDER BY move_number;
 
+-- name: UpdateGameFEN :exec
+UPDATE games
+SET fen = $1
+WHERE id = $2;
+
 -- name: EndGameWithResult :exec
 UPDATE games
 SET result = $1, ended_at = NOW()
