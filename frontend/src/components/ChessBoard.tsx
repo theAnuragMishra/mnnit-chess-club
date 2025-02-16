@@ -26,6 +26,7 @@ export default function ChessBoard(props: { gameID: number }) {
       fen: chess.fen(),
       orientation: white == username ? "white" : "black",
       draggable: { enabled: true },
+      turnColor: chess.turn() == "w" ? "white" : "black",
       // viewOnly: result !== "",
       movable: {
         free: false,
