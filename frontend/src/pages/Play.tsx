@@ -1,7 +1,7 @@
 import useWebSocketStore from "../store/socketStore"; // Import the Zustand store
 import { useParams } from "react-router";
 import useChessStore from "../store/gameStore.ts";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import ResultModal from "../components/ResultModal.tsx";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getBaseURL } from "../utils/urlUtils.ts";
@@ -26,7 +26,7 @@ export default function Play() {
 
       setUserNames(x.WhiteUsername, x.BlackUsername);
       updateFen(x.Fen);
-      setResult(x.result);
+      setResult(x.Result);
       updateGround();
 
       return x; // Convert to JSON
@@ -43,11 +43,14 @@ export default function Play() {
   useEffect(() => {
     connect(); // Ensure WebSocket stays connected
   }, [connect]);
+  const [modalOpen, setModalOpen] = useState(true);
 
   if (!params.gameID) return <div>Bad Request</div>;
   return (
     <div className="text-2xl px-10 pb-10">
-      {result && <ResultModal />}
+      {result && modalOpen && (
+        <ResultModal onClose={() => setModalOpen(false)} />
+      )}
       <div className="w-full flex items-center justify-center">
         <div className="mt-5 flex flex-col items-center justify-center">
           <p className="w-full mb-1">{data.WhiteUsername}</p>
