@@ -38,7 +38,7 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, 
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, ended_at = NOW()
+SET result = $1
 WHERE id = $2
 `
 

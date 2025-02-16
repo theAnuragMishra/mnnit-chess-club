@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 
@@ -72,7 +73,6 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 			BlackUsername: user.Username,
 			Fen:           createdGame.Board.FEN(),
 		})
-
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -116,11 +116,10 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fmt.Println(c.GameManager)
-
 }
 
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
-	//fmt.Println(string(event.Payload))
+	// fmt.Println(string(event.Payload))
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
 		log.Println("Invalid move payload")
@@ -146,6 +145,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	message, result := foundGame.MakeMove(client.UserID, move.MoveStr)
 
 	if message == "game over with result" {
+		// log.Println("game ho gya over")
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result: result,
 			ID:     foundGame.ID,
@@ -178,7 +178,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		log.Println("error updating game fen", err)
 	}
 
-	//log.Println(foundGame.Board.Position().Turn())
+	// log.Println(foundGame.Board.Position().Turn())
 
 	payload, err := json.Marshal(map[string]interface{}{"fen": foundGame.Board.FEN(), "Result": result, "message": message})
 	if err != nil {
@@ -201,9 +201,8 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 	}
 	gameID := int32(gameIDStr)
-	//fmt.Println(gameID)
+	// fmt.Println(gameID)
 	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
-
 	if err != nil {
 		log.Println(err)
 

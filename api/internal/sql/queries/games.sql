@@ -26,7 +26,7 @@ WHERE id = $2;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, ended_at = NOW()
+SET result = $1
 WHERE id = $2;
 
 -- name: GetPlayerGames :many
