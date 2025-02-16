@@ -10,6 +10,9 @@ VALUES ($1,$2, $3, $4, $5);
 -- name: GetGameInfo :one
 SELECT * FROM games WHERE id = $1;
 
+-- name: GetOngoingGames :many
+SELECT * FROM games WHERE result = 'ongoing';
+
 -- name: GetGameMoves :many
 SELECT move_number, move_notation, move_fen
 FROM moves

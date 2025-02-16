@@ -129,6 +129,39 @@ func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMove
 	return i, err
 }
 
+const getOngoingGames = `-- name: GetOngoingGames :many
+SELECT id, white_id, black_id, white_username, black_username, fen, result, created_at FROM games WHERE result = 'ongoing'
+`
+
+func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
+	rows, err := q.db.Query(ctx, getOngoingGames)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Game
+	for rows.Next() {
+		var i Game
+		if err := rows.Scan(
+			&i.ID,
+			&i.WhiteID,
+			&i.BlackID,
+			&i.WhiteUsername,
+			&i.BlackUsername,
+			&i.Fen,
+			&i.Result,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPlayerGames = `-- name: GetPlayerGames :many
 SELECT id, white_username, black_username, result
 FROM games

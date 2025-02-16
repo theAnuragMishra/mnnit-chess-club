@@ -1,7 +1,9 @@
 package control
 
 import (
+	"context"
 	"errors"
+	"log"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -19,6 +21,15 @@ func NewController(queries *database.Queries) *Controller {
 	c.SocketManager = socket.NewManager(c.HandleEvent)
 	c.GameManager = game.NewManager()
 	c.Queries = queries
+
+	games, err := queries.GetOngoingGames(context.Background())
+	if err != nil {
+		log.Println("error getting ongoing games", err)
+	}
+	for _, ongoingGame := range games {
+
+		c.GameManager.Games = append(c.GameManager.Games, game.DatabaseGameToGame(&ongoingGame))
+	}
 
 	return &c
 }
