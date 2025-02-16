@@ -17,10 +17,10 @@ type Game struct {
 	Result    Result
 }
 
-func NewGame(id int32, player1 int32, player2 int32) *Game {
+func NewGame(player1 int32, player2 int32) *Game {
 	board := chess.NewGame()
 	return &Game{
-		ID:      id,
+
 		WhiteID: player1,
 		BlackID: player2,
 		Board:   board,

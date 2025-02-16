@@ -1,6 +1,6 @@
 -- name: CreateGame :one
-INSERT INTO games (white_id, black_id, white_username, black_username)
-VALUES ($1, $2, $3, $4)
+INSERT INTO games (white_id, black_id, white_username, black_username, fen)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id;
 
 -- name: InsertMove :exec

@@ -20,6 +20,7 @@ type Game struct {
 	BlackID       *int32
 	WhiteUsername string
 	BlackUsername string
+	Fen           string
 	Result        string
 	CreatedAt     time.Time
 }

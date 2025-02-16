@@ -63,16 +63,22 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 		if c.GameManager.PendingUserName == user.Username {
 			utils.RespondWithError(w, http.StatusBadRequest, "You can't play both sides")
 		}
+		createdGame := game.NewGame(c.GameManager.PendingUserID, session.UserID)
 
 		id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+			WhiteID:       &c.GameManager.PendingUserID,
+			BlackID:       &session.UserID,
 			WhiteUsername: c.GameManager.PendingUserName,
 			BlackUsername: user.Username,
+			Fen:           createdGame.Board.FEN(),
 		})
+
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		createdGame := game.NewGame(id, c.GameManager.PendingUserID, session.UserID)
+
+		createdGame.ID = id
 		c.GameManager.Games = append(c.GameManager.Games, createdGame)
 
 		thisClient := c.SocketManager.FindClientByUserID(session.UserID)

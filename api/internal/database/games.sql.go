@@ -10,8 +10,8 @@ import (
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO games (white_id, black_id, white_username, black_username)
-VALUES ($1, $2, $3, $4)
+INSERT INTO games (white_id, black_id, white_username, black_username, fen)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 
@@ -20,6 +20,7 @@ type CreateGameParams struct {
 	BlackID       *int32
 	WhiteUsername string
 	BlackUsername string
+	Fen           string
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, error) {
@@ -28,6 +29,7 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, 
 		arg.BlackID,
 		arg.WhiteUsername,
 		arg.BlackUsername,
+		arg.Fen,
 	)
 	var id int32
 	err := row.Scan(&id)
@@ -51,7 +53,7 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, white_id, black_id, white_username, black_username, result, created_at FROM games WHERE id = $1
+SELECT id, white_id, black_id, white_username, black_username, fen, result, created_at FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -63,6 +65,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 		&i.BlackID,
 		&i.WhiteUsername,
 		&i.BlackUsername,
+		&i.Fen,
 		&i.Result,
 		&i.CreatedAt,
 	)
