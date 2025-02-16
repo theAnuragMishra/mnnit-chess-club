@@ -6,12 +6,14 @@ import ResultModal from "../components/ResultModal.tsx";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getBaseURL } from "../utils/urlUtils.ts";
 import ChessBoard from "../components/ChessBoard.tsx";
+import useAuthStore from "../store/authStore.ts";
 
 export default function Play() {
   const params = useParams();
   const { connect } = useWebSocketStore();
   const { setResult, updateFen, updateGround, result, setUserNames } =
     useChessStore();
+  const username = useAuthStore((state) => state.user?.username);
 
   const { data } = useSuspenseQuery({
     queryKey: [params.gameID],
@@ -26,7 +28,9 @@ export default function Play() {
 
       setUserNames(x.WhiteUsername, x.BlackUsername);
       updateFen(x.Fen);
-      setResult(x.Result);
+      if (x.Result !== "ongoing") {
+        setResult(x.Result);
+      }
       updateGround();
 
       return x; // Convert to JSON
@@ -53,9 +57,13 @@ export default function Play() {
       )}
       <div className="w-full flex items-center justify-center">
         <div className="mt-5 flex flex-col items-center justify-center">
-          <p className="w-full mb-1">{data.WhiteUsername}</p>
+          <p className="w-full mb-1">
+            {data.WhiteUsername !== username
+              ? data.WhiteUsername
+              : data.BlackUsername}
+          </p>
           <ChessBoard gameID={Number(params.gameID)} />
-          <p className="w-full mb-1">{data.BlackUsername}</p>
+          <p className="w-full mb-1">{username}</p>
         </div>
       </div>
     </div>
