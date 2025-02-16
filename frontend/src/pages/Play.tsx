@@ -46,15 +46,14 @@ export default function Play() {
 
   if (!params.gameID) return <div>Bad Request</div>;
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="text-2xl px-10 pb-10">
       {result && <ResultModal />}
-      <h2>Play</h2>
-      <div>
-        White: {data.WhiteUsername} Black: {data.BlackUsername}
-      </div>
-      <div>Game ID: {params.gameID}</div>
-      <div className="flex justify-center items-center mt-10">
-        <ChessBoard gameID={Number(params.gameID)} />
+      <div className="w-full flex items-center justify-center">
+        <div className="mt-5 flex flex-col items-center justify-center">
+          <p className="w-full mb-1">{data.WhiteUsername}</p>
+          <ChessBoard gameID={Number(params.gameID)} />
+          <p className="w-full mb-1">{data.BlackUsername}</p>
+        </div>
       </div>
     </div>
   );
