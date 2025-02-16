@@ -7,24 +7,28 @@ package database
 
 import (
 	"context"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO games (white_player_id, black_player_id)
-VALUES ($1, $2)
+INSERT INTO games (white_id, black_id, white_username, black_username)
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateGameParams struct {
-	WhitePlayerID uuid.UUID
-	BlackPlayerID uuid.UUID
+	WhiteID       *int32
+	BlackID       *int32
+	WhiteUsername string
+	BlackUsername string
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, error) {
-	row := q.db.QueryRow(ctx, createGame, arg.WhitePlayerID, arg.BlackPlayerID)
+	row := q.db.QueryRow(ctx, createGame,
+		arg.WhiteID,
+		arg.BlackID,
+		arg.WhiteUsername,
+		arg.BlackUsername,
+	)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -32,17 +36,22 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, 
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = '1-0', ended_at = NOW()
-WHERE id = 1
+SET result = $1, ended_at = NOW()
+WHERE id = $2
 `
 
-func (q *Queries) EndGameWithResult(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, endGameWithResult)
+type EndGameWithResultParams struct {
+	Result string
+	ID     int32
+}
+
+func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultParams) error {
+	_, err := q.db.Exec(ctx, endGameWithResult, arg.Result, arg.ID)
 	return err
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, white_player_id, black_player_id, result, created_at, ended_at FROM games WHERE id = $1
+SELECT id, white_id, black_id, white_username, black_username, result, created_at FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -50,11 +59,12 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 	var i Game
 	err := row.Scan(
 		&i.ID,
-		&i.WhitePlayerID,
-		&i.BlackPlayerID,
+		&i.WhiteID,
+		&i.BlackID,
+		&i.WhiteUsername,
+		&i.BlackUsername,
 		&i.Result,
 		&i.CreatedAt,
-		&i.EndedAt,
 	)
 	return i, err
 }
@@ -93,11 +103,12 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMove
 }
 
 const getLatestMove = `-- name: GetLatestMove :one
+
 SELECT move_number, move_notation, move_fen
 FROM moves
-WHERE game_id = 1
+WHERE game_id = $1
 ORDER BY move_number DESC
-LIMIT 1
+LIMIT $1
 `
 
 type GetLatestMoveRow struct {
@@ -106,31 +117,30 @@ type GetLatestMoveRow struct {
 	MoveFen      string
 }
 
-func (q *Queries) GetLatestMove(ctx context.Context) (GetLatestMoveRow, error) {
-	row := q.db.QueryRow(ctx, getLatestMove)
+// AND ended_at IS NOT NULL
+// ORDER BY ended_at DESC;
+func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMoveRow, error) {
+	row := q.db.QueryRow(ctx, getLatestMove, limit)
 	var i GetLatestMoveRow
 	err := row.Scan(&i.MoveNumber, &i.MoveNotation, &i.MoveFen)
 	return i, err
 }
 
 const getPlayerGames = `-- name: GetPlayerGames :many
-SELECT id, white_player_id, black_player_id, result, ended_at
+SELECT id, white_username, black_username, result
 FROM games
-WHERE (white_player_id = 1 OR black_player_id = 1)
-AND ended_at IS NOT NULL
-ORDER BY ended_at DESC
+WHERE (white_username = $1 OR black_username = $1)
 `
 
 type GetPlayerGamesRow struct {
 	ID            int32
-	WhitePlayerID uuid.UUID
-	BlackPlayerID uuid.UUID
+	WhiteUsername string
+	BlackUsername string
 	Result        string
-	EndedAt       time.Time
 }
 
-func (q *Queries) GetPlayerGames(ctx context.Context) ([]GetPlayerGamesRow, error) {
-	rows, err := q.db.Query(ctx, getPlayerGames)
+func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername string) ([]GetPlayerGamesRow, error) {
+	rows, err := q.db.Query(ctx, getPlayerGames, whiteUsername)
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +150,9 @@ func (q *Queries) GetPlayerGames(ctx context.Context) ([]GetPlayerGamesRow, erro
 		var i GetPlayerGamesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.WhitePlayerID,
-			&i.BlackPlayerID,
+			&i.WhiteUsername,
+			&i.BlackUsername,
 			&i.Result,
-			&i.EndedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -163,7 +172,7 @@ VALUES ($1,$2, $3, $4, $5)
 type InsertMoveParams struct {
 	GameID       int32
 	MoveNumber   int32
-	PlayerID     uuid.UUID
+	PlayerID     *int32
 	MoveNotation string
 	MoveFen      string
 }

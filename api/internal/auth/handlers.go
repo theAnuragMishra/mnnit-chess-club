@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
@@ -44,11 +43,10 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.queries.CreateUser(r.Context(), database.CreateUserParams{
-		ID:           uuid.New(),
 		Username:     username,
 		PasswordHash: hashedPassword,
-		CreatedAt:    time.Now().UTC(),
-		UpdatedAt:    time.Now().UTC(),
+
+		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())

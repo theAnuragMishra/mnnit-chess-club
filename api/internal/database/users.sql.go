@@ -8,31 +8,21 @@ package database
 import (
 	"context"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :exec
-INSERT INTO users(id, created_at, updated_at, username, password_hash)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users(updated_at, username, password_hash)
+VALUES ($1, $2, $3)
 `
 
 type CreateUserParams struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Username     string
 	PasswordHash string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser,
-		arg.ID,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-		arg.Username,
-		arg.PasswordHash,
-	)
+	_, err := q.db.Exec(ctx, createUser, arg.UpdatedAt, arg.Username, arg.PasswordHash)
 	return err
 }
 
@@ -40,7 +30,7 @@ const getUserByUserID = `-- name: GetUserByUserID :one
 SELECT id, created_at, updated_at, username, password_hash FROM users WHERE id = $1
 `
 
-func (q *Queries) GetUserByUserID(ctx context.Context, id uuid.UUID) (User, error) {
+func (q *Queries) GetUserByUserID(ctx context.Context, id int32) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByUserID, id)
 	var i User
 	err := row.Scan(

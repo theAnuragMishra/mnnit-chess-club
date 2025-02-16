@@ -8,8 +8,6 @@ package database
 import (
 	"context"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const createCSRFToken = `-- name: CreateCSRFToken :exec
@@ -35,7 +33,7 @@ VALUES ($1, $2, $3)
 
 type CreateSessionParams struct {
 	ID        string
-	UserID    uuid.UUID
+	UserID    int32
 	ExpiresAt time.Time
 }
 

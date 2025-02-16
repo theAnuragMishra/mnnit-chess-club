@@ -1,11 +1,9 @@
 package game
 
-import "github.com/google/uuid"
-
 type Manager struct {
 	Games           []*Game
-	PendingUser     uuid.UUID
 	PendingUserName string
+	PendingUserID   int32
 	// Users         []string
 }
 

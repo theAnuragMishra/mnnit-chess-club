@@ -1,8 +1,6 @@
 package socket
 
-import "github.com/google/uuid"
-
-func (m *Manager) FindClientByUserID(id uuid.UUID) *Client {
+func (m *Manager) FindClientByUserID(id int32) *Client {
 	if client, ok := m.clients[id]; ok {
 		return client
 	}

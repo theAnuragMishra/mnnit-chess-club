@@ -1,43 +1,37 @@
 package game
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/google/uuid"
 	"github.com/notnil/chess"
 )
 
 type Result string
 
 type Game struct {
-	ID                  int32
-	WhitePlayerID       uuid.UUID
-	BlackPlayerID       uuid.UUID
-	WhitePlayerUsername string
-	BlackPlayerUsername string
-	Board               *chess.Game
-	moveCount           int
-	Result              Result
+	ID        int32
+	WhiteID   int32
+	BlackID   int32
+	Board     *chess.Game
+	moveCount int
+	Result    Result
 }
 
-func NewGame(id int32, player1ID uuid.UUID, player1Username string, player2ID uuid.UUID, player2Username string) *Game {
+func NewGame(id int32, player1 int32, player2 int32) *Game {
 	board := chess.NewGame()
 	return &Game{
-		ID:                  id,
-		WhitePlayerID:       player1ID,
-		WhitePlayerUsername: player1Username,
-		BlackPlayerID:       player2ID,
-		BlackPlayerUsername: player2Username,
-		Board:               board,
+		ID:      id,
+		WhiteID: player1,
+		BlackID: player2,
+		Board:   board,
 	}
 }
 
-func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
-	if g.Board.Position().Turn() == chess.White && playerID != g.WhitePlayerID {
+func (g *Game) MakeMove(player int32, move string) Result {
+	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
 		return "not your turn"
 	}
-	if g.Board.Position().Turn() == chess.Black && playerID != g.BlackPlayerID {
+	if g.Board.Position().Turn() == chess.Black && player != g.BlackID {
 		return "not your turn"
 	}
 
@@ -49,7 +43,7 @@ func (g *Game) MakeMove(playerID uuid.UUID, move string) Result {
 		log.Println(err)
 		return "error making move"
 	}
-	fmt.Println(g.Board.Position().Board().Draw())
+	log.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {
 		g.Result = Result(g.Board.Outcome())

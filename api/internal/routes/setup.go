@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -39,7 +39,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	router.Post("/login", authHandler.HandleLogin)
 	router.Post("/meow", func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
-		fmt.Println(username)
+		log.Println(username)
 	})
 
 	// game subroute

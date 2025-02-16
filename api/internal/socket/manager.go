@@ -1,12 +1,10 @@
 package socket
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
@@ -77,17 +75,17 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 // addClient will add clients to our clientList
-func (m *Manager) addClient(id uuid.UUID, client *Client) {
+func (m *Manager) addClient(id int32, client *Client) {
 	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
-	fmt.Println("adding client")
+	log.Println("adding client")
 	// Add Client
 	m.clients[id] = client
 }
 
 // removeClient will remove the client and clean up
-func (m *Manager) removeClient(id uuid.UUID) {
+func (m *Manager) removeClient(id int32) {
 	m.Lock()
 	defer m.Unlock()
 

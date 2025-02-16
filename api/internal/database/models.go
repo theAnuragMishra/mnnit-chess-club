@@ -6,8 +6,6 @@ package database
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type CsrfToken struct {
@@ -18,18 +16,19 @@ type CsrfToken struct {
 
 type Game struct {
 	ID            int32
-	WhitePlayerID uuid.UUID
-	BlackPlayerID uuid.UUID
+	WhiteID       *int32
+	BlackID       *int32
+	WhiteUsername string
+	BlackUsername string
 	Result        string
 	CreatedAt     time.Time
-	EndedAt       time.Time
 }
 
 type Move struct {
 	ID           int32
 	GameID       int32
 	MoveNumber   int32
-	PlayerID     uuid.UUID
+	PlayerID     *int32
 	MoveNotation string
 	MoveFen      string
 	CreatedAt    time.Time
@@ -37,12 +36,12 @@ type Move struct {
 
 type Session struct {
 	ID        string
-	UserID    uuid.UUID
+	UserID    int32
 	ExpiresAt time.Time
 }
 
 type User struct {
-	ID           uuid.UUID
+	ID           int32
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Username     string

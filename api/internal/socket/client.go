@@ -4,25 +4,24 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 // ClientList is a map used to help manage a map of clients
-type ClientList map[uuid.UUID]*Client
+type ClientList map[int32]*Client
 
 // Client is a websocket client, basically a frontend visitor
 type Client struct {
 	// the websocket connection
 	connection *websocket.Conn
-	UserID     uuid.UUID
+	UserID     int32
 	// manager is the manager used to manage the client
 	manager *Manager
 	egress  chan Event
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
-func NewClient(conn *websocket.Conn, manager *Manager, userID uuid.UUID) *Client {
+func NewClient(conn *websocket.Conn, manager *Manager, userID int32) *Client {
 	return &Client{
 		UserID:     userID,
 		connection: conn,

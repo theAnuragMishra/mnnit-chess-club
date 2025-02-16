@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"log"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
-	"github.com/google/uuid"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
@@ -31,13 +29,14 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
 
-	fmt.Println("inside init game :)")
+	log.Println("inside init game :)")
 
 	// if there's no pending game, create one, else, add the player to the game
-	if c.GameManager.PendingUser == uuid.Nil {
-		fmt.Println("no pending game, creating...")
-		c.GameManager.PendingUser = session.UserID
+	if c.GameManager.PendingUserID == 0 {
+		log.Println("no pending game, creating...")
 		c.GameManager.PendingUserName = user.Username
+		c.GameManager.PendingUserID = session.UserID
+
 		//newGame := game.NewGame(client.UserID, user.Username)
 		//c.GameManager.PendingGameID = newGame.ID
 		//c.GameManager.Games = append(c.GameManager.Games, newGame)
@@ -61,25 +60,25 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 		// client.Send(e)
 	} else {
 
-		if c.GameManager.PendingUser == session.UserID {
+		if c.GameManager.PendingUserName == user.Username {
 			utils.RespondWithError(w, http.StatusBadRequest, "You can't play both sides")
 		}
 
 		id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-			WhitePlayerID: c.GameManager.PendingUser,
-			BlackPlayerID: session.UserID,
+			WhiteUsername: c.GameManager.PendingUserName,
+			BlackUsername: user.Username,
 		})
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		createdGame := game.NewGame(id, c.GameManager.PendingUser, c.GameManager.PendingUserName, session.UserID, user.Username)
+		createdGame := game.NewGame(id, c.GameManager.PendingUserID, session.UserID)
 		c.GameManager.Games = append(c.GameManager.Games, createdGame)
 
 		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
-		otherClient := c.SocketManager.FindClientByUserID(c.GameManager.PendingUser)
+		otherClient := c.SocketManager.FindClientByUserID(c.GameManager.PendingUserID)
 		if thisClient == nil || otherClient == nil {
-			fmt.Println("player not found")
+			log.Println("player not found")
 			return
 		}
 
@@ -91,7 +90,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 			"player2username": user.Username,
 		}
 
-		c.GameManager.PendingUser = uuid.Nil
+		c.GameManager.PendingUserID = 0
 		c.GameManager.PendingUserName = ""
 
 		rawPayload, err := json.Marshal(payload)
@@ -115,7 +114,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
-	fmt.Println(string(event.Payload))
+	//fmt.Println(string(event.Payload))
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
 		log.Println("Invalid move payload")
@@ -134,11 +133,28 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	if foundGame.WhitePlayerID == uuid.Nil || foundGame.BlackPlayerID == uuid.Nil {
+	if foundGame.WhiteID == 0 || foundGame.BlackID == 0 {
 		return errors.New("game not started")
 	}
 
 	moveResult := foundGame.MakeMove(client.UserID, move.MoveStr)
+	var x int32
+	if foundGame.Board.Position().Turn() == 'w' {
+		x = foundGame.BlackID
+	} else {
+		x = foundGame.WhiteID
+	}
+	if err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
+		GameID:       gameID,
+		MoveNumber:   int32((len(foundGame.Board.MoveHistory())-1)/2 + 1),
+		PlayerID:     &x,
+		MoveNotation: move.MoveStr,
+		MoveFen:      foundGame.Board.FEN(),
+	}); err != nil {
+		log.Println(err)
+	}
+
+	//log.Println(foundGame.Board.Position().Turn())
 
 	payload, err := json.Marshal(map[string]interface{}{"Result": moveResult})
 	if err != nil {
@@ -157,14 +173,15 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameIDStr, err := strconv.ParseInt(chi.URLParam(r, "gameID"), 10, 32)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 	}
 	gameID := int32(gameIDStr)
-	fmt.Println(gameID)
+	//fmt.Println(gameID)
 	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
+
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 	}
