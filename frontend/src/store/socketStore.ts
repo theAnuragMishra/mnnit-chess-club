@@ -15,7 +15,7 @@ interface WebSocketState {
 }
 
 // Create Zustand store
-const useWebSocketStore = create<WebSocketState>((set, get) => {
+const useWebSocketStore = create<WebSocketState>(() => {
   let socket: WebSocket | null = null;
 
   return {
@@ -29,25 +29,25 @@ const useWebSocketStore = create<WebSocketState>((set, get) => {
       socket.onerror = (error) => console.error("WebSocket Error:", error);
       socket.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        if (data.type === "move") {
-          useChessStore.getState().makeMove(data.move);
-        }
+
         if (data.type === "Init_Game") {
           console.log(data);
-          useChessStore.setState((state) => ({
+          useChessStore.setState(() => ({
             gameID: data.payload.GameID,
-            player1username: data.payload.player1username,
-            player2username: data.payload.player2username,
+            whiteusername: data.payload.WhiteUsername,
+            blackusername: data.payload.BlackUsername,
           }));
         }
-        if (data.type === "Result_Alert") {
+        if (data.type === "Move_Response") {
           console.log(data);
-          if (data.payload.Result === "1-0")
-            useChessStore.setState((state) => ({ result: "1-0" }));
-          else if (data.payload.Result === "0-1")
-            useChessStore.setState((state) => ({ result: "0-1" }));
-          else if (data.payload.Result === "1/2-1/2")
-            useChessStore.setState((state) => ({ result: "1/2-1/2" }));
+
+          const { updateGround, updateFen } = useChessStore.getState();
+          updateFen(data.payload.fen);
+          updateGround();
+
+          if (data.payload.Result !== "") {
+            useChessStore.setState(() => ({ result: data.payload.Result }));
+          }
         }
       };
     },

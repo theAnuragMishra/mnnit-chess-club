@@ -10,7 +10,6 @@ import Home from "./pages/Home.tsx";
 import Loading from "./components/Loading";
 
 import Play from "./pages/Play.tsx";
-import Board from "./pages/BoardTest.tsx";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -30,7 +29,6 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/board" element={<Board />} />
 
         <Route
           path="/play/:gameID"
