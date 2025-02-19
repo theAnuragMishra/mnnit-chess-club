@@ -10,10 +10,11 @@ interface ChessState {
   ground: Api | null;
   result: string;
   gameID: string;
-  moveHistory: string[];
+  moveHistory: { MoveFen: string; MoveNotation: string; MoveNumber: number }[];
   updateFen: (fen: string) => void;
   setResult: (result: string) => void;
   updateHistory: (move: string) => void;
+  setHistory: (his: string[]) => void;
   updateGround: () => void;
   setGround: (ground: Api) => void;
   resetGame: () => void;
@@ -47,13 +48,14 @@ const useChessStore = create<ChessState>((set, get) => ({
 
   updateFen: (fen: string) => {
     get().board.load(fen);
-    console.log("fen updated");
-    console.log(get().board.ascii());
   },
 
-  updateHistory: (move: string) => {
+  setHistory: (his: any) => {
+    get().moveHistory = his;
+  },
+
+  updateHistory: (move: any) => {
     set((state) => ({ moveHistory: [...state.moveHistory, move] }));
-    console.log(get().moveHistory);
   },
   resetGame: () =>
     set(() => ({

@@ -31,7 +31,6 @@ const useWebSocketStore = create<WebSocketState>(() => {
         const data = JSON.parse(e.data);
 
         if (data.type === "Init_Game") {
-          console.log(data);
           useChessStore.setState(() => ({
             gameID: data.payload.GameID,
             whiteusername: data.payload.WhiteUsername,
@@ -40,10 +39,11 @@ const useWebSocketStore = create<WebSocketState>(() => {
         }
         if (data.type === "Move_Response") {
           console.log(data);
-
-          const { updateGround, updateFen } = useChessStore.getState();
-          updateFen(data.payload.fen);
+          const { updateGround, updateFen, updateHistory } =
+            useChessStore.getState();
+          updateFen(data.payload.move.MoveFen);
           updateGround();
+          updateHistory(data.payload.move);
 
           if (data.payload.Result !== "") {
             useChessStore.setState(() => ({ result: data.payload.Result }));

@@ -7,12 +7,20 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getBaseURL } from "../utils/urlUtils.ts";
 import ChessBoard from "../components/ChessBoard.tsx";
 import useAuthStore from "../store/authStore.ts";
+import { chunkArray } from "../utils/utils.ts";
 
 export default function Play() {
   const params = useParams();
   const { connect } = useWebSocketStore();
-  const { setResult, updateFen, updateGround, result, setUserNames } =
-    useChessStore();
+  const {
+    setResult,
+    updateFen,
+    updateGround,
+    result,
+    moveHistory,
+    setUserNames,
+    setHistory,
+  } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
   const { data } = useSuspenseQuery({
@@ -26,10 +34,12 @@ export default function Play() {
       }
       const x = await response.json();
 
-      setUserNames(x.WhiteUsername, x.BlackUsername);
-      updateFen(x.Fen);
-      if (x.Result !== "ongoing") {
-        setResult(x.Result);
+      setUserNames(x.game.WhiteUsername, x.game.BlackUsername);
+      setHistory(x.moves);
+      updateFen(x.game.Fen);
+      // setHistory(x.moves);
+      if (x.game.Result !== "ongoing") {
+        setResult(x.game.Result);
       }
       updateGround();
 
@@ -50,20 +60,38 @@ export default function Play() {
   const [modalOpen, setModalOpen] = useState(true);
 
   if (!params.gameID) return <div>Bad Request</div>;
+
+  const history = chunkArray(moveHistory, 2);
+
   return (
     <div className="text-2xl px-10 pb-10">
       {result && modalOpen && (
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
-      <div className="w-full flex items-center justify-center">
+      <div className="w-full flex gap-15 items-center justify-center">
         <div className="mt-5 flex flex-col items-center justify-center">
           <p className="w-full mb-1">
             {data.WhiteUsername !== username
-              ? data.WhiteUsername
-              : data.BlackUsername}
+              ? data.game.WhiteUsername
+              : data.game.BlackUsername}
           </p>
           <ChessBoard gameID={Number(params.gameID)} />
           <p className="w-full mb-1">{username}</p>
+        </div>
+        <div className="w-[200px] h-full">
+          {history &&
+            history.map((move, index) => {
+              return (
+                <p key={index} className="flex w-full justify-between">
+                  <span>
+                    {index + 1}
+                    {".    "}
+                    {move[0] && move[0].MoveNotation}
+                  </span>
+                  <span> {move[1] && move[1].MoveNotation}</span>
+                </p>
+              );
+            })}
         </div>
       </div>
     </div>

@@ -2,24 +2,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import useAuthStore from "../store/authStore.ts";
-import {Link, useNavigate} from "react-router";
+import { Link, useNavigate } from "react-router";
 import Loading from "../components/Loading.tsx";
-import {useEffect} from "react";
+import { useEffect } from "react";
 
 // Define the schema for the signup form
 const signupFormSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
 });
 
 type SignupFormInputs = z.infer<typeof signupFormSchema>;
 
 export default function Signup() {
   const navigate = useNavigate();
-  const user = useAuthStore(state=>state.user)
-  const loading = useAuthStore(state=>state.loading)
-const signup = useAuthStore(state => state.register);
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
+  const signup = useAuthStore((state) => state.register);
   const {
     register,
     handleSubmit,
@@ -34,25 +38,18 @@ const signup = useAuthStore(state => state.register);
     }
   }, [user, navigate, loading]);
 
-  if(loading)return <Loading/>;
-
-
+  if (loading) return <Loading />;
 
   const onSubmit: SubmitHandler<SignupFormInputs> = async (data) => {
     //console.log("Signup Data:", data);
-    try{
-await signup(data.username, data.password);
-console.log("Signed up successfully");
-    navigate("/login?message=registered")
-    }
-
-    catch(err){
-
+    try {
+      await signup(data.username, data.password);
+      navigate("/login?message=registered");
+    } catch (err) {
       //Todo show registration error
       console.log(err);
     }
   };
-
 
   return (
     <div className="flex flex-col items-center justify-center mt-20">
@@ -81,7 +78,9 @@ console.log("Signed up successfully");
             className="w-full px-3 py-2 border rounded"
           />
           {errors.username && (
-            <span className="text-red-500 text-sm">{errors.username.message}</span>
+            <span className="text-red-500 text-sm">
+              {errors.username.message}
+            </span>
           )}
         </div>
 
@@ -93,7 +92,9 @@ console.log("Signed up successfully");
             className="w-full px-3 py-2 border rounded"
           />
           {errors.password && (
-            <span className="text-red-500 text-sm">{errors.password.message}</span>
+            <span className="text-red-500 text-sm">
+              {errors.password.message}
+            </span>
           )}
         </div>
 
@@ -103,7 +104,12 @@ console.log("Signed up successfully");
         >
           Signup
         </button>
-        <Link className="w-full text-center block mt-2 text-blue-400 hover:underline" to={"/login"}>Already registered? Login!</Link>
+        <Link
+          className="w-full text-center block mt-2 text-blue-400 hover:underline"
+          to={"/login"}
+        >
+          Already registered? Login!
+        </Link>
       </form>
     </div>
   );

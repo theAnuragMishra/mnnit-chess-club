@@ -11,7 +11,6 @@ import useAuthStore from "../store/authStore";
 export default function ChessBoard(props: { gameID: number }) {
   const boardRef = useRef<HTMLDivElement>(null);
   const chess = useChessStore((state) => state.board);
-  const updateHistory = useChessStore((state) => state.updateHistory);
   const setGround = useChessStore((state) => state.setGround);
   const sendMessage = useWebSocketStore((state) => state.sendMessage);
   const white = useChessStore((state) => state.whiteusername);
@@ -36,7 +35,6 @@ export default function ChessBoard(props: { gameID: number }) {
         events: {
           after: (orig, dest) => {
             const move = chess.move({ from: orig, to: dest });
-            updateHistory(move.san);
             sendMessage({
               type: "move",
               payload: { MoveStr: move.san, GameID: Number(props.gameID) },
@@ -50,15 +48,7 @@ export default function ChessBoard(props: { gameID: number }) {
     setGround(ground);
 
     return () => ground.destroy();
-  }, [
-    chess,
-    props.gameID,
-    sendMessage,
-    setGround,
-    updateHistory,
-    white,
-    username,
-  ]);
+  }, [chess, props.gameID, sendMessage, setGround, white, username]);
 
   return <div ref={boardRef} className="w-[500px] h-[500px]" />;
 }
