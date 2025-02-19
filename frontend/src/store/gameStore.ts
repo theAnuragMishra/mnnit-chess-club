@@ -55,7 +55,11 @@ const useChessStore = create<ChessState>((set, get) => ({
   },
 
   updateHistory: (move: any) => {
-    set((state) => ({ moveHistory: [...state.moveHistory, move] }));
+    if (get().moveHistory)
+      set((state) => ({ moveHistory: [...state.moveHistory, move] }));
+    else {
+      set(() => ({ moveHistory: [move] }));
+    }
   },
   resetGame: () =>
     set(() => ({

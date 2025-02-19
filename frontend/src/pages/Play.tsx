@@ -61,7 +61,7 @@ export default function Play() {
 
   if (!params.gameID) return <div>Bad Request</div>;
 
-  const history = chunkArray(moveHistory, 2);
+  const history = moveHistory ? chunkArray(moveHistory, 2) : [];
 
   return (
     <div className="text-2xl px-10 pb-10">
