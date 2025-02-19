@@ -3,9 +3,11 @@ INSERT INTO games (white_id, black_id, white_username, black_username, fen)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING id;
 
--- name: InsertMove :exec
+-- name: InsertMove :one
 INSERT INTO moves (game_id, move_number, player_id, move_notation, move_fen)
-VALUES ($1,$2, $3, $4, $5);
+VALUES ($1,$2, $3, $4, $5)
+RETURNING move_number, move_notation, move_fen
+;
 
 -- name: GetGameInfo :one
 SELECT * FROM games WHERE id = $1;
@@ -19,10 +21,10 @@ FROM moves
 WHERE game_id = $1
 ORDER BY move_number;
 
--- name: UpdateGameFEN :exec
+-- name: UpdateGameLengthAndFEN :exec
 UPDATE games
-SET fen = $1
-WHERE id = $2;
+SET fen = $1, game_length = $2
+WHERE id = $3;
 
 -- name: EndGameWithResult :exec
 UPDATE games

@@ -160,19 +160,22 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	} else {
 		x = foundGame.WhiteID
 	}
-	if err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
+	insertedMove, err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
 		GameID:       gameID,
-		MoveNumber:   int32((len(foundGame.Board.MoveHistory())-1)/2 + 1),
+		MoveNumber:   int32(foundGame.GameLength + 1),
 		PlayerID:     &x,
 		MoveNotation: move.MoveStr,
 		MoveFen:      foundGame.Board.FEN(),
-	}); err != nil {
+	})
+	if err != nil {
 		log.Println(err)
 	}
+	foundGame.GameLength += 1
 
-	err := c.Queries.UpdateGameFEN(context.Background(), database.UpdateGameFENParams{
-		Fen: foundGame.Board.FEN(),
-		ID:  foundGame.ID,
+	err = c.Queries.UpdateGameLengthAndFEN(context.Background(), database.UpdateGameLengthAndFENParams{
+		Fen:        foundGame.Board.FEN(),
+		GameLength: foundGame.GameLength,
+		ID:         foundGame.ID,
 	})
 	if err != nil {
 		log.Println("error updating game fen", err)
@@ -180,7 +183,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]interface{}{"fen": foundGame.Board.FEN(), "Result": result, "message": message})
+	payload, err := json.Marshal(map[string]interface{}{"move": insertedMove, "Result": result, "message": message})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -208,5 +211,15 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 	}
-	utils.RespondWithJSON(w, http.StatusOK, foundGame)
+	moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
+	if err != nil {
+		log.Println(err)
+	}
+
+	response := GameResponse{
+		Game:  foundGame,
+		Moves: moves,
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }

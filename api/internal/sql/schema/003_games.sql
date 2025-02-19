@@ -6,6 +6,7 @@ CREATE TABLE games (
     white_username VARCHAR(20) REFERENCES users(username) ON DELETE SET NULL,
     black_username VARCHAR(20) REFERENCES users(username) ON DELETE SET NULL,
     fen TEXT NOT NULL,
+    game_length SMALLINT NOT NULL DEFAULT 0,
     result VARCHAR(10) CHECK(result IN ('1-0', '0-1', '1/2-1/2', 'ongoing')) DEFAULT 'ongoing',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

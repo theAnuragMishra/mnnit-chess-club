@@ -3,15 +3,20 @@ package game
 import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
+	"time"
 
 	"github.com/notnil/chess"
 )
 
 type Game struct {
-	ID      int32
-	WhiteID int32
-	BlackID int32
-	Board   *chess.Game
+	ID           int32
+	WhiteID      int32
+	BlackID      int32
+	Board        *chess.Game
+	GameLength   int16
+	LastMoveTime time.Time
+	TimeWhite    time.Duration
+	TimeBlack    time.Duration
 }
 
 func NewGame(player1 int32, player2 int32) *Game {
@@ -27,10 +32,11 @@ func NewGame(player1 int32, player2 int32) *Game {
 func DatabaseGameToGame(game *database.Game) *Game {
 	fen, _ := chess.FEN(game.Fen)
 	return &Game{
-		ID:      game.ID,
-		WhiteID: *game.WhiteID,
-		BlackID: *game.BlackID,
-		Board:   chess.NewGame(fen),
+		ID:         game.ID,
+		WhiteID:    *game.WhiteID,
+		BlackID:    *game.BlackID,
+		Board:      chess.NewGame(fen),
+		GameLength: game.GameLength,
 	}
 }
 

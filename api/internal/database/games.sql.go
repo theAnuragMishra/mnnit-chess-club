@@ -53,7 +53,7 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, white_id, black_id, white_username, black_username, fen, result, created_at FROM games WHERE id = $1
+SELECT id, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -66,6 +66,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 		&i.WhiteUsername,
 		&i.BlackUsername,
 		&i.Fen,
+		&i.GameLength,
 		&i.Result,
 		&i.CreatedAt,
 	)
@@ -130,7 +131,7 @@ func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMove
 }
 
 const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, white_id, black_id, white_username, black_username, fen, result, created_at FROM games WHERE result = 'ongoing'
+SELECT id, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
@@ -149,6 +150,7 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 			&i.WhiteUsername,
 			&i.BlackUsername,
 			&i.Fen,
+			&i.GameLength,
 			&i.Result,
 			&i.CreatedAt,
 		); err != nil {
@@ -200,9 +202,10 @@ func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername string) ([]G
 	return items, nil
 }
 
-const insertMove = `-- name: InsertMove :exec
+const insertMove = `-- name: InsertMove :one
 INSERT INTO moves (game_id, move_number, player_id, move_notation, move_fen)
 VALUES ($1,$2, $3, $4, $5)
+RETURNING move_number, move_notation, move_fen
 `
 
 type InsertMoveParams struct {
@@ -213,29 +216,38 @@ type InsertMoveParams struct {
 	MoveFen      string
 }
 
-func (q *Queries) InsertMove(ctx context.Context, arg InsertMoveParams) error {
-	_, err := q.db.Exec(ctx, insertMove,
+type InsertMoveRow struct {
+	MoveNumber   int32
+	MoveNotation string
+	MoveFen      string
+}
+
+func (q *Queries) InsertMove(ctx context.Context, arg InsertMoveParams) (InsertMoveRow, error) {
+	row := q.db.QueryRow(ctx, insertMove,
 		arg.GameID,
 		arg.MoveNumber,
 		arg.PlayerID,
 		arg.MoveNotation,
 		arg.MoveFen,
 	)
-	return err
+	var i InsertMoveRow
+	err := row.Scan(&i.MoveNumber, &i.MoveNotation, &i.MoveFen)
+	return i, err
 }
 
-const updateGameFEN = `-- name: UpdateGameFEN :exec
+const updateGameLengthAndFEN = `-- name: UpdateGameLengthAndFEN :exec
 UPDATE games
-SET fen = $1
-WHERE id = $2
+SET fen = $1, game_length = $2
+WHERE id = $3
 `
 
-type UpdateGameFENParams struct {
-	Fen string
-	ID  int32
+type UpdateGameLengthAndFENParams struct {
+	Fen        string
+	GameLength int16
+	ID         int32
 }
 
-func (q *Queries) UpdateGameFEN(ctx context.Context, arg UpdateGameFENParams) error {
-	_, err := q.db.Exec(ctx, updateGameFEN, arg.Fen, arg.ID)
+func (q *Queries) UpdateGameLengthAndFEN(ctx context.Context, arg UpdateGameLengthAndFENParams) error {
+	_, err := q.db.Exec(ctx, updateGameLengthAndFEN, arg.Fen, arg.GameLength, arg.ID)
 	return err
 }

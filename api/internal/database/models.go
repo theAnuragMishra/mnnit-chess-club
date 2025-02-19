@@ -21,6 +21,7 @@ type Game struct {
 	WhiteUsername string
 	BlackUsername string
 	Fen           string
+	GameLength    int16
 	Result        string
 	CreatedAt     time.Time
 }
