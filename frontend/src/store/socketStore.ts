@@ -10,6 +10,7 @@ interface Message {
 // Zustand store type definition
 interface WebSocketState {
   connect: () => void;
+  setNavigate: (navFunc: any) => void;
   sendMessage: (message: Message) => void;
   close: () => void;
 }
@@ -17,6 +18,7 @@ interface WebSocketState {
 // Create Zustand store
 const useWebSocketStore = create<WebSocketState>(() => {
   let socket: WebSocket | null = null;
+  let navigate: any = null;
 
   return {
     connect: () => {
@@ -31,11 +33,7 @@ const useWebSocketStore = create<WebSocketState>(() => {
         const data = JSON.parse(e.data);
 
         if (data.type === "Init_Game") {
-          useChessStore.setState(() => ({
-            gameID: data.payload.GameID,
-            whiteusername: data.payload.WhiteUsername,
-            blackusername: data.payload.BlackUsername,
-          }));
+          navigate(`/game/${data.payload.GameID}`);
         }
         if (data.type === "Move_Response") {
           console.log(data);
@@ -50,6 +48,10 @@ const useWebSocketStore = create<WebSocketState>(() => {
           }
         }
       };
+    },
+
+    setNavigate: (navFunc: any) => {
+      navigate = navFunc;
     },
 
     sendMessage: (message: Message) => {

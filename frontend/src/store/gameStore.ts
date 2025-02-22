@@ -9,7 +9,6 @@ interface ChessState {
   blackusername: string;
   ground: Api | null;
   result: string;
-  gameID: string;
   moveHistory: { MoveFen: string; MoveNotation: string; MoveNumber: number }[];
   updateFen: (fen: string) => void;
   setResult: (result: string) => void;
@@ -21,11 +20,10 @@ interface ChessState {
   setUserNames: (white: string, black: string) => void;
 }
 
-const useChessStore = create<ChessState>((set, get) => ({
+const useChessStore = create<ChessState>()((set, get) => ({
   ground: null,
   whiteusername: "",
   blackusername: "",
-  gameID: "",
   result: "",
   board: new Chess(),
   moveHistory: [],

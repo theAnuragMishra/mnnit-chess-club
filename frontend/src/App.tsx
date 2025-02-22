@@ -9,6 +9,7 @@ import RootLayout from "./layouts/RootLayout.tsx";
 import Home from "./pages/Home.tsx";
 import Loading from "./components/Loading";
 
+import Game from "./pages/Game.tsx";
 import Play from "./pages/Play.tsx";
 
 function App() {
@@ -29,12 +30,12 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
+        <Route path="/play" element={<Play />} />
         <Route
-          path="/play/:gameID"
+          path="/game/:gameID"
           element={
             <Suspense fallback={<Loading />}>
-              <Play />
+              <Game />
             </Suspense>
           }
         />
