@@ -63,6 +63,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 
 		if c.GameManager.PendingUserName == user.Username {
 			utils.RespondWithError(w, http.StatusBadRequest, "You can't play both sides")
+			return
 		}
 		createdGame := game.NewGame(c.GameManager.PendingUserID, session.UserID)
 
