@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"time"
@@ -42,20 +41,22 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 func DatabaseGameToGame(game *database.Game) *Game {
 	fen, _ := chess.FEN(game.Fen)
 	return &Game{
-		ID:         game.ID,
-		Result:     game.Result,
-		BaseTime:   time.Duration(game.BaseTime) * time.Second,
-		Increment:  time.Duration(game.Increment) * time.Second,
-		TimeBlack:  time.Duration(game.BaseTime) * time.Second,
-		TimeWhite:  time.Duration(game.BaseTime) * time.Second,
-		WhiteID:    *game.WhiteID,
-		BlackID:    *game.BlackID,
-		Board:      chess.NewGame(fen),
-		GameLength: game.GameLength,
+		ID:           game.ID,
+		Result:       game.Result,
+		BaseTime:     time.Duration(game.BaseTime) * time.Second,
+		Increment:    time.Duration(game.Increment) * time.Second,
+		TimeBlack:    time.Duration(game.BaseTime) * time.Second,
+		TimeWhite:    time.Duration(game.BaseTime) * time.Second,
+		WhiteID:      *game.WhiteID,
+		BlackID:      *game.BlackID,
+		Board:        chess.NewGame(fen),
+		GameLength:   game.GameLength,
+		LastMoveTime: time.Now(),
 	}
 }
 
 func (g *Game) MakeMove(player int32, move string) (string, string) {
+
 	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
 		return "not your turn", ""
 	}
@@ -70,7 +71,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 
 	moveTime := time.Since(g.LastMoveTime)
 
-	fmt.Println(moveTime)
+	//fmt.Println(moveTime)
 
 	if g.Board.Position().Turn() == chess.White {
 		if moveTime > g.TimeWhite {

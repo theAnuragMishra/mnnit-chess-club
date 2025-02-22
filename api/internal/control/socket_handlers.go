@@ -15,6 +15,7 @@ import (
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// fmt.Println(string(event.Payload))
+
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
 		log.Println("Invalid move payload")
