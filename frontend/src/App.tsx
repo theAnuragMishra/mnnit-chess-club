@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 import "./App.css";
-import Profile from "./pages/Profile";
+import Member from "./pages/Member.tsx";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import useAuthStore from "./store/authStore.ts";
@@ -11,6 +11,7 @@ import Loading from "./components/Loading";
 
 import Game from "./pages/Game.tsx";
 import Play from "./pages/Play.tsx";
+import Profile from "./pages/Profile.tsx";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -27,7 +28,23 @@ function App() {
     <Routes>
       <Route element={<RootLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <Suspense fallback={<Loading />}>
+              <Profile />
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="/member/:username"
+          element={
+            <Suspense fallback={<Loading />}>
+              <Member />
+            </Suspense>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/play" element={<Play />} />
