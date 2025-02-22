@@ -39,7 +39,7 @@ export default function Clock({
 
   return (
     <span
-      className={`p-4 text-2xl ${active ? "font-bold text-blue-600" : "text-gray-600"}`}
+      className={`px-2 py-1 my-2 rounded-md text-2xl ${active ? "font-bold bg-white  text-black" : "bg-black text-gray-400"}`}
     >
       {formatTime(time)}
     </span>
