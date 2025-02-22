@@ -3,13 +3,13 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -166,12 +166,19 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	if serverGame == nil {
 		ongoing = false
 	} else {
+		timePassed := time.Since(serverGame.LastMoveTime)
+		if serverGame.Board.Position().Turn() == chess.White {
+			serverGame.TimeWhite -= timePassed
+		} else {
+			serverGame.TimeBlack -= timePassed
+		}
+		serverGame.LastMoveTime = time.Now()
 		ongoing = true
 		timeBlack = int32(serverGame.TimeBlack.Seconds())
 		timeWhite = int32(serverGame.TimeWhite.Seconds())
 	}
 
-	fmt.Println(serverGame.Result)
+	// fmt.Println(serverGame.Result)
 
 	response := GameResponse{
 		Game:      foundGame,

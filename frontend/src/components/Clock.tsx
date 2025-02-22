@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 
 interface ChessTimerProps {
-  color: "white" | "black";
   initialTime: number;
   active: boolean;
-  onTimeUp: (player: "white" | "black") => void;
+  onTimeUp: () => void;
 }
 
 export default function Clock({
-  color,
   initialTime,
   active,
   onTimeUp,
@@ -21,16 +19,24 @@ export default function Clock({
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
 
-    if (active && time > 0)
-      timer = setInterval(() => setTime((prev) => prev - 100), 100);
-
+    if (active && time > 0) {
+      timer = setInterval(() => {
+        setTime((prev) => {
+          if (prev <= 100) {
+            clearInterval(timer!);
+            return 0;
+          }
+          return prev - 100;
+        });
+      }, 100);
+    }
     return () => {
       if (timer) clearInterval(timer);
     };
   });
   useEffect(() => {
-    if (time <= 0) onTimeUp(color);
-  }, [time, onTimeUp, color]);
+    if (time <= 0) onTimeUp();
+  }, [time, onTimeUp]);
   const formatTime = (time: number): string => {
     const minutes = Math.floor(time / 60000);
     const seconds = Math.floor((time % 60000) / 1000);

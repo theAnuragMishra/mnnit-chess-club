@@ -13,7 +13,7 @@ import Clock from "../components/Clock.tsx";
 export default function Game() {
   console.log("on game page");
   const params = useParams();
-  const { connect } = useWebSocketStore();
+  const { connect, sendMessage } = useWebSocketStore();
   const {
     setResult,
     updateFen,
@@ -74,7 +74,7 @@ export default function Game() {
 
   return (
     <div className="text-2xl px-10 pb-10 max-h-screen">
-      {result!=="ongoing" && result!=="" && modalOpen && (
+      {result !== "ongoing" && result !== "" && modalOpen && (
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex gap-15 items-center justify-center">
@@ -83,10 +83,17 @@ export default function Game() {
             {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
             <Clock
               initialTime={whiteUp ? timeWhite : timeBlack}
-              onTimeUp={() => console.log("timeup")}
-              color={whiteUp ? "white" : "black"}
+              onTimeUp={() =>
+                sendMessage({
+                  type: "timeup",
+                  payload: {
+                    color: whiteUp ? "black" : "white",
+                    gameID: Number(params.gameID),
+                  },
+                })
+              }
               active={
-                result!=="ongoing" && result!==""
+                result !== "ongoing" && result !== ""
                   ? false
                   : whiteUp
                     ? board.turn() === "w"
@@ -99,10 +106,17 @@ export default function Game() {
             {username}{" "}
             <Clock
               initialTime={whiteUp ? timeBlack : timeWhite}
-              onTimeUp={() => console.log("timeup")}
-              color={whiteUp ? "black" : "white"}
+              onTimeUp={() =>
+                sendMessage({
+                  type: "timeup",
+                  payload: {
+                    color: whiteUp ? "black" : "white",
+                    gameID: Number(params.gameID),
+                  },
+                })
+              }
               active={
-                result!=="ongoing" && result!==""
+                result !== "ongoing" && result !== ""
                   ? false
                   : whiteUp
                     ? board.turn() === "b"

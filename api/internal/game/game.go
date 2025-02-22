@@ -1,9 +1,10 @@
 package game
 
 import (
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
 	"github.com/notnil/chess"
 )
@@ -56,7 +57,6 @@ func DatabaseGameToGame(game *database.Game) *Game {
 }
 
 func (g *Game) MakeMove(player int32, move string) (string, string) {
-
 	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
 		return "not your turn", ""
 	}
@@ -65,13 +65,12 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 	}
 
 	if g.Board.Outcome() != "*" {
-
 		return "game has ended", string(g.Board.Outcome())
 	}
 
 	moveTime := time.Since(g.LastMoveTime)
 
-	//fmt.Println(moveTime)
+	// fmt.Println(moveTime)
 
 	if g.Board.Position().Turn() == chess.White {
 		if moveTime > g.TimeWhite {
@@ -82,12 +81,11 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 			g.TimeWhite -= moveTime
 			g.TimeWhite += g.Increment
 		}
-
 	}
 	if g.Board.Position().Turn() == chess.Black {
 		if moveTime > g.TimeBlack {
 			g.TimeBlack = 0
-			g.Result = "0-1"
+			g.Result = "1-0"
 			return "game over with result", "1-0"
 		} else {
 			g.TimeBlack -= moveTime

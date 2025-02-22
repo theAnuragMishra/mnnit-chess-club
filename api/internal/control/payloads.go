@@ -5,6 +5,11 @@ type movePayload struct {
 	GameID  int32  `json:"GameId"`
 }
 
+type timeupPayload struct {
+	Color  string `json:"color"`
+	GameID int32  `json:"gameID"`
+}
+
 type InitGamePayload struct {
 	Username  string `json:"username"`
 	TimerCode int16  `json:"timerCode"`
