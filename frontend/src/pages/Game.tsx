@@ -27,7 +27,6 @@ export default function Game() {
     setHistory,
     setTimeBlack,
     setTimeWhite,
-    setIncrement,
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -48,11 +47,7 @@ export default function Game() {
       updateFen(x.game.Fen);
       setTimeWhite(x.timeWhite);
       setTimeBlack(x.timeBlack);
-      setIncrement(x.game.Increment);
-      // setHistory(x.moves);
-      if (x.game.Result !== "ongoing") {
-        setResult(x.game.Result);
-      }
+      setResult(x.game.Result);
       updateGround();
 
       return x; // Convert to JSON
@@ -79,7 +74,7 @@ export default function Game() {
 
   return (
     <div className="text-2xl px-10 pb-10 max-h-screen">
-      {result && modalOpen && (
+      {result!=="ongoing" && result!=="" && modalOpen && (
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex gap-15 items-center justify-center">
@@ -91,7 +86,7 @@ export default function Game() {
               onTimeUp={() => console.log("timeup")}
               color={whiteUp ? "white" : "black"}
               active={
-                result
+                result!=="ongoing" && result!==""
                   ? false
                   : whiteUp
                     ? board.turn() === "w"
@@ -107,7 +102,7 @@ export default function Game() {
               onTimeUp={() => console.log("timeup")}
               color={whiteUp ? "black" : "white"}
               active={
-                result
+                result!=="ongoing" && result!==""
                   ? false
                   : whiteUp
                     ? board.turn() === "b"
