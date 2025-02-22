@@ -34,7 +34,8 @@ export default function Member() {
             to={`/game/${item.ID}`}
             className="flex gap-2 underline text-blue-500"
           >
-            <span>{item.WhiteUsername}</span> <span>{item.Result}</span>
+            <span>{item.WhiteUsername}</span>{" "}
+            <span>{item.Result !== "ongoing" ? item.Result : "*"}</span>
             <span>{item.BlackUsername}</span>
           </Link>
         ))}

@@ -11,7 +11,6 @@ import Loading from "./components/Loading";
 
 import Game from "./pages/Game.tsx";
 import Play from "./pages/Play.tsx";
-import Profile from "./pages/Profile.tsx";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -28,14 +27,6 @@ function App() {
     <Routes>
       <Route element={<RootLayout />}>
         <Route path="/" element={<Home />} />
-        <Route
-          path="/profile"
-          element={
-            <Suspense fallback={<Loading />}>
-              <Profile />
-            </Suspense>
-          }
-        />
 
         <Route
           path="/member/:username"
