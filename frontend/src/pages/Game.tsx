@@ -90,7 +90,13 @@ export default function Game() {
               initialTime={whiteUp ? timeWhite : timeBlack}
               onTimeUp={() => console.log("timeup")}
               color={whiteUp ? "white" : "black"}
-              active={whiteUp ? board.turn() === "w" : board.turn() === "b"}
+              active={
+                result
+                  ? false
+                  : whiteUp
+                    ? board.turn() === "w"
+                    : board.turn() === "b"
+              }
             />
           </p>
           <ChessBoard gameID={Number(params.gameID)} />
@@ -100,7 +106,13 @@ export default function Game() {
               initialTime={whiteUp ? timeBlack : timeWhite}
               onTimeUp={() => console.log("timeup")}
               color={whiteUp ? "black" : "white"}
-              active={whiteUp ? board.turn() === "b" : board.turn() === "w"}
+              active={
+                result
+                  ? false
+                  : whiteUp
+                    ? board.turn() === "b"
+                    : board.turn() === "w"
+              }
             />
           </p>
         </div>
