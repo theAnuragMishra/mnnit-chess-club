@@ -10,12 +10,14 @@ import (
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO games (white_id, black_id, white_username, black_username, fen)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO games (base_time, increment, white_id, black_id, white_username, black_username, fen)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id
 `
 
 type CreateGameParams struct {
+	BaseTime      int32
+	Increment     int32
 	WhiteID       *int32
 	BlackID       *int32
 	WhiteUsername string
@@ -25,6 +27,8 @@ type CreateGameParams struct {
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, error) {
 	row := q.db.QueryRow(ctx, createGame,
+		arg.BaseTime,
+		arg.Increment,
 		arg.WhiteID,
 		arg.BlackID,
 		arg.WhiteUsername,
@@ -53,7 +57,7 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE id = $1
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -61,6 +65,8 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 	var i Game
 	err := row.Scan(
 		&i.ID,
+		&i.BaseTime,
+		&i.Increment,
 		&i.WhiteID,
 		&i.BlackID,
 		&i.WhiteUsername,
@@ -128,7 +134,7 @@ func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMove
 }
 
 const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE result = 'ongoing'
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
@@ -142,6 +148,8 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 		var i Game
 		if err := rows.Scan(
 			&i.ID,
+			&i.BaseTime,
+			&i.Increment,
 			&i.WhiteID,
 			&i.BlackID,
 			&i.WhiteUsername,

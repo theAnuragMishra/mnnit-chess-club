@@ -16,12 +16,12 @@ export default function Play() {
     connect();
   }, [connect, navigate, setNavigate]);
 
-  async function handleInitGame() {
+  async function handleInitGame(timerCode: number) {
     await fetch(`${getBaseURL()}/game/init`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ username: user?.username }),
+      body: JSON.stringify({ username: user?.username, timerCode }),
     });
   }
   // useEffect(() => {
@@ -32,10 +32,22 @@ export default function Play() {
   return (
     <div className="w-full min-h-screen flex items-center justify-center">
       <button
-        onClick={handleInitGame}
-        className="w-[100px] h-[500px] bg-gray-400 cursor-pointer text-xl"
+        onClick={() => handleInitGame(2)}
+        className="w-[150px] h-[100px] bg-gray-400 cursor-pointer text-xl"
       >
-        Start
+        3+2
+      </button>
+      <button
+        onClick={() => handleInitGame(3)}
+        className="w-[150px] h-[100px] bg-gray-400 cursor-pointer text-xl"
+      >
+        10+0
+      </button>
+      <button
+        onClick={() => handleInitGame(1)}
+        className="w-[150px] h-[100px] bg-gray-400 cursor-pointer text-xl"
+      >
+        1+0
       </button>
     </div>
   );

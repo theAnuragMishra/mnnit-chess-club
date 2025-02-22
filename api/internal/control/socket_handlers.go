@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"net/http"
-
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
-
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
@@ -17,107 +12,8 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println(event)
-	var user userPayload
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
-
-	log.Println("inside init game :)")
-
-	// if there's no pending game, create one, else, add the player to the game
-	if c.GameManager.PendingUserID == 0 {
-		log.Println("no pending game, creating...")
-		c.GameManager.PendingUserName = user.Username
-		c.GameManager.PendingUserID = session.UserID
-
-		//newGame := game.NewGame(client.UserID, user.Username)
-		//c.GameManager.PendingGameID = newGame.ID
-		//c.GameManager.Games = append(c.GameManager.Games, newGame)
-		// payload := map[string]interface{}{
-		// 	"GameID":          newGame.ID,
-		// 	"player1":         client.UserID,
-		// 	"player2":         "",
-		// 	"player1username": user.Username,
-		// 	"player2username": "",
-		// }
-		// rawPayload, err := json.Marshal(payload)
-		// if err != nil {
-		// 	log.Println("error marshalling new game payload")
-		// 	return nil
-		// }
-		//
-		// e := socket.Event{
-		// 	Type:    "Init_Game",
-		// 	Payload: json.RawMessage(rawPayload),
-		// }
-		// client.Send(e)
-	} else {
-
-		if c.GameManager.PendingUserName == user.Username {
-			utils.RespondWithError(w, http.StatusBadRequest, "You can't play both sides")
-			return
-		}
-		createdGame := game.NewGame(c.GameManager.PendingUserID, session.UserID)
-
-		id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-			WhiteID:       &c.GameManager.PendingUserID,
-			BlackID:       &session.UserID,
-			WhiteUsername: c.GameManager.PendingUserName,
-			BlackUsername: user.Username,
-			Fen:           createdGame.Board.FEN(),
-		})
-		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		createdGame.ID = id
-		c.GameManager.Games = append(c.GameManager.Games, createdGame)
-
-		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
-		otherClient := c.SocketManager.FindClientByUserID(c.GameManager.PendingUserID)
-		if thisClient == nil || otherClient == nil {
-			log.Println("player not found")
-			return
-		}
-
-		payload := map[string]interface{}{
-			"GameID":          createdGame.ID,
-			"player1":         otherClient.UserID,
-			"player2":         session.UserID,
-			"player1username": c.GameManager.PendingUserName,
-			"player2username": user.Username,
-		}
-
-		c.GameManager.PendingUserID = 0
-		c.GameManager.PendingUserName = ""
-
-		rawPayload, err := json.Marshal(payload)
-		if err != nil {
-			log.Println("error marshalling new createdGame payload")
-			return
-		}
-
-		e := socket.Event{
-			Type:    "Init_Game",
-			Payload: json.RawMessage(rawPayload),
-		}
-
-		thisClient.Send(e)
-		otherClient.Send(e)
-
-	}
-
-	// fmt.Println(c.GameManager)
-}
-
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
+
 	// fmt.Println(string(event.Payload))
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
@@ -135,6 +31,10 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if foundGame == nil {
 		return errors.New("game not found")
+	}
+
+	if foundGame.Result != "ongoing" {
+		return errors.New("game has ended")
 	}
 
 	if foundGame.WhiteID == 0 || foundGame.BlackID == 0 {
@@ -182,7 +82,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]interface{}{"move": insertedMove, "Result": result, "message": message})
+	payload, err := json.Marshal(map[string]interface{}{"move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil

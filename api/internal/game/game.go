@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"time"
@@ -10,6 +11,9 @@ import (
 
 type Game struct {
 	ID           int32
+	Result       string
+	BaseTime     time.Duration
+	Increment    time.Duration
 	WhiteID      int32
 	BlackID      int32
 	Board        *chess.Game
@@ -19,13 +23,19 @@ type Game struct {
 	TimeBlack    time.Duration
 }
 
-func NewGame(player1 int32, player2 int32) *Game {
+func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
 	board := chess.NewGame()
-	return &Game{
 
-		WhiteID: player1,
-		BlackID: player2,
-		Board:   board,
+	return &Game{
+		Result:       "ongoing",
+		TimeWhite:    baseTime,
+		TimeBlack:    baseTime,
+		BaseTime:     baseTime,
+		Increment:    increment,
+		WhiteID:      player1,
+		BlackID:      player2,
+		Board:        board,
+		LastMoveTime: time.Now(),
 	}
 }
 
@@ -33,6 +43,9 @@ func DatabaseGameToGame(game *database.Game) *Game {
 	fen, _ := chess.FEN(game.Fen)
 	return &Game{
 		ID:         game.ID,
+		Result:     game.Result,
+		BaseTime:   time.Duration(game.BaseTime) * time.Second,
+		Increment:  time.Duration(game.Increment) * time.Second,
 		WhiteID:    *game.WhiteID,
 		BlackID:    *game.BlackID,
 		Board:      chess.NewGame(fen),
@@ -53,6 +66,26 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		return "game has ended", string(g.Board.Outcome())
 	}
 
+	moveTime := time.Since(g.LastMoveTime)
+
+	fmt.Println(moveTime)
+
+	if g.Board.Position().Turn() == chess.White {
+		if moveTime > g.TimeWhite {
+			return "game over with result", "0-1"
+		} else {
+			g.TimeWhite += g.Increment
+		}
+
+	}
+	if g.Board.Position().Turn() == chess.Black {
+		if moveTime > g.TimeBlack {
+			return "game over with result", "1-0"
+		} else {
+			g.TimeBlack += g.Increment
+		}
+	}
+
 	if err := g.Board.MoveStr(move); err != nil {
 		log.Println(err)
 		return "error making move", ""
@@ -66,6 +99,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 	// fmt.Println(g.Board.Position())
 	// fmt.Println(g.Board.Position().Board())
 	// fmt.Println(g.Board)
+	g.LastMoveTime = time.Now()
 
 	return "move successful", ""
 

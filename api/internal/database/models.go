@@ -16,6 +16,8 @@ type CsrfToken struct {
 
 type Game struct {
 	ID            int32
+	BaseTime      int32
+	Increment     int32
 	WhiteID       *int32
 	BlackID       *int32
 	WhiteUsername string

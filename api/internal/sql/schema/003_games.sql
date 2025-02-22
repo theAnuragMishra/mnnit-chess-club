@@ -1,6 +1,8 @@
 -- +goose Up
 CREATE TABLE games (
     id SERIAL PRIMARY KEY,
+    base_time INT NOT NULL,
+    increment INT NOT NULL,
     white_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     black_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     white_username VARCHAR(20) REFERENCES users(username) ON DELETE SET NULL,
