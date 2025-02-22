@@ -34,9 +34,9 @@ WHERE id = $2;
 -- name: GetPlayerGames :many
 SELECT id, white_username, black_username, result
 FROM games
-WHERE (white_username = $1 OR black_username = $1);
+WHERE (white_username = $1 OR black_username = $1)
 --AND ended_at IS NOT NULL
---ORDER BY ended_at DESC;
+ORDER BY created_at DESC;
 
 -- name: GetLatestMove :one
 SELECT move_number, move_notation, move_fen

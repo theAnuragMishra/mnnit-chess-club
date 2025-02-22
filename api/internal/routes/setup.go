@@ -35,6 +35,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	})
 
 	// routes that don't need authentication
+	router.Get("/profile/{username}", controller.WriteProfileInfo)
 	router.Post("/register", authHandler.HandleRegister)
 	router.Post("/login", authHandler.HandleLogin)
 	router.Post("/meow", func(w http.ResponseWriter, r *http.Request) {

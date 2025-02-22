@@ -107,7 +107,6 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMove
 }
 
 const getLatestMove = `-- name: GetLatestMove :one
-
 SELECT move_number, move_notation, move_fen
 FROM moves
 WHERE game_id = $1
@@ -121,8 +120,6 @@ type GetLatestMoveRow struct {
 	MoveFen      string
 }
 
-// AND ended_at IS NOT NULL
-// ORDER BY ended_at DESC;
 func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMoveRow, error) {
 	row := q.db.QueryRow(ctx, getLatestMove, limit)
 	var i GetLatestMoveRow
@@ -168,6 +165,7 @@ const getPlayerGames = `-- name: GetPlayerGames :many
 SELECT id, white_username, black_username, result
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
+ORDER BY created_at DESC
 `
 
 type GetPlayerGamesRow struct {
@@ -177,6 +175,7 @@ type GetPlayerGamesRow struct {
 	Result        string
 }
 
+// AND ended_at IS NOT NULL
 func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername string) ([]GetPlayerGamesRow, error) {
 	rows, err := q.db.Query(ctx, getPlayerGames, whiteUsername)
 	if err != nil {

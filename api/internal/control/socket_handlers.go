@@ -6,13 +6,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -196,31 +194,4 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	c.SocketManager.Broadcast(e)
 
 	return nil
-}
-
-func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
-	gameIDStr, err := strconv.ParseInt(chi.URLParam(r, "gameID"), 10, 32)
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
-	}
-	gameID := int32(gameIDStr)
-	// fmt.Println(gameID)
-	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
-	if err != nil {
-		log.Println(err)
-
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
-	}
-	moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
-	if err != nil {
-		log.Println(err)
-	}
-
-	response := GameResponse{
-		Game:  foundGame,
-		Moves: moves,
-	}
-
-	utils.RespondWithJSON(w, http.StatusOK, response)
 }
