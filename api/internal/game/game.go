@@ -46,6 +46,8 @@ func DatabaseGameToGame(game *database.Game) *Game {
 		Result:     game.Result,
 		BaseTime:   time.Duration(game.BaseTime) * time.Second,
 		Increment:  time.Duration(game.Increment) * time.Second,
+		TimeBlack:  time.Duration(game.BaseTime) * time.Second,
+		TimeWhite:  time.Duration(game.BaseTime) * time.Second,
 		WhiteID:    *game.WhiteID,
 		BlackID:    *game.BlackID,
 		Board:      chess.NewGame(fen),
@@ -74,6 +76,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		if moveTime > g.TimeWhite {
 			return "game over with result", "0-1"
 		} else {
+			g.TimeWhite -= moveTime
 			g.TimeWhite += g.Increment
 		}
 
@@ -82,6 +85,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		if moveTime > g.TimeBlack {
 			return "game over with result", "1-0"
 		} else {
+			g.TimeBlack -= moveTime
 			g.TimeBlack += g.Increment
 		}
 	}
