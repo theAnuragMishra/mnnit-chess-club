@@ -75,6 +75,8 @@ export default function Game() {
 
   const history = moveHistory ? chunkArray(moveHistory, 2) : [];
 
+  const whiteUp = data.game.WhiteUsername !== username;
+
   return (
     <div className="text-2xl px-10 pb-10">
       {result && modalOpen && (
@@ -83,12 +85,24 @@ export default function Game() {
       <div className="w-full flex gap-15 items-center justify-center">
         <div className="mt-5 flex flex-col items-center justify-center">
           <p className="w-full mb-1">
-            {data.game.WhiteUsername === username
-              ? data.game.BlackUsername
-              : data.game.WhiteUsername}
+            {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
+            <Clock
+              initialTime={whiteUp ? timeWhite : timeBlack}
+              onTimeUp={() => console.log("timeup")}
+              color={whiteUp ? "white" : "black"}
+              active={whiteUp ? board.turn() === "w" : board.turn() === "b"}
+            />
           </p>
           <ChessBoard gameID={Number(params.gameID)} />
-          <p className="w-full mb-1">{username}</p>
+          <p className="w-full mb-1">
+            {username}{" "}
+            <Clock
+              initialTime={whiteUp ? timeBlack : timeWhite}
+              onTimeUp={() => console.log("timeup")}
+              color={whiteUp ? "black" : "white"}
+              active={whiteUp ? board.turn() === "b" : board.turn() === "w"}
+            />
+          </p>
         </div>
         <div className="w-[200px] h-full">
           {history &&
@@ -105,14 +119,7 @@ export default function Game() {
               );
             })}
         </div>
-        <div>
-          <Clock
-            initialWhite={timeWhite * 1000}
-            initialBlack={timeBlack * 1000}
-            onTimeUp={() => alert("timeup")}
-            turn={board.turn() === "w" ? "white" : "black"}
-          />
-        </div>
+        <div></div>
       </div>
     </div>
   );
