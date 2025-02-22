@@ -7,6 +7,9 @@ interface ChessState {
   board: Chess;
   whiteusername: string;
   blackusername: string;
+  timeBlack: number;
+  timeWhite: number;
+  increment: number;
   ground: Api | null;
   result: string;
   moveHistory: { MoveFen: string; MoveNotation: string; MoveNumber: number }[];
@@ -18,12 +21,18 @@ interface ChessState {
   setGround: (ground: Api) => void;
   resetGame: () => void;
   setUserNames: (white: string, black: string) => void;
+  setTimeBlack: (time: number) => void;
+  setTimeWhite: (time: number) => void;
+  setIncrement: (time: number) => void;
 }
 
 const useChessStore = create<ChessState>()((set, get) => ({
   ground: null,
   whiteusername: "",
   blackusername: "",
+  timeBlack: 0,
+  timeWhite: 0,
+  increment: 0,
   result: "",
   board: new Chess(),
   moveHistory: [],
@@ -59,6 +68,10 @@ const useChessStore = create<ChessState>()((set, get) => ({
       set(() => ({ moveHistory: [move] }));
     }
   },
+  setTimeWhite: (time: number) => set({ timeWhite: time }),
+  setTimeBlack: (time: number) => set({ timeBlack: time }),
+  setIncrement: (time: number) => set({ increment: time }),
+
   resetGame: () =>
     set(() => ({
       board: new Chess(),

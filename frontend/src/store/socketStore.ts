@@ -37,11 +37,22 @@ const useWebSocketStore = create<WebSocketState>(() => {
         }
         if (data.type === "Move_Response") {
           console.log(data);
-          const { updateGround, updateFen, updateHistory } =
-            useChessStore.getState();
+          const {
+            updateGround,
+            updateFen,
+            updateHistory,
+            setTimeBlack,
+            setTimeWhite,
+          } = useChessStore.getState();
           updateFen(data.payload.move.MoveFen);
           updateGround();
           updateHistory(data.payload.move);
+          setTimeWhite(data.payload.timeWhite);
+          setTimeBlack(data.payload.timeBlack);
+          console.log(
+            useChessStore.getState().timeBlack,
+            useChessStore.getState().timeWhite,
+          );
 
           if (data.payload.Result !== "") {
             useChessStore.setState(() => ({ result: data.payload.Result }));

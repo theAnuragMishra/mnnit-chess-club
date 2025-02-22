@@ -8,6 +8,7 @@ import { getBaseURL } from "../utils/urlUtils.ts";
 import ChessBoard from "../components/ChessBoard.tsx";
 import useAuthStore from "../store/authStore.ts";
 import { chunkArray } from "../utils/utils.ts";
+import Clock from "../components/Clock.tsx";
 
 export default function Game() {
   console.log("on game page");
@@ -18,9 +19,15 @@ export default function Game() {
     updateFen,
     updateGround,
     result,
+    board,
+    timeBlack,
+    timeWhite,
     moveHistory,
     setUserNames,
     setHistory,
+    setTimeBlack,
+    setTimeWhite,
+    setIncrement,
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -35,11 +42,13 @@ export default function Game() {
       }
       const x = await response.json();
       console.log(x);
-      console.log(x.game.WhiteUsername === username);
 
       setUserNames(x.game.WhiteUsername, x.game.BlackUsername);
       setHistory(x.moves);
       updateFen(x.game.Fen);
+      setTimeWhite(x.timeWhite);
+      setTimeBlack(x.timeBlack);
+      setIncrement(x.game.Increment);
       // setHistory(x.moves);
       if (x.game.Result !== "ongoing") {
         setResult(x.game.Result);
@@ -95,6 +104,14 @@ export default function Game() {
                 </p>
               );
             })}
+        </div>
+        <div>
+          <Clock
+            initialWhite={timeWhite * 1000}
+            initialBlack={timeBlack * 1000}
+            onTimeUp={() => alert("timeup")}
+            turn={board.turn() === "w" ? "white" : "black"}
+          />
         </div>
       </div>
     </div>
