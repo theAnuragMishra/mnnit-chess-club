@@ -3,6 +3,7 @@ package control
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -169,6 +170,8 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		timeBlack = int32(serverGame.TimeBlack.Seconds())
 		timeWhite = int32(serverGame.TimeWhite.Seconds())
 	}
+
+	fmt.Println(serverGame.Result)
 
 	response := GameResponse{
 		Game:      foundGame,

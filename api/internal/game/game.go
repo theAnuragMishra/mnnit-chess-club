@@ -75,6 +75,8 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 
 	if g.Board.Position().Turn() == chess.White {
 		if moveTime > g.TimeWhite {
+			g.TimeWhite = 0
+			g.Result = "0-1"
 			return "game over with result", "0-1"
 		} else {
 			g.TimeWhite -= moveTime
@@ -84,6 +86,8 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 	}
 	if g.Board.Position().Turn() == chess.Black {
 		if moveTime > g.TimeBlack {
+			g.TimeBlack = 0
+			g.Result = "0-1"
 			return "game over with result", "1-0"
 		} else {
 			g.TimeBlack -= moveTime

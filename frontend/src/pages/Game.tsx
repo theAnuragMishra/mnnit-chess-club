@@ -78,13 +78,13 @@ export default function Game() {
   const whiteUp = data.game.WhiteUsername !== username;
 
   return (
-    <div className="text-2xl px-10 pb-10">
+    <div className="text-2xl px-10 pb-10 max-h-screen">
       {result && modalOpen && (
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex gap-15 items-center justify-center">
         <div className="mt-5 flex flex-col items-center justify-center">
-          <p className="w-full mb-1">
+          <p className="w-full mb-1 flex justify-between items-center">
             {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
             <Clock
               initialTime={whiteUp ? timeWhite : timeBlack}
@@ -100,7 +100,7 @@ export default function Game() {
             />
           </p>
           <ChessBoard gameID={Number(params.gameID)} />
-          <p className="w-full mb-1">
+          <p className="w-full mb-1 flex items-center justify-between">
             {username}{" "}
             <Clock
               initialTime={whiteUp ? timeBlack : timeWhite}
