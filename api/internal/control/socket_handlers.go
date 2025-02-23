@@ -36,6 +36,10 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
+	if foundGame.BlackID != client.UserID && foundGame.WhiteID != client.UserID {
+		return errors.New("not one of the players")
+	}
+
 	if foundGame.Result != "ongoing" {
 		return errors.New("game has ended")
 	}

@@ -97,7 +97,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		log.Println(err)
 		return "error making move", ""
 	}
-	log.Println(g.Board.Position().Board().Draw())
+	// log.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {
 		return "game over with result", string(g.Board.Outcome())

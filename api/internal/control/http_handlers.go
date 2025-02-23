@@ -168,9 +168,9 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	} else {
 		timePassed := time.Since(serverGame.LastMoveTime)
 		if serverGame.Board.Position().Turn() == chess.White {
-			serverGame.TimeWhite -= timePassed
+			serverGame.TimeWhite = max(serverGame.TimeWhite-timePassed, 0)
 		} else {
-			serverGame.TimeBlack -= timePassed
+			serverGame.TimeBlack = max(serverGame.TimeBlack-timePassed, 0)
 		}
 		serverGame.LastMoveTime = time.Now()
 		ongoing = true
