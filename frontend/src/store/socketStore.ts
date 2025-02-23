@@ -61,6 +61,7 @@ const useWebSocketStore = create<WebSocketState>(() => {
           if (data.payload.Result !== "") {
             useChessStore.setState(() => ({ result: data.payload.Result }));
           }
+          useChessStore.getState().ground?.playPremove();
         }
       };
     },
