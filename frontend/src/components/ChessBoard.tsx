@@ -15,7 +15,7 @@ export default function ChessBoard(props: { gameID: number }) {
   const sendMessage = useWebSocketStore((state) => state.sendMessage);
   const white = useChessStore((state) => state.whiteusername);
   const username = useAuthStore((state) => state.user?.username);
-  // const result = useChessStore((state) => state.result);
+  const result = useChessStore((state) => state.result);
 
   useEffect(() => {
     if (!boardRef.current) return;
@@ -26,7 +26,7 @@ export default function ChessBoard(props: { gameID: number }) {
       orientation: white == username ? "white" : "black",
       draggable: { enabled: true },
       turnColor: chess.turn() == "w" ? "white" : "black",
-      // viewOnly: result !== "",
+      viewOnly: result !== "" && result !== "ongoing",
       movable: {
         free: false,
         color: white == username ? "white" : "black",

@@ -11,7 +11,6 @@ import { chunkArray } from "../utils/utils.ts";
 import Clock from "../components/Clock2.tsx";
 
 export default function Game() {
-  console.log("on game page");
   const params = useParams();
   const { connect, sendMessage } = useWebSocketStore();
   const {
@@ -120,14 +119,18 @@ export default function Game() {
             {history &&
               history.map((move, index) => {
                 return (
-                  <p key={index} className="flex w-full justify-between">
+                  <button
+                    onClick={() => console.log("hi")}
+                    key={index}
+                    className="flex w-full justify-between"
+                  >
                     <span>
                       {index + 1}
                       {".    "}
                       {move[0] && move[0].MoveNotation}
                     </span>
                     <span> {move[1] && move[1].MoveNotation}</span>
-                  </p>
+                  </button>
                 );
               })}
           </div>

@@ -3,7 +3,6 @@ import Loading from "../components/Loading";
 import { useNavigate } from "react-router";
 
 export default function Home() {
-  console.log("on home page");
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
   const navigate = useNavigate();

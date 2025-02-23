@@ -36,7 +36,7 @@ const useWebSocketStore = create<WebSocketState>(() => {
           navigate(`/game/${data.payload.GameID}`);
         }
         if (data.type === "timeup") {
-          console.log(data);
+          // console.log(data);
           useChessStore.setState(() => ({ result: data.payload.Result }));
         }
         if (data.type === "Move_Response") {

@@ -5,7 +5,6 @@ import { getBaseURL } from "../utils/urlUtils";
 import useAuthStore from "../store/authStore";
 
 export default function Play() {
-  console.log("on play page");
   const { connect } = useWebSocketStore();
   const { setNavigate } = useWebSocketStore();
   const navigate = useNavigate();
