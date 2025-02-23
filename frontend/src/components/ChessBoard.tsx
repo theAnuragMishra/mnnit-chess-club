@@ -48,7 +48,7 @@ export default function ChessBoard(props: { gameID: number }) {
     setGround(ground);
 
     return () => ground.destroy();
-  }, [chess, props.gameID, sendMessage, setGround, white, username]);
+  }, [chess, props.gameID, sendMessage, setGround, white, username, result]);
 
   return <div ref={boardRef} className="w-[644px] h-[644px]" />;
 }

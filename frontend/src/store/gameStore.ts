@@ -41,7 +41,7 @@ const useChessStore = create<ChessState>()((set, get) => ({
 
   updateGround: () => {
     get().ground?.set({
-      // viewOnly: get().result !== "",
+      // viewOnly: get().result !== "" && get().result !== "ongoing",
       fen: get().board.fen(),
       turnColor: get().board.turn() === "w" ? "white" : "black",
       movable: { dests: getValidMoves(get().board) },
