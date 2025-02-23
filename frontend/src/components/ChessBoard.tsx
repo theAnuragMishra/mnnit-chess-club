@@ -50,5 +50,5 @@ export default function ChessBoard(props: { gameID: number }) {
     return () => ground.destroy();
   }, [chess, props.gameID, sendMessage, setGround, white, username]);
 
-  return <div ref={boardRef} className="w-[500px] h-[500px]" />;
+  return <div ref={boardRef} className="w-[644px] h-[644px]" />;
 }

@@ -70,7 +70,7 @@ export default function Clock({
 
   return (
     <span
-      className={`px-2 py-1 my-2 rounded-md text-2xl ${
+      className={`px-2 py-1 my-2 rounded-md text-4xl ${
         active ? "font-bold " : "bg-black text-gray-400"
       } ${active && time > 10000 ? "bg-white text-black" : ""} ${time < 10000 ? "bg-red-500 text-white" : ""}`}
     >

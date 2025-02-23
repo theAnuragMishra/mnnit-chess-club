@@ -17,7 +17,7 @@ export default function Member() {
         throw new Error("Failed to fetch user data");
       }
       const x = await response.json();
-      console.log(x);
+      // console.log(x);
 
       return x; // Convert to JSON
     },
@@ -34,9 +34,7 @@ export default function Member() {
             to={`/game/${item.ID}`}
             className="flex gap-2 underline text-blue-500"
           >
-            <span>{item.WhiteUsername}</span>{" "}
-            <span>{item.Result !== "ongoing" ? item.Result : "*"}</span>
-            <span>{item.BlackUsername}</span>
+            {`${item.WhiteUsername} ${item.Result !== "ongoing" ? item.Result : "*"} ${item.BlackUsername}`}
           </Link>
         ))}
       </div>

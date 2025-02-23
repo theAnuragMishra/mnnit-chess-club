@@ -73,12 +73,26 @@ export default function Game() {
   const whiteUp = data.game.WhiteUsername !== username;
 
   return (
-    <div className="text-2xl px-10 pb-10 max-h-screen">
+    <div className="text-2xl px-5">
       {result !== "ongoing" && result !== "" && modalOpen && (
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
-      <div className="w-full flex gap-15 items-center justify-center">
-        <div className="mt-5 flex flex-col items-center justify-center">
+      <div className="w-full flex items-center justify-around">
+        <div className="w-1/5 px-2 py-1 bg-white text-black">
+          <h1>Chat</h1>
+          <ul>
+            <li>hi this</li>
+            <li>hello will</li>
+            <li>there be</li>
+            <li>is replaced</li>
+            <li>me by</li>
+            <li>bye chat</li>
+          </ul>
+        </div>
+        <div className="flex items-center justify-center">
+          <ChessBoard gameID={Number(params.gameID)} />
+        </div>
+        <div className="w-1/5 h-full flex flex-col gap-2">
           <p className="w-full mb-1 flex justify-between items-center">
             {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
             <Clock
@@ -102,7 +116,21 @@ export default function Game() {
               }
             />
           </p>
-          <ChessBoard gameID={Number(params.gameID)} />
+          <div className="h-[250px] text-lg overflow-y-auto pl-2 pr-4 bg-gray-800">
+            {history &&
+              history.map((move, index) => {
+                return (
+                  <p key={index} className="flex w-full justify-between">
+                    <span>
+                      {index + 1}
+                      {".    "}
+                      {move[0] && move[0].MoveNotation}
+                    </span>
+                    <span> {move[1] && move[1].MoveNotation}</span>
+                  </p>
+                );
+              })}
+          </div>
           <p className="w-full mb-1 flex items-center justify-between">
             {username}{" "}
             <Clock
@@ -127,22 +155,6 @@ export default function Game() {
             />
           </p>
         </div>
-        <div className="w-[200px] h-full">
-          {history &&
-            history.map((move, index) => {
-              return (
-                <p key={index} className="flex w-full justify-between">
-                  <span>
-                    {index + 1}
-                    {".    "}
-                    {move[0] && move[0].MoveNotation}
-                  </span>
-                  <span> {move[1] && move[1].MoveNotation}</span>
-                </p>
-              );
-            })}
-        </div>
-        <div></div>
       </div>
     </div>
   );
