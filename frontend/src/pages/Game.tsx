@@ -8,7 +8,7 @@ import { getBaseURL } from "../utils/urlUtils.ts";
 import ChessBoard from "../components/ChessBoard.tsx";
 import useAuthStore from "../store/authStore.ts";
 import { chunkArray } from "../utils/utils.ts";
-import Clock from "../components/Clock.tsx";
+import Clock from "../components/Clock2.tsx";
 
 export default function Game() {
   console.log("on game page");
@@ -40,7 +40,7 @@ export default function Game() {
         throw new Error("Failed to fetch game data");
       }
       const x = await response.json();
-      console.log(x);
+      // console.log(x);
 
       setUserNames(x.game.WhiteUsername, x.game.BlackUsername);
       setHistory(x.moves);
@@ -83,15 +83,16 @@ export default function Game() {
             {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
             <Clock
               initialTime={whiteUp ? timeWhite : timeBlack}
-              onTimeUp={() =>
+              onTimeUp={() => {
+                console.log("time up");
                 sendMessage({
                   type: "timeup",
                   payload: {
                     color: whiteUp ? "black" : "white",
                     gameID: Number(params.gameID),
                   },
-                })
-              }
+                });
+              }}
               active={
                 result !== "ongoing" && result !== ""
                   ? false
@@ -106,15 +107,16 @@ export default function Game() {
             {username}{" "}
             <Clock
               initialTime={whiteUp ? timeBlack : timeWhite}
-              onTimeUp={() =>
+              onTimeUp={() => {
+                console.log("time up");
                 sendMessage({
                   type: "timeup",
                   payload: {
                     color: whiteUp ? "black" : "white",
                     gameID: Number(params.gameID),
                   },
-                })
-              }
+                });
+              }}
               active={
                 result !== "ongoing" && result !== ""
                   ? false
