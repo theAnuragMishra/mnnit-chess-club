@@ -100,6 +100,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 	// log.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {
+		g.Result = string(g.Board.Outcome())
 		return "game over with result", string(g.Board.Outcome())
 	}
 
