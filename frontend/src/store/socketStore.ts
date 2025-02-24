@@ -45,11 +45,15 @@ const useWebSocketStore = create<WebSocketState>(() => {
           const {
             updateGround,
             updateFen,
+            setGroundFen,
             updateHistory,
             setTimeBlack,
             setTimeWhite,
+            // makeMoveOnGround,
           } = useChessStore.getState();
           updateFen(data.payload.move.MoveFen);
+          setGroundFen(data.payload.move.MoveFen);
+          // makeMoveOnGround(data.payload.s1, data.payload.s2);
           updateGround();
           updateHistory(data.payload.move);
           setTimeWhite(data.payload.timeWhite);

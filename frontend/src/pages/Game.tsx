@@ -26,6 +26,8 @@ export default function Game() {
     setHistory,
     setTimeBlack,
     setTimeWhite,
+    setGroundFen,
+    setGroundViewOnly,
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -115,31 +117,77 @@ export default function Game() {
               }
             />
           </p>
-          <div className="h-[250px] text-lg overflow-y-auto pl-2 pr-4 bg-gray-800">
-            {history &&
-              history.map((move, index) => {
-                return (
-                  <button
-                    onClick={() => console.log("hi")}
-                    key={index}
-                    className="flex w-full justify-between"
-                  >
-                    <span>
-                      {index + 1}
-                      {".    "}
-                      {move[0] && move[0].MoveNotation}
-                    </span>
-                    <span> {move[1] && move[1].MoveNotation}</span>
-                  </button>
-                );
-              })}
+          <div className="h-[250px] text-lg px-4 py-2  bg-gray-800 relative">
+            <div className="overflow-y-auto">
+              {history &&
+                history.map((move, index) => {
+                  return (
+                    <div key={index} className="w-full grid grid-cols-3 gap-10">
+                      <span>
+                        {index + 1}
+                        {".    "}
+                      </span>
+                      {move[0] && (
+                        <button
+                          onClick={() => {
+                            setGroundFen(move[0].MoveFen);
+                            if (index === history.length - 1 && !move[1]) {
+                              setGroundViewOnly(false);
+                            } else {
+                              setGroundViewOnly(true);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {move[0].MoveNotation}
+                        </button>
+                      )}
+                      {move[1] && (
+                        <button
+                          onClick={() => {
+                            setGroundFen(move[1].MoveFen);
+                            if (index === history.length - 1) {
+                              setGroundViewOnly(false);
+                            } else {
+                              setGroundViewOnly(true);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {move[1].MoveNotation}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="absolute bottom-2 w-full flex justify-around">
+              <button
+                className="cursor-pointer"
+                onClick={() => {
+                  setGroundFen(history[0][0].MoveFen);
+                  setGroundViewOnly(true);
+                }}
+              >
+                {"<"}
+              </button>
+              <button
+                className="cursor-pointer"
+                onClick={() => {
+                  setGroundFen(board.fen());
+                  setGroundViewOnly(false);
+                }}
+              >
+                {">"}
+              </button>
+            </div>
           </div>
           <p className="w-full mb-1 flex items-center justify-between">
             {username}{" "}
             <Clock
               initialTime={whiteUp ? timeBlack : timeWhite}
               onTimeUp={() => {
-                console.log("time up");
+                // console.log("time up");
                 sendMessage({
                   type: "timeup",
                   payload: {

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Chess } from "chess.js";
 import { Api } from "chessground/api";
 import { getValidMoves } from "../utils/chessUtils";
+import { Key } from "chessground/types";
 
 interface ChessState {
   board: Chess;
@@ -17,6 +18,9 @@ interface ChessState {
   updateHistory: (move: string) => void;
   setHistory: (his: string[]) => void;
   updateGround: () => void;
+  makeMoveOnGround: (s1: Key, s2: Key) => void;
+  setGroundFen: (fen: string) => void;
+  setGroundViewOnly: (x: boolean) => void;
   setGround: (ground: Api) => void;
   resetGame: () => void;
   setUserNames: (white: string, black: string) => void;
@@ -39,10 +43,24 @@ const useChessStore = create<ChessState>()((set, get) => ({
 
   setGround: (ground: Api) => set({ ground }),
 
+  makeMoveOnGround: (s1: Key, s2: Key) => {
+    get().ground?.move(s1, s2);
+  },
+
+  setGroundFen: (fen: string) => {
+    get().ground?.set({
+      fen: fen,
+    });
+  },
+
+  setGroundViewOnly: (x: boolean) => {
+    get().ground?.set({
+      viewOnly: x,
+    });
+  },
+
   updateGround: () => {
     get().ground?.set({
-      // viewOnly: get().result !== "" && get().result !== "ongoing",
-      fen: get().board.fen(),
       turnColor: get().board.turn() === "w" ? "white" : "black",
       movable: { dests: getValidMoves(get().board) },
     });
