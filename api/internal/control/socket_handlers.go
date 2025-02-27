@@ -144,7 +144,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
-		payload, err := json.Marshal(map[string]interface{}{"Result": "1-0"})
+		payload, err := json.Marshal(map[string]interface{}{"Result": "0-1"})
 		if err != nil {
 			log.Println("error marshalling new game payload")
 			return nil
