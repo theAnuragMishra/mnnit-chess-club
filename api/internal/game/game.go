@@ -57,6 +57,7 @@ func DatabaseGameToGame(game *database.Game) *Game {
 }
 
 func (g *Game) MakeMove(player int32, move string) (string, string) {
+	log.Println("inside make move ")
 	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
 		return "not your turn", ""
 	}

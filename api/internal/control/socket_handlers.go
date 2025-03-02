@@ -17,6 +17,7 @@ import (
 
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(string(event.Payload))
+	log.Println("inside make move handler")
 
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
