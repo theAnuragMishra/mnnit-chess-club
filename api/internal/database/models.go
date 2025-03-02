@@ -34,6 +34,8 @@ type Move struct {
 	MoveNumber   int32
 	PlayerID     *int32
 	MoveNotation string
+	Orig         string
+	Dest         string
 	MoveFen      string
 	CreatedAt    time.Time
 }

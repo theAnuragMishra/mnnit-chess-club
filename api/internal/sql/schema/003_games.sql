@@ -19,6 +19,8 @@ CREATE TABLE moves (
     move_number INT NOT NULL,
     player_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     move_notation VARCHAR(10) NOT NULL,
+    orig VARCHAR(4) NOT NULL,
+    dest VARCHAR(4) NOT NULL,
     move_fen TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

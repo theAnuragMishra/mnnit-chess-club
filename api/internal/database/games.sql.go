@@ -80,7 +80,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 }
 
 const getGameMoves = `-- name: GetGameMoves :many
-SELECT move_number, move_notation, move_fen
+SELECT move_number, move_notation, orig, dest, move_fen
 FROM moves
 WHERE game_id = $1
 ORDER BY move_number
@@ -89,6 +89,8 @@ ORDER BY move_number
 type GetGameMovesRow struct {
 	MoveNumber   int32
 	MoveNotation string
+	Orig         string
+	Dest         string
 	MoveFen      string
 }
 
@@ -101,7 +103,13 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMove
 	var items []GetGameMovesRow
 	for rows.Next() {
 		var i GetGameMovesRow
-		if err := rows.Scan(&i.MoveNumber, &i.MoveNotation, &i.MoveFen); err != nil {
+		if err := rows.Scan(
+			&i.MoveNumber,
+			&i.MoveNotation,
+			&i.Orig,
+			&i.Dest,
+			&i.MoveFen,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -113,7 +121,7 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMove
 }
 
 const getLatestMove = `-- name: GetLatestMove :one
-SELECT move_number, move_notation, move_fen
+SELECT move_number, move_notation, orig, dest, move_fen
 FROM moves
 WHERE game_id = $1
 ORDER BY move_number DESC
@@ -123,13 +131,21 @@ LIMIT $1
 type GetLatestMoveRow struct {
 	MoveNumber   int32
 	MoveNotation string
+	Orig         string
+	Dest         string
 	MoveFen      string
 }
 
 func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMoveRow, error) {
 	row := q.db.QueryRow(ctx, getLatestMove, limit)
 	var i GetLatestMoveRow
-	err := row.Scan(&i.MoveNumber, &i.MoveNotation, &i.MoveFen)
+	err := row.Scan(
+		&i.MoveNumber,
+		&i.MoveNotation,
+		&i.Orig,
+		&i.Dest,
+		&i.MoveFen,
+	)
 	return i, err
 }
 
@@ -210,9 +226,9 @@ func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername string) ([]G
 }
 
 const insertMove = `-- name: InsertMove :one
-INSERT INTO moves (game_id, move_number, player_id, move_notation, move_fen)
-VALUES ($1,$2, $3, $4, $5)
-RETURNING move_number, move_notation, move_fen
+INSERT INTO moves (game_id, move_number, player_id, move_notation,orig, dest, move_fen)
+VALUES ($1,$2, $3, $4, $5, $6, $7)
+RETURNING move_number, move_notation, orig, dest, move_fen
 `
 
 type InsertMoveParams struct {
@@ -220,12 +236,16 @@ type InsertMoveParams struct {
 	MoveNumber   int32
 	PlayerID     *int32
 	MoveNotation string
+	Orig         string
+	Dest         string
 	MoveFen      string
 }
 
 type InsertMoveRow struct {
 	MoveNumber   int32
 	MoveNotation string
+	Orig         string
+	Dest         string
 	MoveFen      string
 }
 
@@ -235,10 +255,18 @@ func (q *Queries) InsertMove(ctx context.Context, arg InsertMoveParams) (InsertM
 		arg.MoveNumber,
 		arg.PlayerID,
 		arg.MoveNotation,
+		arg.Orig,
+		arg.Dest,
 		arg.MoveFen,
 	)
 	var i InsertMoveRow
-	err := row.Scan(&i.MoveNumber, &i.MoveNotation, &i.MoveFen)
+	err := row.Scan(
+		&i.MoveNumber,
+		&i.MoveNotation,
+		&i.Orig,
+		&i.Dest,
+		&i.MoveFen,
+	)
 	return i, err
 }
 

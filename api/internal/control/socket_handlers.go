@@ -71,6 +71,8 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		MoveNumber:   int32(foundGame.GameLength + 1),
 		PlayerID:     &x,
 		MoveNotation: move.MoveStr,
+		Orig:         move.Orig,
+		Dest:         move.Dest,
 		MoveFen:      foundGame.Board.FEN(),
 	})
 	if err != nil {
