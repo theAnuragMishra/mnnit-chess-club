@@ -21,6 +21,7 @@ interface ChessState {
   makeMoveOnGround: (s1: Key, s2: Key) => void;
   setGroundFen: (fen: string) => void;
   setGroundViewOnly: (x: boolean) => void;
+  setGroundLastMoves: (orig: string, dest: string) => void;
   setGround: (ground: Api) => void;
   resetGame: () => void;
   setUserNames: (white: string, black: string) => void;
@@ -50,6 +51,12 @@ const useChessStore = create<ChessState>()((set, get) => ({
   setGroundFen: (fen: string) => {
     get().ground?.set({
       fen: fen,
+    });
+  },
+
+  setGroundLastMoves: (orig: string, dest: string) => {
+    get().ground?.set({
+      lastMove: [orig as Key, dest as Key],
     });
   },
 

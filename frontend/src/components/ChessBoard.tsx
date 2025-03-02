@@ -27,6 +27,7 @@ export default function ChessBoard(props: { gameID: number }) {
       draggable: { enabled: true },
       turnColor: chess.turn() == "w" ? "white" : "black",
       viewOnly: result !== "" && result !== "ongoing",
+      lastMove: [],
       movable: {
         free: false,
         color: white == username ? "white" : "black",
@@ -37,7 +38,12 @@ export default function ChessBoard(props: { gameID: number }) {
             const move = chess.move({ from: orig, to: dest });
             sendMessage({
               type: "move",
-              payload: { MoveStr: move.san, GameID: Number(props.gameID) },
+              payload: {
+                MoveStr: move.san,
+                orig: orig,
+                dest: dest,
+                GameID: Number(props.gameID),
+              },
             });
           },
         },

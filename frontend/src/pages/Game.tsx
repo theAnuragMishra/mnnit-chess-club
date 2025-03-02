@@ -15,6 +15,7 @@ export default function Game() {
   const { connect, sendMessage } = useWebSocketStore();
   const {
     setResult,
+    setGroundLastMoves,
     updateFen,
     updateGround,
     result,
@@ -41,7 +42,6 @@ export default function Game() {
         throw new Error("Failed to fetch game data");
       }
       const x = await response.json();
-      // console.log(x);
 
       setUserNames(x.game.WhiteUsername, x.game.BlackUsername);
       setHistory(x.moves);
@@ -50,17 +50,17 @@ export default function Game() {
       setTimeBlack(x.timeBlack);
       setResult(x.game.Result);
       updateGround();
+      if (x.moves) {
+        setGroundLastMoves(
+          x.moves[x.moves.length - 1].Orig,
+          x.moves[x.moves.length - 1].Dest,
+        );
+      }
 
       return x; // Convert to JSON
     },
     refetchOnMount: true,
   });
-
-  //     useEffect(() => {
-  //     connect(); // Connect WebSocket on mount
-  //
-  //     return () => close(); // Disconnect on unmount
-  // }, [connect, close, sendMessage]);
 
   useEffect(() => {
     connect(); // Ensure WebSocket stays connected
@@ -131,6 +131,7 @@ export default function Game() {
                         <button
                           onClick={() => {
                             setGroundFen(move[0].MoveFen);
+                            setGroundLastMoves(move[0].Orig, move[0].Dest);
                             if (index === history.length - 1 && !move[1]) {
                               setGroundViewOnly(false);
                             } else {
@@ -146,6 +147,7 @@ export default function Game() {
                         <button
                           onClick={() => {
                             setGroundFen(move[1].MoveFen);
+                            setGroundLastMoves(move[1].Orig, move[1].Dest);
                             if (index === history.length - 1) {
                               setGroundViewOnly(false);
                             } else {
@@ -166,6 +168,7 @@ export default function Game() {
                 className="cursor-pointer"
                 onClick={() => {
                   setGroundFen(history[0][0].MoveFen);
+                  setGroundLastMoves(history[0][0].Orig, history[0][0].Dest);
                   setGroundViewOnly(true);
                 }}
               >
@@ -175,6 +178,17 @@ export default function Game() {
                 className="cursor-pointer"
                 onClick={() => {
                   setGroundFen(board.fen());
+                  if (history[history.length - 1][1]) {
+                    setGroundLastMoves(
+                      history[history.length - 1][1].Orig,
+                      history[history.length - 1][1].Dest,
+                    );
+                  } else {
+                    setGroundLastMoves(
+                      history[history.length - 1][0].Orig,
+                      history[history.length - 1][0].Dest,
+                    );
+                  }
                   setGroundViewOnly(false);
                 }}
               >
