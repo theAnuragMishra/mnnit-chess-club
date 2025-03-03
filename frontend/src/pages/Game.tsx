@@ -79,7 +79,7 @@ export default function Game() {
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex items-center justify-around">
-        <div className="w-1/5 px-2 py-1 bg-white text-black">
+        <div className="w-1/4 px-2 py-1 bg-white text-black">
           <h1>Chat</h1>
           <ul>
             <li>hi this</li>
@@ -93,7 +93,7 @@ export default function Game() {
         <div className="flex items-center justify-center">
           <ChessBoard gameID={Number(params.gameID)} />
         </div>
-        <div className="w-1/5 h-full flex flex-col gap-2">
+        <div className="w-1/4 h-full flex flex-col gap-2">
           <p className="w-full mb-1 flex justify-between items-center">
             {whiteUp ? data.game.WhiteUsername : data.game.BlackUsername}{" "}
             <Clock
@@ -117,12 +117,12 @@ export default function Game() {
               }
             />
           </p>
-          <div className="h-[250px] text-lg px-4 py-2  bg-gray-800 relative">
-            <div className="overflow-y-auto">
+          <div className="h-[300px] text-lg px-4 py-2  bg-gray-800 relative">
+            <div className="overflow-y-auto h-[250px] overflow-x-hidden">
               {history &&
                 history.map((move, index) => {
                   return (
-                    <div key={index} className="w-full grid grid-cols-3 gap-10">
+                    <div key={index} className="w-full grid grid-cols-[1fr_16fr_16fr] gap-10">
                       <span>
                         {index + 1}
                         {".    "}
