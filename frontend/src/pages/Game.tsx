@@ -9,6 +9,8 @@ import ChessBoard from "../components/ChessBoard.tsx";
 import useAuthStore from "../store/authStore.ts";
 import { chunkArray } from "../utils/utils.ts";
 import Clock from "../components/Clock2.tsx";
+import HistoryTable from "../components/HistoryTable.tsx";
+import {FastForward, Rewind} from "@phosphor-icons/react";
 
 export default function Game() {
   const params = useParams();
@@ -117,65 +119,21 @@ export default function Game() {
               }
             />
           </p>
-          <div className="h-[300px] text-lg px-4 py-2  bg-gray-800 relative">
-            <div className="overflow-y-auto h-[250px] overflow-x-hidden">
-              {history &&
-                history.map((move, index) => {
-                  return (
-                    <div key={index} className="w-full grid grid-cols-[1fr_16fr_16fr] gap-10">
-                      <span>
-                        {index + 1}
-                        {".    "}
-                      </span>
-                      {move[0] && (
-                        <button
-                          onClick={() => {
-                            setGroundFen(move[0].MoveFen);
-                            setGroundLastMoves(move[0].Orig, move[0].Dest);
-                            if (index === history.length - 1 && !move[1]) {
-                              setGroundViewOnly(false);
-                            } else {
-                              setGroundViewOnly(true);
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {move[0].MoveNotation}
-                        </button>
-                      )}
-                      {move[1] && (
-                        <button
-                          onClick={() => {
-                            setGroundFen(move[1].MoveFen);
-                            setGroundLastMoves(move[1].Orig, move[1].Dest);
-                            if (index === history.length - 1) {
-                              setGroundViewOnly(false);
-                            } else {
-                              setGroundViewOnly(true);
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {move[1].MoveNotation}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="absolute bottom-2 w-full flex justify-around">
+          <div className="h-[310px] text-lg px-4 py-2  bg-gray-800 relative">
+            <HistoryTable history={history} />
+            <div className="absolute bottom-2 w-4/5 flex justify-around">
               <button
-                className="cursor-pointer"
+                className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
                 onClick={() => {
                   setGroundFen(history[0][0].MoveFen);
                   setGroundLastMoves(history[0][0].Orig, history[0][0].Dest);
                   setGroundViewOnly(true);
                 }}
-              >
-                {"<"}
+              ><Rewind size={32}/>
+
               </button>
               <button
-                className="cursor-pointer"
+                className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
                 onClick={() => {
                   setGroundFen(board.fen());
                   if (history[history.length - 1][1]) {
@@ -192,7 +150,7 @@ export default function Game() {
                   setGroundViewOnly(false);
                 }}
               >
-                {">"}
+                <FastForward size={32}/>
               </button>
             </div>
           </div>
