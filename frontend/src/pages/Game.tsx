@@ -10,7 +10,7 @@ import useAuthStore from "../store/authStore.ts";
 import { chunkArray } from "../utils/utils.ts";
 import Clock from "../components/Clock2.tsx";
 import HistoryTable from "../components/HistoryTable.tsx";
-import {FastForward, Rewind} from "@phosphor-icons/react";
+
 
 export default function Game() {
   const params = useParams();
@@ -29,8 +29,7 @@ export default function Game() {
     setHistory,
     setTimeBlack,
     setTimeWhite,
-    setGroundFen,
-    setGroundViewOnly,
+
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -119,41 +118,10 @@ export default function Game() {
               }
             />
           </p>
-          <div className="h-[310px] text-lg px-4 py-2  bg-gray-800 relative">
-            <HistoryTable history={history} />
-            <div className="absolute bottom-2 w-4/5 flex justify-around">
-              <button
-                className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
-                onClick={() => {
-                  setGroundFen(history[0][0].MoveFen);
-                  setGroundLastMoves(history[0][0].Orig, history[0][0].Dest);
-                  setGroundViewOnly(true);
-                }}
-              ><Rewind size={32}/>
 
-              </button>
-              <button
-                className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
-                onClick={() => {
-                  setGroundFen(board.fen());
-                  if (history[history.length - 1][1]) {
-                    setGroundLastMoves(
-                      history[history.length - 1][1].Orig,
-                      history[history.length - 1][1].Dest,
-                    );
-                  } else {
-                    setGroundLastMoves(
-                      history[history.length - 1][0].Orig,
-                      history[history.length - 1][0].Dest,
-                    );
-                  }
-                  setGroundViewOnly(false);
-                }}
-              >
-                <FastForward size={32}/>
-              </button>
-            </div>
-          </div>
+            <HistoryTable history={history} />
+
+
           <p className="w-full mb-1 flex items-center justify-between">
             {username}{" "}
             <Clock
