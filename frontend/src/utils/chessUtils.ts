@@ -1,5 +1,5 @@
 import { Key } from "chessground/types";
-import { Chess, Color } from "chess.js";
+import { Chess, Color, Piece } from "chess.js";
 
 export function colorToCgColor(chessjsColor: Color): "white" | "black" {
   return chessjsColor === "w" ? "white" : "black";
@@ -25,3 +25,11 @@ export const getValidMoves = (chess: Chess) => {
 
   return moves;
 };
+
+export function isPromoting(dest: Key, piece: Piece) {
+  return (
+    piece.type == "p" &&
+    ((piece.color == "w" && dest[1] == "8") ||
+      (piece.color == "b" && dest[1] == "1"))
+  );
+}

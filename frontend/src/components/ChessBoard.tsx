@@ -4,9 +4,11 @@ import "../../node_modules/chessground/assets/chessground.base.css";
 import "../../node_modules/chessground/assets/chessground.brown.css";
 import "../../node_modules/chessground/assets/chessground.cburnett.css";
 import useChessStore from "../store/gameStore";
-import { getValidMoves } from "../utils/chessUtils";
+import { getValidMoves, isPromoting } from "../utils/chessUtils";
 import useWebSocketStore from "../store/socketStore";
 import useAuthStore from "../store/authStore";
+import { Piece } from "chessground/types";
+import { Square } from "chess.js";
 
 export default function ChessBoard(props: { gameID: number }) {
   const boardRef = useRef<HTMLDivElement>(null);
@@ -35,16 +37,30 @@ export default function ChessBoard(props: { gameID: number }) {
         showDests: true,
         events: {
           after: (orig, dest) => {
-            const move = chess.move({ from: orig, to: dest });
-            sendMessage({
-              type: "move",
-              payload: {
-                MoveStr: move.san,
-                orig: orig,
-                dest: dest,
-                GameID: Number(props.gameID),
-              },
-            });
+            const piece = chess.get(orig as Square);
+            if (isPromoting(dest, piece!)) {
+              const move = chess.move({ from: orig, to: dest, promotion: "q" });
+              sendMessage({
+                type: "move",
+                payload: {
+                  MoveStr: move.san,
+                  orig: orig,
+                  dest: dest,
+                  GameID: Number(props.gameID),
+                },
+              });
+            } else {
+              const move = chess.move({ from: orig, to: dest });
+              sendMessage({
+                type: "move",
+                payload: {
+                  MoveStr: move.san,
+                  orig: orig,
+                  dest: dest,
+                  GameID: Number(props.gameID),
+                },
+              });
+            }
           },
         },
       },
