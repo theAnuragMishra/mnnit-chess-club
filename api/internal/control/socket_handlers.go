@@ -17,7 +17,6 @@ import (
 
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(string(event.Payload))
-	log.Println("inside make move handler")
 
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
@@ -106,7 +105,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
-	fmt.Println("inside timeup event")
 	var timeupData timeupPayload
 	if err := json.Unmarshal(event.Payload, &timeupData); err != nil {
 		return err
@@ -228,7 +226,6 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 
 	client.Send(e)
 	otherClient.Send(e)
-	fmt.Println("message sent")
 
 	return nil
 }
