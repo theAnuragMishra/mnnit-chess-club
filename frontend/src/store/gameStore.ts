@@ -8,6 +8,8 @@ interface ChessState {
   board: Chess;
   whiteusername: string;
   blackusername: string;
+  whiteID: string;
+  blackID: string;
   timeBlack: number;
   timeWhite: number;
   ground: Api | null;
@@ -25,6 +27,7 @@ interface ChessState {
   setGround: (ground: Api) => void;
   resetGame: () => void;
   setUserNames: (white: string, black: string) => void;
+  setUserIDs: (white: string, black: string) => void;
   setTimeBlack: (time: number) => void;
   setTimeWhite: (time: number) => void;
 }
@@ -33,6 +36,8 @@ const useChessStore = create<ChessState>()((set, get) => ({
   ground: null,
   whiteusername: "",
   blackusername: "",
+  whiteID: "",
+  blackID: "",
   timeBlack: 0,
   timeWhite: 0,
   result: "",
@@ -41,6 +46,9 @@ const useChessStore = create<ChessState>()((set, get) => ({
 
   setUserNames: (white: string, black: string) =>
     set({ whiteusername: white, blackusername: black }),
+
+  setUserIDs: (white: string, black: string) =>
+    set({ whiteID: white, blackID: black }),
 
   setGround: (ground: Api) => set({ ground }),
 
