@@ -10,13 +10,14 @@ import useAuthStore from "../store/authStore.ts";
 import { chunkArray } from "../utils/utils.ts";
 import Clock from "../components/Clock2.tsx";
 import HistoryTable from "../components/HistoryTable.tsx";
-
+import Chat from "../components/Chat.tsx";
 
 export default function Game() {
   const params = useParams();
   const { connect, sendMessage } = useWebSocketStore();
   const {
     setResult,
+    setUserIDs,
     setGroundLastMoves,
     updateFen,
     updateGround,
@@ -29,7 +30,6 @@ export default function Game() {
     setHistory,
     setTimeBlack,
     setTimeWhite,
-
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -45,6 +45,7 @@ export default function Game() {
       const x = await response.json();
 
       setUserNames(x.game.WhiteUsername, x.game.BlackUsername);
+      setUserIDs(x.game.WhiteID, x.game.BlackID);
       setHistory(x.moves);
       updateFen(x.game.Fen);
       setTimeWhite(x.timeWhite);
@@ -80,17 +81,7 @@ export default function Game() {
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex items-center justify-around">
-        <div className="w-1/4 px-2 py-1 bg-white text-black">
-          <h1>Chat</h1>
-          <ul>
-            <li>hi this</li>
-            <li>hello will</li>
-            <li>there be</li>
-            <li>is replaced</li>
-            <li>me by</li>
-            <li>bye chat</li>
-          </ul>
-        </div>
+        <Chat gameID={params.gameID} />
         <div className="flex items-center justify-center">
           <ChessBoard gameID={Number(params.gameID)} />
         </div>
@@ -119,8 +110,7 @@ export default function Game() {
             />
           </p>
 
-            <HistoryTable history={history} />
-
+          <HistoryTable history={history} />
 
           <p className="w-full mb-1 flex items-center justify-between">
             {username}{" "}

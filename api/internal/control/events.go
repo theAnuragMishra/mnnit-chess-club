@@ -7,4 +7,5 @@ type EventHandler func(c *Controller, event socket.Event, client *socket.Client)
 var handlers = map[string]EventHandler{
 	"move":   Move,
 	"timeup": TimeUp,
+	"chat":   Chat,
 }

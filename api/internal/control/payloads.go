@@ -24,3 +24,12 @@ type GameResponse struct {
 	TimeBlack int32       `json:"timeBlack"`
 	TimeWhite int32       `json:"timeWhite"`
 }
+
+type ChatPayload struct {
+	Sender           int32  `json:"sender"`
+	Receiver         int32  `json:"receiver"`
+	SenderUsername   string `json:"senderUsername"`
+	ReceiverUsername string `json:"receiverUsername"`
+	Text             string `json:"text"`
+	GameID           int32  `json:"gameID"`
+}

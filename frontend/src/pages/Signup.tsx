@@ -34,7 +34,7 @@ export default function Signup() {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate("/profile");
+      navigate(`/member/${user?.username}`);
     }
   }, [user, navigate, loading]);
 

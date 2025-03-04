@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import useChessStore from "./gameStore.ts";
+import useChatStore from "./chatStore.ts";
 
-// Define WebSocket message type
+//Define WebSocket message type
 interface Message {
   type: string;
   payload?: any;
 }
 
-// Zustand store type definition
+//Zustand store type definition
 interface WebSocketState {
   connect: () => void;
   setNavigate: (navFunc: any) => void;
@@ -16,7 +17,7 @@ interface WebSocketState {
 }
 
 // Create Zustand store
-const useWebSocketStore = create<WebSocketState>(() => {
+const useWebSocketStore = create<WebSocketState>()(() => {
   let socket: WebSocket | null = null;
   let navigate: any = null;
 
@@ -64,6 +65,10 @@ const useWebSocketStore = create<WebSocketState>(() => {
             useChessStore.setState(() => ({ result: data.payload.Result }));
           }
           useChessStore.getState().ground?.playPremove();
+        }
+        if (data.type === "chat") {
+          // console.log(data);
+          useChatStore.getState().setMessages(data.payload);
         }
       };
     },

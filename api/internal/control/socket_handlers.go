@@ -21,7 +21,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	var move movePayload
 	if err := json.Unmarshal(event.Payload, &move); err != nil {
-		log.Println("Invalid move payload")
 		return err
 	}
 	gameID := move.GameID
@@ -110,7 +109,6 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 	fmt.Println("inside timeup event")
 	var timeupData timeupPayload
 	if err := json.Unmarshal(event.Payload, &timeupData); err != nil {
-		log.Println("Invalid timeup payload")
 		return err
 	}
 
@@ -149,8 +147,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		payload, err := json.Marshal(map[string]interface{}{"Result": "0-1"})
 		if err != nil {
-			log.Println("error marshalling new game payload")
-			return nil
+			return err
 		}
 		e := socket.Event{
 			Type:    "timeup",
@@ -172,8 +169,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		payload, err := json.Marshal(map[string]interface{}{"Result": "1-0"})
 		if err != nil {
-			log.Println("error marshalling new game payload")
-			return nil
+			return err
 		}
 		e := socket.Event{
 			Type:    "timeup",
@@ -184,4 +180,55 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	return errors.New("time not actually up")
+}
+
+func Chat(c *Controller, event socket.Event, client *socket.Client) error {
+	var chat ChatPayload
+	if err := json.Unmarshal(event.Payload, &chat); err != nil {
+		return errors.New("invalid payload")
+	}
+
+	if chat.Sender == chat.Receiver {
+		return errors.New("same Sender and Receiver")
+	}
+
+	if chat.Sender != client.UserID {
+		return errors.New("client not the sender")
+	}
+	var foundGame *game.Game
+	for _, g := range c.GameManager.Games {
+		if g.ID == chat.GameID {
+			foundGame = g
+		}
+	}
+
+	if foundGame == nil {
+		return errors.New("game not found")
+	}
+	fmt.Println(foundGame.Result)
+	if foundGame.Result != "ongoing" {
+		return errors.New("game has ended")
+	}
+
+	if (chat.Sender != foundGame.WhiteID && chat.Sender != foundGame.BlackID) || (chat.Receiver != foundGame.WhiteID && chat.Receiver != foundGame.BlackID) {
+		return errors.New("game id doesn't correspond")
+	}
+
+	otherClient := c.SocketManager.FindClientByUserID(chat.Receiver)
+
+	payload, err := json.Marshal(map[string]interface{}{"sender": chat.SenderUsername, "receiver": chat.ReceiverUsername, "gameID": chat.GameID, "text": chat.Text})
+	if err != nil {
+		return errors.New("error marshalling chat payload")
+	}
+
+	e := socket.Event{
+		Type:    "chat",
+		Payload: json.RawMessage(payload),
+	}
+
+	client.Send(e)
+	otherClient.Send(e)
+	fmt.Println("message sent")
+
+	return nil
 }
