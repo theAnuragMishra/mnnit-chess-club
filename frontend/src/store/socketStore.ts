@@ -51,6 +51,8 @@ const useWebSocketStore = create<WebSocketState>()(() => {
             setTimeBlack,
             setTimeWhite,
             setGroundLastMoves,
+            setActiveIndex,
+            moveHistory,
           } = useChessStore.getState();
           // console.log(data.payload.move);
           updateFen(data.payload.move.MoveFen);
@@ -60,6 +62,7 @@ const useWebSocketStore = create<WebSocketState>()(() => {
           updateHistory(data.payload.move);
           setTimeWhite(data.payload.timeWhite);
           setTimeBlack(data.payload.timeBlack);
+          setActiveIndex(moveHistory ? moveHistory.length : -1);
 
           if (data.payload.Result !== "") {
             useChessStore.setState(() => ({ result: data.payload.Result }));

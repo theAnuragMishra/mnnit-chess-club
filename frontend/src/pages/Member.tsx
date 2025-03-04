@@ -17,7 +17,6 @@ export default function Member() {
         throw new Error("Failed to fetch user data");
       }
       const x = await response.json();
-      // console.log(x);
 
       return x; // Convert to JSON
     },
@@ -28,15 +27,16 @@ export default function Member() {
     <div className="flex-col items-start p-4 text-xl bg-gray-600 rounded-xl m-5 w-3/5">
       <div className="text-3xl mb-2">{params.username}'s Games</div>
       <div>
-        {data.map((item) => (
-          <Link
-            key={item.ID}
-            to={`/game/${item.ID}`}
-            className="flex gap-2 underline text-blue-500"
-          >
-            {`${item.WhiteUsername} ${item.Result !== "ongoing" ? item.Result : "*"} ${item.BlackUsername}`}
-          </Link>
-        ))}
+        {data &&
+          data.map((item) => (
+            <Link
+              key={item.ID}
+              to={`/game/${item.ID}`}
+              className="flex gap-2 underline text-blue-500"
+            >
+              {`${item.WhiteUsername} ${item.Result !== "ongoing" ? item.Result : "*"} ${item.BlackUsername}`}
+            </Link>
+          ))}
       </div>
     </div>
   );
