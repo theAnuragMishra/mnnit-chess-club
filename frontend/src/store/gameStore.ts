@@ -15,8 +15,8 @@ interface ChessState {
   ground: Api | null;
   result: string;
   moveHistory:
-    | { MoveFen: string; MoveNotation: string; MoveNumber: number }[]
-    | null;
+  | { MoveFen: string; MoveNotation: string; MoveNumber: number }[]
+  | null;
   activeIndex: number;
   updateFen: (fen: string) => void;
   setResult: (result: string) => void;

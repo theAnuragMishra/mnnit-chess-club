@@ -7,7 +7,6 @@ import useChessStore from "../store/gameStore";
 import { getValidMoves, isPromoting } from "../utils/chessUtils";
 import useWebSocketStore from "../store/socketStore";
 import useAuthStore from "../store/authStore";
-import { Piece } from "chessground/types";
 import { Square } from "chess.js";
 
 export default function ChessBoard(props: { gameID: number }) {
@@ -30,6 +29,7 @@ export default function ChessBoard(props: { gameID: number }) {
       turnColor: chess.turn() == "w" ? "white" : "black",
       viewOnly: result !== "" && result !== "ongoing",
       lastMove: [],
+      check: chess.isCheck(),
       movable: {
         free: false,
         color: white == username ? "white" : "black",

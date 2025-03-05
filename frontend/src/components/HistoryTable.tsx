@@ -4,6 +4,7 @@ import { FastForward, Rewind } from "@phosphor-icons/react";
 
 export default function HistoryTable({ history }: { history: any }) {
   const {
+    updateFen,
     setGroundFen,
     setGroundLastMoves,
     setGroundViewOnly,
@@ -32,6 +33,7 @@ export default function HistoryTable({ history }: { history: any }) {
                 <button
                   ref={(el) => (moveRefs.current[index] = el)}
                   onClick={() => {
+                    updateFen(move.MoveFen);
                     setGroundFen(move.MoveFen);
                     setGroundLastMoves(move.Orig, move.Dest);
                     if (index === history.length - 1) {
@@ -54,6 +56,7 @@ export default function HistoryTable({ history }: { history: any }) {
           <button
             className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
             onClick={() => {
+              updateFen(history[0].MoveFen);
               setGroundFen(history[0].MoveFen);
               setGroundLastMoves(history[0].Orig, history[0].Dest);
               setGroundViewOnly(true);
@@ -65,7 +68,9 @@ export default function HistoryTable({ history }: { history: any }) {
           <button
             className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
             onClick={() => {
+              updateFen(history[history.length - 1].MoveFen);
               setGroundFen(board.fen());
+
               setGroundLastMoves(
                 history[history.length - 1].Orig,
                 history[history.length - 1].Dest,
