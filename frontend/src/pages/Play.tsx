@@ -9,6 +9,13 @@ export default function Play() {
   const { setNavigate } = useWebSocketStore();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  });
 
   useEffect(() => {
     setNavigate(navigate);
@@ -23,11 +30,6 @@ export default function Play() {
       body: JSON.stringify({ username: user?.username, timerCode }),
     });
   }
-  // useEffect(() => {
-  //
-  //   handleInitGame();
-  // }, [user]);
-  //
   return (
     <div className="w-full h-[500px] flex gap-5 items-center justify-center">
       <button

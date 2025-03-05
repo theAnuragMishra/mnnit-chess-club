@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -216,7 +215,7 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 	if foundGame == nil {
 		return errors.New("game not found")
 	}
-	fmt.Println(foundGame.Result)
+	// fmt.Println(foundGame.Result)
 	if foundGame.Result != "ongoing" {
 		return errors.New("game has ended")
 	}
