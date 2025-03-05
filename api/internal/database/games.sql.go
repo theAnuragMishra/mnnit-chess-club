@@ -42,22 +42,29 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, 
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1
-WHERE id = $2
+SET result = $1, end_time_left_white = $2, end_time_left_black = $3
+WHERE id = $4
 `
 
 type EndGameWithResultParams struct {
-	Result string
-	ID     int32
+	Result           string
+	EndTimeLeftWhite *int32
+	EndTimeLeftBlack *int32
+	ID               int32
 }
 
 func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultParams) error {
-	_, err := q.db.Exec(ctx, endGameWithResult, arg.Result, arg.ID)
+	_, err := q.db.Exec(ctx, endGameWithResult,
+		arg.Result,
+		arg.EndTimeLeftWhite,
+		arg.EndTimeLeftBlack,
+		arg.ID,
+	)
 	return err
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE id = $1
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -75,6 +82,8 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 		&i.GameLength,
 		&i.Result,
 		&i.CreatedAt,
+		&i.EndTimeLeftWhite,
+		&i.EndTimeLeftBlack,
 	)
 	return i, err
 }
@@ -150,7 +159,7 @@ func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMove
 }
 
 const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at FROM games WHERE result = 'ongoing'
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
@@ -174,6 +183,8 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 			&i.GameLength,
 			&i.Result,
 			&i.CreatedAt,
+			&i.EndTimeLeftWhite,
+			&i.EndTimeLeftBlack,
 		); err != nil {
 			return nil, err
 		}

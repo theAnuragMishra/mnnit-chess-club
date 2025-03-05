@@ -51,9 +51,14 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if message == "game over with result" {
 		// log.Println("game ho gya over")
+		etlb := int32(foundGame.TimeBlack.Seconds())
+		etlw := int32(foundGame.TimeWhite.Seconds())
+
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-			Result: result,
-			ID:     foundGame.ID,
+			Result:           result,
+			ID:               foundGame.ID,
+			EndTimeLeftBlack: &etlb,
+			EndTimeLeftWhite: &etlw,
 		})
 		if err != nil {
 			log.Println("error ending game with result", err)
@@ -136,9 +141,13 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			foundGame.TimeWhite = 0
 			foundGame.Result = "0-1"
 		}
+		etlb := int32(foundGame.TimeBlack.Seconds())
+		etlw := int32(foundGame.TimeWhite.Seconds())
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-			Result: "0-1",
-			ID:     foundGame.ID,
+			Result:           "0-1",
+			ID:               foundGame.ID,
+			EndTimeLeftBlack: &etlb,
+			EndTimeLeftWhite: &etlw,
 		})
 		if err != nil {
 			log.Println("error ending game with result", err)
@@ -158,9 +167,13 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			foundGame.TimeBlack = 0
 			foundGame.Result = "1-0"
 		}
+		etlb := int32(foundGame.TimeBlack.Seconds())
+		etlw := int32(foundGame.TimeWhite.Seconds())
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-			Result: "1-0",
-			ID:     foundGame.ID,
+			Result:           "1-0",
+			ID:               foundGame.ID,
+			EndTimeLeftWhite: &etlw,
+			EndTimeLeftBlack: &etlb,
 		})
 		if err != nil {
 			log.Println("error ending game with result", err)

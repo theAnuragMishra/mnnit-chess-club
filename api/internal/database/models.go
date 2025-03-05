@@ -15,17 +15,19 @@ type CsrfToken struct {
 }
 
 type Game struct {
-	ID            int32
-	BaseTime      int32
-	Increment     int32
-	WhiteID       *int32
-	BlackID       *int32
-	WhiteUsername string
-	BlackUsername string
-	Fen           string
-	GameLength    int16
-	Result        string
-	CreatedAt     time.Time
+	ID               int32
+	BaseTime         int32
+	Increment        int32
+	WhiteID          *int32
+	BlackID          *int32
+	WhiteUsername    string
+	BlackUsername    string
+	Fen              string
+	GameLength       int16
+	Result           string
+	CreatedAt        time.Time
+	EndTimeLeftWhite *int32
+	EndTimeLeftBlack *int32
 }
 
 type Move struct {

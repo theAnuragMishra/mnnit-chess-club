@@ -28,8 +28,8 @@ WHERE id = $3;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1
-WHERE id = $2;
+SET result = $1, end_time_left_white = $2, end_time_left_black = $3
+WHERE id = $4;
 
 -- name: GetPlayerGames :many
 SELECT id, white_username, black_username, result

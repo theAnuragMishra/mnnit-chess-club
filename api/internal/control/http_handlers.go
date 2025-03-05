@@ -165,6 +165,13 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	if serverGame == nil {
 		ongoing = false
+		if foundGame.EndTimeLeftWhite != nil {
+			timeWhite = *foundGame.EndTimeLeftWhite
+		}
+		if foundGame.EndTimeLeftBlack != nil {
+			timeBlack = *foundGame.EndTimeLeftBlack
+		}
+
 	} else {
 		timePassed := time.Since(serverGame.LastMoveTime)
 		if serverGame.Board.Position().Turn() == chess.White {
