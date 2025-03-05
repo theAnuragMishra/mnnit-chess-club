@@ -17,7 +17,7 @@ interface AuthState {
 }
 
 // Create Zustand store
-const useAuthStore = create<AuthState>()((set) => ({
+const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   loading: true,
   login: async (username: string, password: string) => {

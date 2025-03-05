@@ -43,7 +43,7 @@ export default function Login() {
   ) => {
     try {
       await login(data.username, data.password);
-      navigate(`/member/${user?.username}`);
+      navigate(`/member/${data.username}`);
     } catch (error) {
       //Todo show login error
       console.log(error);
