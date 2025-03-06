@@ -34,13 +34,13 @@ export default function HistoryTable({ history }: { history: any }) {
                   ref={(el) => (moveRefs.current[index] = el)}
                   onClick={() => {
                     updateFen(move.MoveFen);
-                    setGroundFen(move.MoveFen);
+                    // setGroundFen(move.MoveFen);
                     setGroundLastMoves(move.Orig, move.Dest);
-                    if (index === history.length - 1) {
-                      setGroundViewOnly(false);
-                    } else {
-                      setGroundViewOnly(true);
-                    }
+                    // if (index === history.length - 1) {
+                    //   setGroundViewOnly(false);
+                    // } else {
+                    //   setGroundViewOnly(true);
+                    // }
                     setActiveIndex(index);
                   }}
                   className={`cursor-pointer h-fit w-fit px-4 py-2 ${activeIndex == index ? "bg-gray-700" : ""}`}
@@ -57,9 +57,9 @@ export default function HistoryTable({ history }: { history: any }) {
             className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
             onClick={() => {
               updateFen(history[0].MoveFen);
-              setGroundFen(history[0].MoveFen);
+              // setGroundFen(history[0].MoveFen);
               setGroundLastMoves(history[0].Orig, history[0].Dest);
-              setGroundViewOnly(true);
+              // setGroundViewOnly(true);
               setActiveIndex(0);
             }}
           >
@@ -69,7 +69,7 @@ export default function HistoryTable({ history }: { history: any }) {
             className="cursor-pointer w-1/3 flex justify-center items-center hover:bg-gray-700"
             onClick={() => {
               updateFen(history[history.length - 1].MoveFen);
-              setGroundFen(board.fen());
+              // setGroundFen(board.fen());
 
               setGroundLastMoves(
                 history[history.length - 1].Orig,
@@ -77,7 +77,7 @@ export default function HistoryTable({ history }: { history: any }) {
               );
               setActiveIndex(history.length - 1);
 
-              setGroundViewOnly(false);
+              // setGroundViewOnly(false);
             }}
           >
             <FastForward size={32} />

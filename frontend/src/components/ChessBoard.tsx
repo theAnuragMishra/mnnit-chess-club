@@ -12,7 +12,11 @@ import { Square } from "chess.js";
 export default function ChessBoard(props: { gameID: number }) {
   const boardRef = useRef<HTMLDivElement>(null);
   const chess = useChessStore((state) => state.board);
-  const check = useChessStore(state=>state.board.isCheck())
+  const fen = useChessStore((state) => state.board.fen());
+  const check = useChessStore(state=>state.board.isCheck());
+  const activeIndex = useChessStore(state=>state.activeIndex);
+  const turn = useChessStore(state=>state.board.turn());
+  const history = useChessStore(state=>state.moveHistory);
   const setGround = useChessStore((state) => state.setGround);
   const sendMessage = useWebSocketStore((state) => state.sendMessage);
   const white = useChessStore((state) => state.whiteusername);
@@ -21,14 +25,15 @@ export default function ChessBoard(props: { gameID: number }) {
 
   useEffect(() => {
     if (!boardRef.current) return;
+    console.log(turn)
 
     // Initialize Chessground
     const ground = Chessground(boardRef.current, {
-      fen: chess.fen(),
+      fen: fen,
       orientation: white == username ? "white" : "black",
       draggable: { enabled: true },
-      turnColor: chess.turn() == "w" ? "white" : "black",
-      viewOnly: result !== "" && result !== "ongoing",
+      turnColor: turn == "w" ? "white" : "black",
+      viewOnly: (result !== "" && result !== "ongoing") || (history ? activeIndex !== history.length-1 : false),
       lastMove: [],
       check: check,
       movable: {
@@ -71,7 +76,7 @@ export default function ChessBoard(props: { gameID: number }) {
     setGround(ground);
 
     return () => ground.destroy();
-  }, [chess, props.gameID, sendMessage, setGround, white, username, result,  check]);
+  }, [chess, props.gameID, sendMessage, setGround, white, username, result,  check, fen, history, activeIndex, turn]);
 
   return <div ref={boardRef} className="w-[644px] h-[644px]" />;
 }

@@ -23,7 +23,6 @@ interface ChessState {
   updateHistory: (move: string) => void;
   setHistory: (his: string[]) => void;
   updateGround: () => void;
-  makeMoveOnGround: (s1: Key, s2: Key) => void;
   setGroundFen: (fen: string) => void;
   setGroundViewOnly: (x: boolean) => void;
   setGroundLastMoves: (orig: string, dest: string) => void;
@@ -59,10 +58,6 @@ const useChessStore = create<ChessState>()((set, get) => ({
 
   setGround: (ground: Api) => set({ ground }),
 
-  makeMoveOnGround: (s1: Key, s2: Key) => {
-    get().ground?.move(s1, s2);
-  },
-
   setGroundFen: (fen: string) => {
     get().ground?.set({
       fen: fen,
@@ -91,10 +86,10 @@ const useChessStore = create<ChessState>()((set, get) => ({
   setResult: (result: string) => set({ result }),
 
   updateFen: (fen: string) => {
-    get().board.load(fen);
-    // const newBoard = get().board ; // Clone or create a new board instance
-    // newBoard.load(fen);
-    // set({ board: newBoard }); // Now Zustand detects a change
+    // get().board.load(fen);
+    const newBoard = get().board ; // Clone or create a new board instance
+    newBoard.load(fen);
+    set({ board: newBoard }); // Now Zustand detects a change
   },
 
   setHistory: (his: any) => {
