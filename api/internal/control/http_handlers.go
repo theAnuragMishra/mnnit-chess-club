@@ -163,7 +163,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 			serverGame = g
 		}
 	}
-	if serverGame == nil {
+	if serverGame == nil || foundGame.Result != "ongoing" {
 		ongoing = false
 		if foundGame.EndTimeLeftWhite != nil {
 			timeWhite = *foundGame.EndTimeLeftWhite
