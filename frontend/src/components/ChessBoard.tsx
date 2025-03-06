@@ -12,6 +12,7 @@ import { Square } from "chess.js";
 export default function ChessBoard(props: { gameID: number }) {
   const boardRef = useRef<HTMLDivElement>(null);
   const chess = useChessStore((state) => state.board);
+  const check = useChessStore(state=>state.board.isCheck())
   const setGround = useChessStore((state) => state.setGround);
   const sendMessage = useWebSocketStore((state) => state.sendMessage);
   const white = useChessStore((state) => state.whiteusername);
@@ -29,7 +30,7 @@ export default function ChessBoard(props: { gameID: number }) {
       turnColor: chess.turn() == "w" ? "white" : "black",
       viewOnly: result !== "" && result !== "ongoing",
       lastMove: [],
-      check: chess.isCheck(),
+      check: check,
       movable: {
         free: false,
         color: white == username ? "white" : "black",
@@ -70,7 +71,7 @@ export default function ChessBoard(props: { gameID: number }) {
     setGround(ground);
 
     return () => ground.destroy();
-  }, [chess, props.gameID, sendMessage, setGround, white, username, result]);
+  }, [chess, props.gameID, sendMessage, setGround, white, username, result,  check]);
 
   return <div ref={boardRef} className="w-[644px] h-[644px]" />;
 }

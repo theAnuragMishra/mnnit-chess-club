@@ -92,6 +92,9 @@ const useChessStore = create<ChessState>()((set, get) => ({
 
   updateFen: (fen: string) => {
     get().board.load(fen);
+    // const newBoard = get().board ; // Clone or create a new board instance
+    // newBoard.load(fen);
+    // set({ board: newBoard }); // Now Zustand detects a change
   },
 
   setHistory: (his: any) => {
