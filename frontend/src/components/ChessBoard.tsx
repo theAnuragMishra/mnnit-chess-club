@@ -29,7 +29,7 @@ export default function ChessBoard(props: { gameID: number }) {
       draggable: { enabled: true },
       turnColor: chess.turn() == "w" ? "white" : "black",
       viewOnly: result !== "" && result !== "ongoing",
-      lastMove: [],
+      // lastMove: [],
       check: check,
       movable: {
         free: false,
