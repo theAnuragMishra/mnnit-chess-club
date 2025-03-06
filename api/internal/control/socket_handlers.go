@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -109,6 +110,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
+	fmt.Println("inside time up")
 	var timeupData timeupPayload
 	if err := json.Unmarshal(event.Payload, &timeupData); err != nil {
 		return err
