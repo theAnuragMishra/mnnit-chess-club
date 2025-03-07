@@ -28,14 +28,13 @@ WHERE id = $3;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, end_time_left_white = $2, end_time_left_black = $3
-WHERE id = $4;
+SET result = $1, end_time_left_white = $2, end_time_left_black = $3, result_reason = $4
+WHERE id = $5;
 
 -- name: GetPlayerGames :many
-SELECT id, white_username, black_username, result
+SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
---AND ended_at IS NOT NULL
 ORDER BY created_at DESC;
 
 -- name: GetLatestMove :one
