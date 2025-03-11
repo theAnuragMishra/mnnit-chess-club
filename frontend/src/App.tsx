@@ -2,7 +2,6 @@ import { Route, Routes } from "react-router";
 import "./App.css";
 import Member from "./pages/Member.tsx";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import useAuthStore from "./store/authStore.ts";
 import { Suspense, useEffect } from "react";
 import RootLayout from "./layouts/RootLayout.tsx";
@@ -11,6 +10,7 @@ import Loading from "./components/Loading";
 
 import Game from "./pages/Game.tsx";
 import Play from "./pages/Play.tsx";
+import ServerErrorPage from "./pages/ServerErrorPage.tsx";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -37,7 +37,6 @@ function App() {
           }
         />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
         <Route path="/play" element={<Play />} />
         <Route
           path="/game/:gameID"
@@ -47,6 +46,7 @@ function App() {
             </Suspense>
           }
         />
+        <Route path="/error-page" element={<ServerErrorPage />} />
       </Route>
     </Routes>
   );
