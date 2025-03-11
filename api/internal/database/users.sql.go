@@ -123,3 +123,17 @@ func (q *Queries) UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarPara
 	)
 	return i, err
 }
+
+const updateUsername = `-- name: UpdateUsername :exec
+UPDATE users SET username = $1 WHERE id = $2
+`
+
+type UpdateUsernameParams struct {
+	Username *string
+	ID       int32
+}
+
+func (q *Queries) UpdateUsername(ctx context.Context, arg UpdateUsernameParams) error {
+	_, err := q.db.Exec(ctx, updateUsername, arg.Username, arg.ID)
+	return err
+}

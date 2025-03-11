@@ -17,6 +17,10 @@ type InitGamePayload struct {
 	TimerCode int16  `json:"timerCode"`
 }
 
+type UserNamePayload struct {
+	Username string `json:"username"`
+}
+
 type GameResponse struct {
 	Game      interface{} `json:"game"`
 	Moves     interface{} `json:"moves"`

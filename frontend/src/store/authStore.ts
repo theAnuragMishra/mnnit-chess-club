@@ -3,7 +3,7 @@ import { getBaseURL } from "../utils/urlUtils.ts";
 import useWebSocketStore from "./socketStore.ts";
 
 interface User {
-  username: string;
+  username: string | null;
   userID: string;
 }
 

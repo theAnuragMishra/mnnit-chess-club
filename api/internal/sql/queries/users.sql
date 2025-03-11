@@ -14,3 +14,6 @@ SELECT * FROM users WHERE email = $1;
 
 -- name: UpdateUserAvatar :one
 UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING *;
+
+-- name: UpdateUsername :exec
+UPDATE users SET username = $1 WHERE id = $2;

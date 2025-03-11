@@ -11,6 +11,7 @@ import Loading from "./components/Loading";
 import Game from "./pages/Game.tsx";
 import Play from "./pages/Play.tsx";
 import ServerErrorPage from "./pages/ServerErrorPage.tsx";
+import SetUsername from "./pages/SetUsername.tsx";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -48,6 +49,7 @@ function App() {
         />
         <Route path="/error-page" element={<ServerErrorPage />} />
       </Route>
+        <Route path="/set-username" element={<SetUsername/>}/>
     </Routes>
   );
 }

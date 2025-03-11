@@ -30,7 +30,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 		router.Use(authHandler.AuthMiddleware)
 		router.Post("/logout", authHandler.HandleLogout)
 		router.Get("/me", authHandler.HandleMe)
-
+		router.Post("/set-username", controller.UpdateUsername)
 		router.HandleFunc("/ws", controller.SocketManager.ServeWS)
 	})
 
