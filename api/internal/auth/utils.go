@@ -4,23 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-	"golang.org/x/crypto/bcrypt"
 )
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func checkPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
 
 func generateToken(length int) string {
 	bytes := make([]byte, length)
@@ -53,4 +45,23 @@ func (h *Handler) ValidateSession(ctx context.Context, token string) (database.S
 		}
 	}
 	return session, nil
+}
+
+func decodeIDToken(idToken string) (*GoogleIDToken, error) {
+	parts := strings.Split(idToken, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid JWT format")
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode ID Token")
+	}
+
+	var user GoogleIDToken
+	if err := json.Unmarshal(payload, &user); err != nil {
+		return nil, fmt.Errorf("failed to parse user info")
+	}
+
+	return &user, nil
 }

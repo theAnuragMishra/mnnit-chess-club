@@ -49,9 +49,11 @@ type Session struct {
 }
 
 type User struct {
-	ID           int32
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Username     string
-	PasswordHash string
+	ID        int32
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Username  string
+	AvatarUrl *string
+	GoogleID  string
 }
