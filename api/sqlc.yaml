@@ -27,6 +27,3 @@ sql:
               import: "time"
               type: "Time"
             nullable: true
-          - db_type: "pg_catalog.varchar"
-            go_type: "string"
-            nullable: true

@@ -81,8 +81,8 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 			Increment:     int32(increment.Seconds()),
 			WhiteID:       PendingUserID,
 			BlackID:       &session.UserID,
-			WhiteUsername: *PendingUserName,
-			BlackUsername: initGamePayload.Username,
+			WhiteUsername: PendingUserName,
+			BlackUsername: &initGamePayload.Username,
 			Fen:           createdGame.Board.FEN(),
 		})
 		if err != nil {
@@ -125,7 +125,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
-	profileInfo, err := c.Queries.GetPlayerGames(r.Context(), username)
+	profileInfo, err := c.Queries.GetPlayerGames(r.Context(), &username)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")

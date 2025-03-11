@@ -85,7 +85,7 @@ const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, email, created_at, updated_at, username, avatar_url, google_id FROM users WHERE username = $1
 `
 
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByUsername, username)
 	var i User
 	err := row.Scan(

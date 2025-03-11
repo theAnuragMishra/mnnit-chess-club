@@ -20,8 +20,8 @@ type Game struct {
 	Increment        int32
 	WhiteID          *int32
 	BlackID          *int32
-	WhiteUsername    string
-	BlackUsername    string
+	WhiteUsername    *string
+	BlackUsername    *string
 	Fen              string
 	GameLength       int16
 	Result           string
@@ -53,7 +53,7 @@ type User struct {
 	Email     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Username  string
+	Username  *string
 	AvatarUrl *string
 	GoogleID  string
 }

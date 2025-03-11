@@ -55,7 +55,6 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			AvatarUrl: &googleUser.Picture,
 			GoogleID:  googleUser.Sub,
 		})
-
 		fmt.Printf("%+v\n", databaseUser)
 		fmt.Printf("%+v\n", err)
 

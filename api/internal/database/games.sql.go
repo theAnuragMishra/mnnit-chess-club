@@ -20,8 +20,8 @@ type CreateGameParams struct {
 	Increment     int32
 	WhiteID       *int32
 	BlackID       *int32
-	WhiteUsername string
-	BlackUsername string
+	WhiteUsername *string
+	BlackUsername *string
 	Fen           string
 }
 
@@ -205,13 +205,13 @@ ORDER BY created_at DESC
 
 type GetPlayerGamesRow struct {
 	ID            int32
-	WhiteUsername string
-	BlackUsername string
+	WhiteUsername *string
+	BlackUsername *string
 	Result        string
 }
 
 // AND ended_at IS NOT NULL
-func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername string) ([]GetPlayerGamesRow, error) {
+func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername *string) ([]GetPlayerGamesRow, error) {
 	rows, err := q.db.Query(ctx, getPlayerGames, whiteUsername)
 	if err != nil {
 		return nil, err
