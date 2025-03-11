@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"net/http"
@@ -55,8 +54,8 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			AvatarUrl: &googleUser.Picture,
 			GoogleID:  googleUser.Sub,
 		})
-		fmt.Printf("%+v\n", databaseUser)
-		fmt.Printf("%+v\n", err)
+		//fmt.Printf("%+v\n", databaseUser)
+		//fmt.Printf("%+v\n", err)
 
 		if err != nil {
 			http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
@@ -96,6 +95,6 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
 
 }
