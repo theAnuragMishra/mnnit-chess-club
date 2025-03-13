@@ -80,7 +80,9 @@ export default function Game() {
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex items-center justify-around">
-        <Chat gameID={params.gameID} />
+        {result !== "1-0" && result !== "0-1" && (
+          <Chat gameID={params.gameID} />
+        )}
         <div className="flex items-center justify-center">
           <ChessBoard gameID={Number(params.gameID)} />
         </div>
