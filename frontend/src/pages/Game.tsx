@@ -10,6 +10,7 @@ import useAuthStore from "../store/authStore.ts";
 import Clock from "../components/Clock2.tsx";
 import HistoryTable from "../components/HistoryTable.tsx";
 import Chat from "../components/Chat.tsx";
+import GameInfo from "../components/GameInfo.tsx";
 
 export default function Game() {
   const params = useParams();
@@ -80,8 +81,10 @@ export default function Game() {
         <ResultModal onClose={() => setModalOpen(false)} />
       )}
       <div className="w-full flex items-center justify-around">
-        {result !== "1-0" && result !== "0-1" && (
+        {result !== "1-0" && result !== "0-1" ? (
           <Chat gameID={params.gameID} />
+        ) : (
+          <GameInfo />
         )}
         <div className="flex items-center justify-center">
           <ChessBoard gameID={Number(params.gameID)} />
