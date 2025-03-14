@@ -96,8 +96,9 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	c.SocketManager.Broadcast(e)
 
-	if message == "game over with result" {
+	if message == "White Time Out" || message == "Black Time Out" || message == "Checkmate" || message == "Stalemate" {
 		// log.Println("game ho gya over")
+
 		etlb := int32(foundGame.TimeBlack.Seconds())
 		etlw := int32(foundGame.TimeWhite.Seconds())
 
@@ -106,6 +107,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 			ID:               foundGame.ID,
 			EndTimeLeftBlack: &etlb,
 			EndTimeLeftWhite: &etlw,
+			ResultReason:     &message,
 		})
 		if err != nil {
 			log.Println("error ending game with result", err)
@@ -150,6 +152,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 		if moveTime > foundGame.TimeWhite {
 			foundGame.TimeWhite = 0
 			foundGame.Result = "0-1"
+			reason := "White Time Out"
 
 			etlb := int32(foundGame.TimeBlack.Seconds())
 			etlw := int32(0)
@@ -158,11 +161,12 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 				ID:               foundGame.ID,
 				EndTimeLeftBlack: &etlb,
 				EndTimeLeftWhite: &etlw,
+				ResultReason:     &reason,
 			})
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]interface{}{"Result": "0-1"})
+			payload, err := json.Marshal(map[string]interface{}{"Result": "0-1", "Reason": reason})
 			if err != nil {
 				return err
 			}
@@ -182,6 +186,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 		if moveTime > foundGame.TimeBlack {
 			foundGame.TimeBlack = 0
 			foundGame.Result = "1-0"
+			reason := "Black Time Out"
 
 			etlb := int32(0)
 			etlw := int32(foundGame.TimeWhite.Seconds())
@@ -190,11 +195,12 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 				ID:               foundGame.ID,
 				EndTimeLeftWhite: &etlw,
 				EndTimeLeftBlack: &etlb,
+				ResultReason:     &reason,
 			})
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]interface{}{"Result": "1-0"})
+			payload, err := json.Marshal(map[string]interface{}{"Result": "1-0", "Reason": reason})
 			if err != nil {
 				return err
 			}
@@ -206,7 +212,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 
 			c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
 			c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
-			
+
 			return nil
 		}
 

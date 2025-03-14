@@ -28,6 +28,7 @@ type Game struct {
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
+	ResultReason     *string
 }
 
 type Move struct {

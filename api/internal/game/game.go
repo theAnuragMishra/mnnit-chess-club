@@ -65,7 +65,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 	}
 
 	if g.Board.Outcome() != "*" {
-		return "game has ended", string(g.Board.Outcome())
+		return "game has ended", ""
 	}
 
 	moveTime := time.Since(g.LastMoveTime)
@@ -76,7 +76,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		if moveTime > g.TimeWhite {
 			g.TimeWhite = 0
 			g.Result = "0-1"
-			return "game over with result", "0-1"
+			return "White Time Out", "0-1"
 		} else {
 			g.TimeWhite -= moveTime
 			g.TimeWhite += g.Increment
@@ -86,7 +86,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		if moveTime > g.TimeBlack {
 			g.TimeBlack = 0
 			g.Result = "1-0"
-			return "game over with result", "1-0"
+			return "Black Time Out", "1-0"
 		} else {
 			g.TimeBlack -= moveTime
 			g.TimeBlack += g.Increment
@@ -101,7 +101,7 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 
 	if g.Board.Outcome() != "*" {
 		g.Result = string(g.Board.Outcome())
-		return "game over with result", string(g.Board.Outcome())
+		return g.Board.Method().String(), string(g.Board.Outcome())
 	}
 
 	// fmt.Println(g.Board.Position())

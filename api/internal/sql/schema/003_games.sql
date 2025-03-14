@@ -12,7 +12,8 @@ CREATE TABLE games (
     result VARCHAR(10) CHECK(result IN ('1-0', '0-1', '1/2-1/2', 'ongoing')) NOT NULL DEFAULT 'ongoing',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     end_time_left_white INT,
-    end_time_left_black INT
+    end_time_left_black INT,
+    result_reason VARCHAR(100)
 );
 
 CREATE TABLE moves (

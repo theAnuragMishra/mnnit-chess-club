@@ -31,6 +31,7 @@ export default function Game() {
     setTimeBlack,
     setTimeWhite,
     setActiveIndex,
+    setReason,
   } = useChessStore();
   const username = useAuthStore((state) => state.user?.username);
 
@@ -52,6 +53,9 @@ export default function Game() {
       setTimeWhite(x.timeWhite);
       setTimeBlack(x.timeBlack);
       setResult(x.game.Result);
+      if (x.game.Result != "ongoing" || x.game.Result != "") {
+        setReason(x.game.ResultReason);
+      }
       updateGround();
       if (x.moves) {
         setActiveIndex(x.moves.length - 1);
@@ -60,7 +64,7 @@ export default function Game() {
           x.moves[x.moves.length - 1].Dest,
         );
       }
-
+      // console.log(x);
       return x; // Convert to JSON
     },
     refetchOnMount: true,

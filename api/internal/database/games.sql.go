@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 )
 
 const createGame = `-- name: CreateGame :one
@@ -42,14 +43,15 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (int32, 
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, end_time_left_white = $2, end_time_left_black = $3
-WHERE id = $4
+SET result = $1, end_time_left_white = $2, end_time_left_black = $3, result_reason = $4
+WHERE id = $5
 `
 
 type EndGameWithResultParams struct {
 	Result           string
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
+	ResultReason     *string
 	ID               int32
 }
 
@@ -58,13 +60,14 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 		arg.Result,
 		arg.EndTimeLeftWhite,
 		arg.EndTimeLeftBlack,
+		arg.ResultReason,
 		arg.ID,
 	)
 	return err
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black FROM games WHERE id = $1
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
@@ -84,6 +87,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id int32) (Game, error) {
 		&i.CreatedAt,
 		&i.EndTimeLeftWhite,
 		&i.EndTimeLeftBlack,
+		&i.ResultReason,
 	)
 	return i, err
 }
@@ -159,7 +163,7 @@ func (q *Queries) GetLatestMove(ctx context.Context, limit int32) (GetLatestMove
 }
 
 const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black FROM games WHERE result = 'ongoing'
+SELECT id, base_time, increment, white_id, black_id, white_username, black_username, fen, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
@@ -185,6 +189,7 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 			&i.CreatedAt,
 			&i.EndTimeLeftWhite,
 			&i.EndTimeLeftBlack,
+			&i.ResultReason,
 		); err != nil {
 			return nil, err
 		}
@@ -197,7 +202,7 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 }
 
 const getPlayerGames = `-- name: GetPlayerGames :many
-SELECT id, white_username, black_username, result
+SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
 ORDER BY created_at DESC
@@ -205,12 +210,16 @@ ORDER BY created_at DESC
 
 type GetPlayerGamesRow struct {
 	ID            int32
+	BaseTime      int32
+	Increment     int32
 	WhiteUsername *string
 	BlackUsername *string
 	Result        string
+	GameLength    int16
+	ResultReason  *string
+	CreatedAt     time.Time
 }
 
-// AND ended_at IS NOT NULL
 func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername *string) ([]GetPlayerGamesRow, error) {
 	rows, err := q.db.Query(ctx, getPlayerGames, whiteUsername)
 	if err != nil {
@@ -222,9 +231,14 @@ func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername *string) ([]
 		var i GetPlayerGamesRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.BaseTime,
+			&i.Increment,
 			&i.WhiteUsername,
 			&i.BlackUsername,
 			&i.Result,
+			&i.GameLength,
+			&i.ResultReason,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

@@ -14,12 +14,14 @@ interface ChessState {
   timeWhite: number;
   ground: Api | null;
   result: string;
+  reason: string;
   moveHistory:
-  | { MoveFen: string; MoveNotation: string; MoveNumber: number }[]
-  | null;
+    | { MoveFen: string; MoveNotation: string; MoveNumber: number }[]
+    | null;
   activeIndex: number;
   updateFen: (fen: string) => void;
   setResult: (result: string) => void;
+  setReason: (reason: string) => void;
   updateHistory: (move: string) => void;
   setHistory: (his: string[]) => void;
   updateGround: () => void;
@@ -45,6 +47,7 @@ const useChessStore = create<ChessState>()((set, get) => ({
   timeBlack: 0,
   timeWhite: 0,
   result: "",
+  reason: "",
   board: new Chess(),
   moveHistory: null,
   activeIndex: -1,
@@ -89,6 +92,7 @@ const useChessStore = create<ChessState>()((set, get) => ({
   },
 
   setResult: (result: string) => set({ result }),
+  setReason: (reason: string) => set({ reason }),
 
   updateFen: (fen: string) => {
     get().board.load(fen);

@@ -38,7 +38,10 @@ const useWebSocketStore = create<WebSocketState>()(() => {
         }
         if (data.type === "timeup") {
           // console.log(data);
-          useChessStore.setState(() => ({ result: data.payload.Result }));
+          useChessStore.setState(() => ({
+            result: data.payload.Result,
+            reason: data.payload.Reason,
+          }));
           // useChessStore.getState().updateGround();
         }
         if (data.type === "Move_Response") {
@@ -52,10 +55,12 @@ const useWebSocketStore = create<WebSocketState>()(() => {
             setTimeWhite,
             setGroundLastMoves,
             setActiveIndex,
-              setResult,
+            setResult,
+            setReason,
             moveHistory,
           } = useChessStore.getState();
           // console.log(data.payload.move);
+          // console.log(data.payload);
           updateFen(data.payload.move.MoveFen);
           setGroundFen(data.payload.move.MoveFen);
           updateGround();
@@ -68,6 +73,7 @@ const useWebSocketStore = create<WebSocketState>()(() => {
           if (data.payload.Result !== "") {
             // useChessStore.setState(() => ({ result: data.payload.Result }));
             setResult(data.payload.Result);
+            setReason(data.payload.message);
           }
           useChessStore.getState().ground?.playPremove();
         }
