@@ -11,6 +11,7 @@ import Clock from "../components/Clock2.tsx";
 import HistoryTable from "../components/HistoryTable.tsx";
 import Chat from "../components/Chat.tsx";
 import GameInfo from "../components/GameInfo.tsx";
+import DrawResign from "../components/DrawResign.tsx";
 
 export default function Game() {
   const params = useParams();
@@ -86,7 +87,10 @@ export default function Game() {
       )}
       <div className="w-full flex items-center justify-around">
         {result !== "1-0" && result !== "0-1" ? (
-          <Chat gameID={params.gameID} />
+          <div className="flex flex-col w-1/4 gap-10">
+            <Chat gameID={params.gameID} />
+            <DrawResign />
+          </div>
         ) : (
           <GameInfo />
         )}

@@ -42,7 +42,7 @@ export default function Chat({ gameID }: { gameID: string }) {
   };
 
   return (
-    <div className="p-4 border rounded shadow-lg w-1/4">
+    <div className="p-4 border rounded shadow-lg">
       <div className="h-64 overflow-y-auto border-b mb-2 p-2 text-lg">
         {messages.map((msg, index) => {
           if (msg.gameID == gameID) {

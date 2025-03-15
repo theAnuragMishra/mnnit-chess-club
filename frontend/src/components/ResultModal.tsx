@@ -12,7 +12,7 @@ export default function ResultModal({ onClose }: { onClose: () => void }) {
         <p className="text-4xl text-white mb-4">{result}</p>
         <p className="text-xl text-white">{reason}!</p>
         <p>
-          {result === "1-0" ? "White is victorius" : "Black is victorious"}.
+          {result === "1-0" ? "White is victorious" : "Black is victorious"}.
         </p>
         <button
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
