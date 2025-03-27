@@ -1,1 +1,1 @@
-# Svelte frontend for the MNNIT Chess Club
+Frontend for mnnit-chess-club. Written in svelte.
