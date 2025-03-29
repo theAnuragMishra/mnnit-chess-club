@@ -6,6 +6,6 @@
 	{#if !data.user}
 		<p>Login to play</p>
 	{:else}
-		<button class="cursor-pointer rounded-lg bg-gray-500 p-3 text-4xl"> Play! </button>
+		<a href="/play" class="cursor-pointer rounded-lg bg-gray-500 p-3 text-4xl"> Play! </a>
 	{/if}
 </div>

@@ -1,3 +1,10 @@
+<script>
+	import { goto } from '$app/navigation';
+
+	const { data } = $props();
+	if (data.user) goto('/');
+</script>
+
 <div class="mt-30 flex h-full flex-col items-center justify-center gap-2">
 	<h1 class="mb-10 text-2xl font-bold">Login</h1>
 	<button
