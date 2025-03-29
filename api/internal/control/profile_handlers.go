@@ -12,8 +12,19 @@ import (
 func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
 
+	user, err := c.Queries.GetUserByUserID(r.Context(), session.UserID)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "Internal server error")
+		return
+	}
+
+	if user.Username != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "Username can only be set once")
+	}
+	
 	var usernamePayload UserNamePayload
-	err := json.NewDecoder(r.Body).Decode(&usernamePayload)
+
+	err = json.NewDecoder(r.Body).Decode(&usernamePayload)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
