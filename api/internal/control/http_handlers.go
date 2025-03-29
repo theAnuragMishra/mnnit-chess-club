@@ -19,7 +19,7 @@ import (
 
 func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(event)
-	//Todo: check if the username from payload is the same as the session user
+	// Todo: check if the username from payload is the same as the session user
 	var initGamePayload InitGamePayload
 	err := json.NewDecoder(r.Body).Decode(&initGamePayload)
 	if err != nil {
@@ -164,7 +164,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 			serverGame = g
 		}
 	}
-	if serverGame == nil || foundGame.Result != "ongoing" {
+	if serverGame == nil {
 		ongoing = false
 		if foundGame.EndTimeLeftWhite != nil {
 			timeWhite = *foundGame.EndTimeLeftWhite
