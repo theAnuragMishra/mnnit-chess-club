@@ -1,6 +1,5 @@
 <script lang="ts">
-	let result = '1-0';
-	let reason = 'Checkmate';
+	const { result, reason } = $props();
 	let open = $state(true);
 </script>
 
