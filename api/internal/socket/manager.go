@@ -69,6 +69,10 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	// Add the newly created client to the manager
 	m.addClient(session.UserID, client)
 
+	// for _, client := range m.clients {
+	// 	fmt.Println(client.UserID)
+	// }
+
 	// Start the read / write processes
 	go client.readMessages()
 	go client.writeMessages()
