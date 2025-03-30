@@ -1,6 +1,6 @@
 <script lang="ts">
 	const { setActiveIndex, activeIndex, moveHistory } = $props();
-	const moves: (HTMLButtonElement | null)[] = [];
+	const moves: (HTMLButtonElement | null)[] = $state([]);
 	$effect(() => {
 		const activeButton = moves[activeIndex];
 		activeButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

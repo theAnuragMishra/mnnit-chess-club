@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Chessground } from 'chessground';
-	import '../../node_modules/chessground/assets/chessground.base.css';
-	import '../../node_modules/chessground/assets/chessground.brown.css';
-	import '../../node_modules/chessground/assets/chessground.cburnett.css';
 	import { getValidMoves, isPromoting } from '$lib/utils';
 	import { websocketStore } from '$lib/websocket';
 	import type { Square } from 'chess.js';
+	import '../../../node_modules/chessground/assets/chessground.base.css';
+	import '../../../node_modules/chessground/assets/chessground.brown.css';
+	import '../../../node_modules/chessground/assets/chessground.cburnett.css';
 
 	const sendMessage = websocketStore.sendMessage;
 
@@ -14,6 +14,9 @@
 	let { username, gameID, chess, white, lastMove, viewOnly } = $props();
 
 	$effect(() => {
+		// console.log('effect ran');
+		console.log(username, chess.ascii(), lastMove, viewOnly);
+		if (!boardContainer) return;
 		const cg = Chessground(boardContainer, {
 			fen: chess.fen(),
 			orientation: white == username ? 'white' : 'black',
@@ -67,4 +70,4 @@
 	});
 </script>
 
-<div bind:this={boardContainer} style="width: 400px; height: 400px;"></div>
+<div bind:this={boardContainer} class="h-[630px] w-[630px]"></div>

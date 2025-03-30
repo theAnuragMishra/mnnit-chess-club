@@ -28,13 +28,13 @@ class WebSocketStore {
 		this.ws.onerror = (error: Event) => console.error('WebSocket Error:', error);
 	}
 
-	sendMessage(message: unknown): void {
+	sendMessage = (message: unknown): void => {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			this.ws.send(JSON.stringify(message));
 		} else {
 			console.warn('WebSocket not open. Message not sent.');
 		}
-	}
+	};
 
 	get socket() {
 		return this.ws;

@@ -11,23 +11,23 @@
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	let { data } = $props();
-
-	let whiteUsername = data.gameData.game.whiteUsername;
-	let blackUsername = data.gameData.game.blackUsername;
-	let whiteID = data.gameData.game.whiteID;
-	let blackID = data.gameData.game.blackID;
+	// console.log(data);
+	let whiteUsername = data.gameData.game.WhiteUsername;
+	let blackUsername = data.gameData.game.BlackUsername;
+	let whiteID = data.gameData.game.WhiteID;
+	let blackID = data.gameData.game.BlackID;
 	let timeBlack = $state(data.gameData.timeBlack);
 	let timeWhite = $state(data.gameData.timeWhite);
 	let result = $state(data.gameData.game.Result);
 	let reason = $state(
-		data.gameData.game.Result != 'ongoing' || data.gameData.game.Result != ''
-			? data.gameData.ResultReason
+		data.gameData.game.Result != 'ongoing' && data.gameData.game.Result != ''
+			? data.gameData.game.ResultReason
 			: ''
 	);
 	let moveHistory = $state(data.gameData.moves);
-	let activeIndex = $state(data.gameData.moves.length - 1);
+	let activeIndex = $state(data.gameData.moves ? data.gameData.moves.length - 1 : -1);
 	let chess = $derived(
-		data.gameData.moves ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
+		moveHistory.length ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
 
 	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
@@ -38,13 +38,15 @@
 	const sendMessage = websocketStore.sendMessage;
 
 	const handleMessage = (e: MessageEvent) => {
+		// console.log('event received');
 		const data = JSON.parse(e.data);
 		if (data.type === 'timeup') {
-			result = data.payload.result;
-			reason = data.payload.reason;
+			result = data.payload.Result;
+			reason = data.payload.Reason;
 		}
 		if (data.type === 'Move_Response') {
-			moveHistory = [...moveHistory, data.payload.move];
+			if (moveHistory) moveHistory = [...moveHistory, data.payload.move];
+			else moveHistory = [data.payload.move];
 			timeBlack = data.payload.timeBlack;
 			timeWhite = data.payload.timeWhite;
 
@@ -67,16 +69,21 @@
 	{/if}
 	<div class="flex w-full items-center justify-around">
 		{#if result !== '1-0' && result !== '0-1'}
-			(
 			<div class="flex w-1/4 flex-col gap-10">
-				<Chat />
+				<Chat
+					username={data.user.username}
+					userID={data.user.userID}
+					{blackID}
+					{whiteID}
+					{gameID}
+					{whiteUsername}
+					{blackUsername}
+				/>
 				<DrawResign />
 			</div>
-			)
 		{:else}
-			(
 			<GameInfo />
-			){/if}
+		{/if}
 		<div class="flex items-center justify-center">
 			<Chessboard
 				username={data.user.username}

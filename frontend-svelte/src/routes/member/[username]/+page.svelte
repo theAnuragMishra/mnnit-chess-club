@@ -23,7 +23,7 @@
 				<span class="w-1/3 text-left">{item.WhiteUsername}</span>
 				<span class={`flex w-1/3 items-center justify-center ${getX(item)}`}>
 					{#if item.Result !== 'ongoing'}
-						item.Result
+						{item.Result}
 					{:else}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
