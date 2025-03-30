@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { websocketStore } from '$lib/websocket';
+	import { onDestroy, onMount } from 'svelte';
 	interface MessageInterface {
 		sender: string;
 		receiver: string;
@@ -36,6 +37,21 @@
 			text = '';
 		}
 	};
+
+	const handleMessage = (e: MessageEvent) => {
+		const data = JSON.parse(e.data);
+		if (data.type === 'chat') {
+			if (messages) messages = [...messages, data.payload];
+			else messages = [data.payload];
+		}
+	};
+
+	onMount(() => {
+		websocketStore.socket?.addEventListener('message', handleMessage);
+	});
+	onDestroy(() => {
+		websocketStore.socket?.removeEventListener('message', handleMessage);
+	});
 </script>
 
 <div class="rounded border p-4 shadow-lg">
