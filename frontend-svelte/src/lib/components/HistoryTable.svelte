@@ -26,4 +26,50 @@
 			</button>
 		{/each}
 	</div>
+	{#if moveHistory}
+		<div class="absolute bottom-2 flex w-4/5 justify-around">
+			<button
+				aria-label="go to first move"
+				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				onclick={() => {
+					setActiveIndex(0);
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+					><path fill="currentColor" d="M2 14V2h2v5.5l5-5v5l5-5v11l-5-5v5l-5-5V14z" /></svg
+				>
+			</button>
+			<button
+				aria-label="go to previous move"
+				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				onclick={() => {
+					setActiveIndex(activeIndex - 1);
+				}}
+				><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+					><path fill="currentColor" d="M4 14V2h2v5.5l5-5v11l-5-5V14z" /></svg
+				></button
+			>
+			<button
+				aria-label="go to next move"
+				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				onclick={() => {
+					setActiveIndex(activeIndex + 1);
+				}}
+				><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+					><path fill="currentColor" d="M12 2v12h-2V8.5l-5 5v-11l5 5V2z" /></svg
+				></button
+			>
+			<button
+				aria-label="go to latest move"
+				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				onclick={() => {
+					setActiveIndex(moveHistory.length - 1);
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+					><path fill="currentColor" d="M14 2v12h-2V8.5l-5 5v-5l-5 5v-11l5 5v-5l5 5V2z" /></svg
+				>
+			</button>
+		</div>
+	{/if}
 </div>

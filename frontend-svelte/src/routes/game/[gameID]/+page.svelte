@@ -26,12 +26,11 @@
 	);
 	let moveHistory = $state(data.gameData.moves);
 	let activeIndex = $state(data.gameData.moves ? data.gameData.moves.length - 1 : -1);
-	let chess = $derived(
-		moveHistory.length ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
-	);
+	let chess = $derived(moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess());
 
 	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
 	const setActiveIndex = (index: number) => {
+		if (index > moveHistory.length - 1 || index < 0) return;
 		activeIndex = index;
 	};
 	const gameID = Number(page.params.gameID);
@@ -45,10 +44,12 @@
 			reason = data.payload.Reason;
 		}
 		if (data.type === 'Move_Response') {
+			// console.log(data);
 			if (moveHistory) moveHistory = [...moveHistory, data.payload.move];
 			else moveHistory = [data.payload.move];
 			timeBlack = data.payload.timeBlack;
 			timeWhite = data.payload.timeWhite;
+			activeIndex = activeIndex + 1;
 
 			if (data.payload.Result !== '') {
 				result = data.payload.Result;
@@ -90,9 +91,7 @@
 				{gameID}
 				{chess}
 				white={whiteUsername}
-				lastMove={moveHistory
-					? [moveHistory[moveHistory.length - 1].Orig, moveHistory[moveHistory.length - 1].Dest]
-					: []}
+				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
 				viewOnly={(result != 'ongoing' && result != '') ||
 					(moveHistory && activeIndex !== moveHistory.length - 1)}
 			/>

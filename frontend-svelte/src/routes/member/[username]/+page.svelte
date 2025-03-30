@@ -12,6 +12,7 @@
 		} else if (item.Result === 'ongoing') {
 			x = 'bg-gray-600';
 		}
+		return x;
 	};
 </script>
 

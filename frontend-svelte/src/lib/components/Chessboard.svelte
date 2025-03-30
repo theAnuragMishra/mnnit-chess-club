@@ -15,7 +15,7 @@
 
 	$effect(() => {
 		// console.log('effect ran');
-		console.log(username, chess.ascii(), lastMove, viewOnly);
+		// console.log(username, chess.ascii(), lastMove, viewOnly);
 		if (!boardContainer) return;
 		const cg = Chessground(boardContainer, {
 			fen: chess.fen(),

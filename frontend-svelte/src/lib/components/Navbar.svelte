@@ -16,18 +16,18 @@
 <div class="flex w-full px-4 py-4 text-xl">
 	<ul class="flex w-full justify-between">
 		<li class="text-2xl">
-			<a href="/" class="rounded-lg p-2 hover:bg-gray-800"> MNNIT Chess Club </a>
+			<a href="/" class="rounded-lg hover:bg-gray-800"> MNNIT Chess Club </a>
 		</li>
 		<li class="flex items-center justify-center gap-1 text-2xl">
 			{#if !data.user}
 				<a class="text-xl text-blue-300 underline" href="/login">Login</a>
 			{:else}
-				<a href={`/member/${data.user.username}`} class="rounded-lg p-2 hover:bg-gray-800"
+				<a href={`/member/${data.user.username}`} class="rounded-lg hover:bg-gray-800"
 					>{data.user.username}</a
 				>
 				<button
 					onclick={handleLogout}
-					class="cursor-pointer rounded-lg p-2 hover:bg-gray-800"
+					class="cursor-pointer rounded-lg hover:bg-gray-800"
 					aria-label="sign out"
 				>
 					<svg
