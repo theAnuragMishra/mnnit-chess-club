@@ -4,7 +4,6 @@
 
 	let { data } = $props();
 
-	//Todo: check if this works
 	if (data.user.username) goto('/');
 
 	let username = $state('');
