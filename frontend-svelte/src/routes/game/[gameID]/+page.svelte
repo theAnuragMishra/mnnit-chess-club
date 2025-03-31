@@ -146,7 +146,14 @@
 				/>
 			</p>
 
-			<HistoryTable {moveHistory} {setActiveIndex} {activeIndex} />
+			<HistoryTable
+				{moveHistory}
+				{setActiveIndex}
+				{activeIndex}
+				highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
+					(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
+					(result === 'ongoing' || result === '')}
+			/>
 
 			<p class="mb-1 flex w-full items-center justify-between">
 				{data.user.username}

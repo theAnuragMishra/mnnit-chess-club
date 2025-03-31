@@ -1,5 +1,5 @@
 <script lang="ts">
-	const { setActiveIndex, activeIndex, moveHistory } = $props();
+	const { setActiveIndex, activeIndex, moveHistory, highlightLastArrow } = $props();
 	const moves: (HTMLButtonElement | null)[] = $state([]);
 	$effect(() => {
 		const activeButton = moves[activeIndex];
@@ -61,7 +61,7 @@
 			>
 			<button
 				aria-label="go to latest move"
-				class="flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
+				class={`flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700 ${highlightLastArrow && 'animate-pulse bg-blue-700'}`}
 				onclick={() => {
 					setActiveIndex(moveHistory.length - 1);
 				}}
