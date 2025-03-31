@@ -7,7 +7,6 @@
 		text: string;
 		gameID: number;
 	}
-	const sendMessage = websocketStore.sendMessage;
 	let messages: MessageInterface[] = $state([]);
 	const { username, userID, gameID, whiteID, blackID, whiteUsername, blackUsername } = $props();
 	let text = $state('');
@@ -23,7 +22,7 @@
 
 	const handleSend = () => {
 		if (text.trim() != '') {
-			sendMessage({
+			websocketStore.sendMessage({
 				type: 'chat',
 				payload: {
 					sender: userID,
@@ -38,19 +37,16 @@
 		}
 	};
 
-	const handleMessage = (e: MessageEvent) => {
-		const data = JSON.parse(e.data);
-		if (data.type === 'chat') {
-			if (messages) messages = [...messages, data.payload];
-			else messages = [data.payload];
-		}
+	const handleMessage = (payload: any) => {
+		if (messages) messages = [...messages, payload];
+		else messages = [payload];
 	};
 
 	onMount(() => {
-		websocketStore.socket?.addEventListener('message', handleMessage);
+		websocketStore.onMessage('chat', handleMessage);
 	});
 	onDestroy(() => {
-		websocketStore.socket?.removeEventListener('message', handleMessage);
+		websocketStore.offMessage('chat', handleMessage);
 	});
 </script>
 

@@ -5,10 +5,8 @@
 	const { userID, gameID, setResultReason } = $props();
 	let offer = $state(false);
 
-	const sendMessage = websocketStore.sendMessage;
-
 	const handleDrawResign = (dr: string) => {
-		sendMessage({
+		websocketStore.sendMessage({
 			type: dr,
 			payload: {
 				playerID: userID,
@@ -17,27 +15,29 @@
 		});
 	};
 
-	const handleMessage = (e: MessageEvent) => {
-		const data = JSON.parse(e.data);
+	const handleGameDrawn = (payload: any) => {
+		setResultReason(payload.Result, payload.Reason);
+	};
 
-		if (data.type === 'gameDrawn') {
-			setResultReason(data.payload.Result, data.payload.Reason);
-		}
+	const handleDrawOffer = (payload: any) => {
+		if (payload.gameID != gameID) return;
+		offer = true;
+	};
 
-		if (data.type === 'drawOffer') {
-			if (data.payload.gameID != gameID) return;
-			offer = true;
-		}
-
-		if (data.type === 'Move_Response') {
-			offer = false;
-		}
+	const handleCancelDraw = (payload: any) => {
+		offer = false;
 	};
 
 	onMount(() => {
-		websocketStore.socket?.addEventListener('message', handleMessage);
+		websocketStore.onMessage('gameDrawn', handleGameDrawn);
+		websocketStore.onMessage('drawOffer', handleDrawOffer);
+		websocketStore.onMessage('Move_Response', handleCancelDraw);
 	});
-	onDestroy(() => websocketStore.socket?.removeEventListener('message', handleMessage));
+	onDestroy(() => {
+		websocketStore.offMessage('gameDrawn', handleGameDrawn);
+		websocketStore.offMessage('drawOffer', handleDrawOffer);
+		websocketStore.offMessage('Move_Response', handleCancelDraw);
+	});
 </script>
 
 <div class="flex w-full items-center justify-center gap-2 text-white">

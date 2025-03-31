@@ -7,8 +7,6 @@
 	import '../../../node_modules/chessground/assets/chessground.brown.css';
 	import '../../../node_modules/chessground/assets/chessground.cburnett.css';
 
-	const sendMessage = websocketStore.sendMessage;
-
 	let boardContainer: HTMLDivElement;
 
 	let { username, gameID, chess, white, lastMove, viewOnly } = $props();
@@ -39,7 +37,7 @@
 								to: dest,
 								promotion: 'q'
 							});
-							sendMessage({
+							websocketStore.sendMessage({
 								type: 'move',
 								payload: {
 									MoveStr: move.san,
@@ -50,7 +48,7 @@
 							});
 						} else {
 							const move = chess.move({ from: orig, to: dest });
-							sendMessage({
+							websocketStore.sendMessage({
 								type: 'move',
 								payload: {
 									MoveStr: move.san,

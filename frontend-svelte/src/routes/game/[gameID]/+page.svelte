@@ -34,34 +34,33 @@
 		activeIndex = index;
 	};
 	const gameID = Number(page.params.gameID);
-	const sendMessage = websocketStore.sendMessage;
 
-	const handleMessage = (e: MessageEvent) => {
-		// console.log('event received');
-		const data = JSON.parse(e.data);
-		if (data.type === 'timeup') {
-			result = data.payload.Result;
-			reason = data.payload.Reason;
-		}
-		if (data.type === 'Move_Response') {
-			// console.log(data);
-			if (moveHistory) moveHistory = [...moveHistory, data.payload.move];
-			else moveHistory = [data.payload.move];
-			timeBlack = data.payload.timeBlack;
-			timeWhite = data.payload.timeWhite;
-			activeIndex = activeIndex + 1;
+	const handleTimeUp = (payload: any) => {
+		result = payload.Result;
+		reason = payload.Reason;
+	};
 
-			if (data.payload.Result !== '') {
-				result = data.payload.Result;
-				reason = data.payload.Reason;
-			}
+	const handleMoveResponse = (payload: any) => {
+		if (moveHistory) moveHistory = [...moveHistory, payload.move];
+		else moveHistory = [payload.move];
+		timeBlack = payload.timeBlack;
+		timeWhite = payload.timeWhite;
+		activeIndex = activeIndex + 1;
+
+		if (payload.Result !== '') {
+			result = payload.Result;
+			reason = payload.Reason;
 		}
 	};
 
 	onMount(() => {
-		websocketStore.socket?.addEventListener('message', handleMessage);
+		websocketStore.onMessage('timeup', handleTimeUp);
+		websocketStore.onMessage('Move_Response', handleMoveResponse);
 	});
-	onDestroy(() => websocketStore.socket?.removeEventListener('message', handleMessage));
+	onDestroy(() => {
+		websocketStore.offMessage('timeup', handleTimeUp);
+		websocketStore.offMessage('Move_Response', handleMoveResponse);
+	});
 </script>
 
 <div class="px-5 text-2xl">
@@ -108,7 +107,7 @@
 				{whiteUp ? whiteUsername : blackUsername}
 				<Clock
 					onTimeUp={() => {
-						sendMessage({
+						websocketStore.sendMessage({
 							type: 'timeup',
 							payload: {
 								gameID: gameID
@@ -130,7 +129,7 @@
 				{data.user.username}
 				<Clock
 					onTimeUp={() => {
-						sendMessage({
+						websocketStore.sendMessage({
 							type: 'timeup',
 							payload: {
 								gameID: gameID
