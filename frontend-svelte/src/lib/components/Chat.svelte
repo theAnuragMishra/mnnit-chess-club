@@ -38,6 +38,7 @@
 	};
 
 	const handleMessage = (payload: any) => {
+		if (payload.gameID != gameID) return;
 		if (messages) messages = [...messages, payload];
 		else messages = [payload];
 	};

@@ -16,6 +16,7 @@
 	};
 
 	const handleGameDrawn = (payload: any) => {
+		if (payload.gameID != gameID) return;
 		setResultReason(payload.Result, payload.Reason);
 	};
 
@@ -25,6 +26,7 @@
 	};
 
 	const handleCancelDraw = (payload: any) => {
+		if (payload.gameID != gameID) return;
 		offer = false;
 	};
 

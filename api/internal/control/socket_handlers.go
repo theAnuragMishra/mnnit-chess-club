@@ -85,7 +85,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]any{"move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -166,7 +166,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]any{"Result": "0-1", "Reason": reason})
+			payload, err := json.Marshal(map[string]any{"Result": "0-1", "Reason": reason, "gameID": gameID})
 			if err != nil {
 				return err
 			}
@@ -200,7 +200,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]any{"Result": "1-0", "Reason": reason})
+			payload, err := json.Marshal(map[string]any{"Result": "1-0", "Reason": reason, "gameID": gameID})
 			if err != nil {
 				return err
 			}
@@ -345,12 +345,11 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			ResultReason:     &reason,
 			ID:               foundGame.ID,
 		})
-
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
 
-		payload, err := json.Marshal(map[string]any{"Result": "1/2-1/2", "Reason": reason})
+		payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": "1/2-1/2", "Reason": reason})
 		if err != nil {
 			return err
 		}

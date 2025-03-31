@@ -36,11 +36,13 @@
 	const gameID = Number(page.params.gameID);
 
 	const handleTimeUp = (payload: any) => {
+		if (payload.gameID != gameID) return;
 		result = payload.Result;
 		reason = payload.Reason;
 	};
 
 	const handleMoveResponse = (payload: any) => {
+		if (payload.gameID != gameID) return;
 		if (moveHistory) moveHistory = [...moveHistory, payload.move];
 		else moveHistory = [payload.move];
 		timeBlack = payload.timeBlack;
