@@ -63,7 +63,7 @@
 			},
 			highlight: { lastMove: true, check: true }
 		});
-
+		// setGround(cg);
 		return () => cg.destroy(); // Cleanup on unmount
 	});
 </script>

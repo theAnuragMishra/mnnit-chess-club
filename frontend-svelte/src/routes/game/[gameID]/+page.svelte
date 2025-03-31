@@ -10,8 +10,10 @@
 	import { websocketStore } from '$lib/websocket.js';
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
+	// import type { Api } from 'chessground/api';
 	let { data } = $props();
 	// console.log(data);
+	// let ground: Api | null = $state(null);
 	let whiteUsername = data.gameData.game.WhiteUsername;
 	let blackUsername = data.gameData.game.BlackUsername;
 	let whiteID = data.gameData.game.WhiteID;
@@ -26,7 +28,13 @@
 	);
 	let moveHistory = $state(data.gameData.moves);
 	let activeIndex = $state(data.gameData.moves ? data.gameData.moves.length - 1 : -1);
-	let chess = $derived(moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess());
+	let chessLatest = $derived(
+		moveHistory ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
+	);
+
+	let chessForView = $derived(
+		moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
+	);
 
 	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
 	const setActiveIndex = (index: number) => {
@@ -34,6 +42,10 @@
 		activeIndex = index;
 	};
 	const gameID = Number(page.params.gameID);
+
+	// const setGround = (g: Api) => {
+	// 	ground = g;
+	// };
 
 	const handleTimeUp = (payload: any) => {
 		if (payload.gameID != gameID) return;
@@ -59,6 +71,7 @@
 			result = payload.Result;
 			reason = payload.Reason;
 		}
+		// ground?.playPremove();
 	};
 
 	onMount(() => {
@@ -105,7 +118,7 @@
 			<Chessboard
 				username={data.user.username}
 				{gameID}
-				{chess}
+				chess={chessForView}
 				white={whiteUsername}
 				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
 				viewOnly={(result != 'ongoing' && result != '') ||
@@ -128,8 +141,8 @@
 					active={result !== 'ongoing' && result !== ''
 						? false
 						: whiteUp
-							? chess.turn() === 'w'
-							: chess.turn() === 'b'}
+							? chessLatest.turn() === 'w'
+							: chessLatest.turn() === 'b'}
 				/>
 			</p>
 
@@ -150,8 +163,8 @@
 					active={result !== 'ongoing' && result !== ''
 						? false
 						: whiteUp
-							? chess.turn() === 'b'
-							: chess.turn() === 'w'}
+							? chessLatest.turn() === 'b'
+							: chessLatest.turn() === 'w'}
 				/>
 			</p>
 		</div>
