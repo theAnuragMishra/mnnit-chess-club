@@ -367,5 +367,82 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func Resign(c *Controller, event socket.Event, client *socket.Client) error {
+	var resign DRPayload
+	if err := json.Unmarshal(event.Payload, &resign); err != nil {
+		return err
+	}
+
+	if client.UserID != resign.PlayerID {
+		return errors.New("not the player")
+	}
+
+	gameID := resign.GameID
+
+	var foundGame *game.Game
+	var index int
+	for i, g := range c.GameManager.Games {
+		if g.ID == gameID {
+			foundGame = g
+			index = i
+		}
+	}
+
+	if foundGame == nil {
+		return errors.New("game not found")
+	}
+
+	if foundGame.Result != "ongoing" {
+		return errors.New("game has ended")
+	}
+
+	if foundGame.WhiteID != resign.PlayerID && foundGame.BlackID != resign.PlayerID {
+		return errors.New("not one of the players")
+	}
+
+	var result string
+	var reason string
+
+	if foundGame.WhiteID == resign.PlayerID {
+		result = "0-1"
+		reason = "White Resigned"
+	} else {
+		result = "1-0"
+		reason = "Black Resigned"
+	}
+
+	timeTaken := time.Since(foundGame.LastMoveTime)
+
+	if foundGame.Board.Position().Turn() == chess.White {
+		foundGame.TimeWhite -= timeTaken
+	} else {
+		foundGame.TimeBlack -= timeTaken
+	}
+
+	etlb := int32(foundGame.TimeBlack.Seconds())
+	etlw := int32(foundGame.TimeWhite.Seconds())
+
+	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
+		Result:           result,
+		EndTimeLeftWhite: &etlw,
+		EndTimeLeftBlack: &etlb,
+		ResultReason:     &reason,
+		ID:               foundGame.ID,
+	})
+	if err != nil {
+		log.Println("error ending game with result", err)
+	}
+
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": result, "Reason": reason})
+	if err != nil {
+		return err
+	}
+	e := socket.Event{
+		Type:    "resignation",
+		Payload: json.RawMessage(payload),
+	}
+	c.SocketManager.Broadcast(e)
+
+	c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
+	c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
 	return nil
 }

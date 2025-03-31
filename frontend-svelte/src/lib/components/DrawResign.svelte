@@ -4,10 +4,25 @@
 
 	const { userID, gameID, setResultReason } = $props();
 	let offer = $state(false);
+	let resignSelected = $state(false);
 
-	const handleDrawResign = (dr: string) => {
+	const handleDraw = () => {
 		websocketStore.sendMessage({
-			type: dr,
+			type: 'draw',
+			payload: {
+				playerID: userID,
+				gameID: gameID
+			}
+		});
+	};
+
+	const handleResign = () => {
+		if (!resignSelected) {
+			resignSelected = true;
+			return;
+		}
+		websocketStore.sendMessage({
+			type: 'resign',
 			payload: {
 				playerID: userID,
 				gameID: gameID
@@ -45,14 +60,14 @@
 <div class="flex w-full items-center justify-center gap-2 text-white">
 	<button
 		class={`rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
-		onclick={() => handleDrawResign('draw')}
+		onclick={handleDraw}
 	>
 		1/2
 	</button>
 	<button
 		aria-label="resign"
-		onclick={() => handleDrawResign('resign')}
-		class="rounded-lg px-4 py-2 hover:bg-gray-600"
+		onclick={handleResign}
+		class={`rounded-lg px-4 py-2 hover:bg-gray-600 ${resignSelected && 'bg-red-600'}`}
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -65,4 +80,17 @@
 			></path></svg
 		>
 	</button>
+	{#if resignSelected}
+		<button
+			aria-label="cancel resignation attempt"
+			class="rounded-lg px-1.5 py-2 hover:bg-gray-600"
+			onclick={() => (resignSelected = false)}
+			><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+				><path
+					fill="currentColor"
+					d="M15.854 12.854L11 8l4.854-4.854a.503.503 0 0 0 0-.707L13.561.146a.5.5 0 0 0-.707 0L8 5L3.146.146a.5.5 0 0 0-.707 0L.146 2.439a.5.5 0 0 0 0 .707L5 8L.146 12.854a.5.5 0 0 0 0 .707l2.293 2.293a.5.5 0 0 0 .707 0L8 11l4.854 4.854a.5.5 0 0 0 .707 0l2.293-2.293a.5.5 0 0 0 0-.707"
+				/></svg
+			></button
+		>
+	{/if}
 </div>

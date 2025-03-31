@@ -41,6 +41,12 @@
 		reason = payload.Reason;
 	};
 
+	const handleResignation = (payload: any) => {
+		if (payload.gameID != gameID) return;
+		result = payload.Result;
+		reason = payload.Reason;
+	};
+
 	const handleMoveResponse = (payload: any) => {
 		if (payload.gameID != gameID) return;
 		if (moveHistory) moveHistory = [...moveHistory, payload.move];
@@ -58,10 +64,12 @@
 	onMount(() => {
 		websocketStore.onMessage('timeup', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
+		websocketStore.onMessage('resignation', handleResignation);
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);
 		websocketStore.offMessage('Move_Response', handleMoveResponse);
+		websocketStore.offMessage('resignation', handleResignation);
 	});
 </script>
 
