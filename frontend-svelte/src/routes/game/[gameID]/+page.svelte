@@ -65,7 +65,7 @@
 		else moveHistory = [payload.move];
 		timeBlack = payload.timeBlack;
 		timeWhite = payload.timeWhite;
-		activeIndex = activeIndex + 1;
+		if (activeIndex === moveHistory.length - 2) activeIndex = moveHistory.length - 1;
 
 		if (payload.Result !== '') {
 			result = payload.Result;
