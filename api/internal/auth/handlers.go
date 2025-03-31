@@ -50,5 +50,5 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{"username": user.Username, "userID": user.ID})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"username": user.Username, "userID": user.ID})
 }

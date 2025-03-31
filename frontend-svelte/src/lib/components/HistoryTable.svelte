@@ -30,7 +30,7 @@
 		<div class="absolute bottom-2 flex w-4/5 justify-around">
 			<button
 				aria-label="go to first move"
-				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				class="flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 				onclick={() => {
 					setActiveIndex(0);
 				}}
@@ -41,7 +41,7 @@
 			</button>
 			<button
 				aria-label="go to previous move"
-				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				class="flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 				onclick={() => {
 					setActiveIndex(activeIndex - 1);
 				}}
@@ -51,7 +51,7 @@
 			>
 			<button
 				aria-label="go to next move"
-				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				class="flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 				onclick={() => {
 					setActiveIndex(activeIndex + 1);
 				}}
@@ -61,7 +61,7 @@
 			>
 			<button
 				aria-label="go to latest move"
-				class="flex w-1/5 cursor-pointer items-center justify-center hover:bg-gray-700"
+				class="flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 				onclick={() => {
 					setActiveIndex(moveHistory.length - 1);
 				}}

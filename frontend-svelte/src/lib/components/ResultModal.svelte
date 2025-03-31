@@ -10,9 +10,13 @@
 		>
 			<h2 class="mb-2 text-2xl font-bold text-white">Game Over</h2>
 			<p class="mb-4 text-4xl text-white">{result}</p>
-			<p class="text-xl text-white">{reason}!</p>
+			<p class="mb-2 text-xl text-white">{reason}!</p>
 			<p>
-				{result === '1-0' ? 'White is victorious' : 'Black is victorious'}.
+				{result === '1-0'
+					? 'White is victorious'
+					: result === '0-1'
+						? 'Black is victorious'
+						: 'Game Drawn'}.
 			</p>
 			<button
 				class="absolute top-2 right-2 text-gray-500 hover:text-gray-800"

@@ -21,11 +21,11 @@ type UserNamePayload struct {
 }
 
 type GameResponse struct {
-	Game      interface{} `json:"game"`
-	Moves     interface{} `json:"moves"`
-	Ongoing   bool        `json:"ongoing"`
-	TimeBlack int32       `json:"timeBlack"`
-	TimeWhite int32       `json:"timeWhite"`
+	Game      any   `json:"game"`
+	Moves     any   `json:"moves"`
+	Ongoing   bool  `json:"ongoing"`
+	TimeBlack int32 `json:"timeBlack"`
+	TimeWhite int32 `json:"timeWhite"`
 }
 
 type ChatPayload struct {
@@ -35,4 +35,9 @@ type ChatPayload struct {
 	ReceiverUsername string `json:"receiverUsername"`
 	Text             string `json:"text"`
 	GameID           int32  `json:"gameID"`
+}
+
+type DRPayload struct {
+	PlayerID int32 `json:"playerID"`
+	GameID   int32 `json:"gameID"`
 }

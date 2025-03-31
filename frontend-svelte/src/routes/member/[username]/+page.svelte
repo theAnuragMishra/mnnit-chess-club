@@ -9,7 +9,7 @@
 			(item.BlackUsername === page.params.username && item.Result === '0-1')
 		) {
 			x = 'bg-green-700';
-		} else if (item.Result === 'ongoing') {
+		} else if (item.Result === 'ongoing' || item.Result === '1/2-1/2') {
 			x = 'bg-gray-600';
 		}
 		return x;

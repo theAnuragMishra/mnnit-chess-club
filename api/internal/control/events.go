@@ -8,4 +8,6 @@ var handlers = map[string]EventHandler{
 	"move":   Move,
 	"timeup": TimeUp,
 	"chat":   Chat,
+	"draw":   Draw,
+	"resign": Resign,
 }

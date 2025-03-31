@@ -103,7 +103,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 
 		*PendingUserID = 0
 		*PendingUserName = ""
-		payload := map[string]interface{}{
+		payload := map[string]any{
 			"GameID": createdGame.ID,
 		}
 		rawPayload, err := json.Marshal(payload)

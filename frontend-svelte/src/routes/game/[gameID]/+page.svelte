@@ -80,7 +80,14 @@
 					{whiteUsername}
 					{blackUsername}
 				/>
-				<DrawResign />
+				<DrawResign
+					{gameID}
+					userID={data.user.userID}
+					setResultReason={(res: string, rea: string) => {
+						result = res;
+						reason = rea;
+					}}
+				/>
 			</div>
 		{:else}
 			<GameInfo />

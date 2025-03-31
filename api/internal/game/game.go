@@ -10,17 +10,18 @@ import (
 )
 
 type Game struct {
-	ID           int32
-	Result       string
-	BaseTime     time.Duration
-	Increment    time.Duration
-	WhiteID      int32
-	BlackID      int32
-	Board        *chess.Game
-	GameLength   int16
-	LastMoveTime time.Time
-	TimeWhite    time.Duration
-	TimeBlack    time.Duration
+	ID            int32
+	Result        string
+	BaseTime      time.Duration
+	Increment     time.Duration
+	WhiteID       int32
+	BlackID       int32
+	Board         *chess.Game
+	GameLength    int16
+	LastMoveTime  time.Time
+	TimeWhite     time.Duration
+	TimeBlack     time.Duration
+	DrawOfferedBy int32
 }
 
 func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
@@ -97,6 +98,8 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		log.Println(err)
 		return "error making move", ""
 	}
+
+	g.DrawOfferedBy = 0
 	// log.Println(g.Board.Position().Board().Draw())
 
 	if g.Board.Outcome() != "*" {

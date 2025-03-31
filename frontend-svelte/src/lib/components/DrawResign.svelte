@@ -1,24 +1,57 @@
 <script lang="ts">
 	import { websocketStore } from '$lib/websocket';
+	import { onDestroy, onMount } from 'svelte';
+
+	const { userID, gameID, setResultReason } = $props();
+	let offer = $state(false);
 
 	const sendMessage = websocketStore.sendMessage;
-	const handleDraw = () => {
+
+	const handleDrawResign = (dr: string) => {
 		sendMessage({
-			type: 'Draw',
-			payload: {}
+			type: dr,
+			payload: {
+				playerID: userID,
+				gameID: gameID
+			}
 		});
 	};
-	const handleResign = () => {
-		sendMessage({
-			type: 'Resign',
-			payload: {}
-		});
+
+	const handleMessage = (e: MessageEvent) => {
+		const data = JSON.parse(e.data);
+
+		if (data.type === 'gameDrawn') {
+			setResultReason(data.payload.Result, data.payload.Reason);
+		}
+
+		if (data.type === 'drawOffer') {
+			if (data.payload.gameID != gameID) return;
+			offer = true;
+		}
+
+		if (data.type === 'Move_Response') {
+			offer = false;
+		}
 	};
+
+	onMount(() => {
+		websocketStore.socket?.addEventListener('message', handleMessage);
+	});
+	onDestroy(() => websocketStore.socket?.removeEventListener('message', handleMessage));
 </script>
 
 <div class="flex w-full items-center justify-center gap-2 text-white">
-	<button class="rounded-lg px-4 py-2 hover:bg-gray-600" onclick={handleDraw}> 1/2 </button>
-	<button aria-label="resign" onclick={handleResign} class="rounded-lg px-4 py-2 hover:bg-gray-600">
+	<button
+		class={`rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
+		onclick={() => handleDrawResign('draw')}
+	>
+		1/2
+	</button>
+	<button
+		aria-label="resign"
+		onclick={() => handleDrawResign('resign')}
+		class="rounded-lg px-4 py-2 hover:bg-gray-600"
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="32"

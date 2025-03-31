@@ -85,7 +85,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]interface{}{"move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
+	payload, err := json.Marshal(map[string]any{"move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -166,7 +166,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]interface{}{"Result": "0-1", "Reason": reason})
+			payload, err := json.Marshal(map[string]any{"Result": "0-1", "Reason": reason})
 			if err != nil {
 				return err
 			}
@@ -200,7 +200,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			if err != nil {
 				log.Println("error ending game with result", err)
 			}
-			payload, err := json.Marshal(map[string]interface{}{"Result": "1-0", "Reason": reason})
+			payload, err := json.Marshal(map[string]any{"Result": "1-0", "Reason": reason})
 			if err != nil {
 				return err
 			}
@@ -215,7 +215,6 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 
 			return nil
 		}
-
 	}
 
 	return errors.New("time not actually up")
@@ -255,7 +254,7 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 
 	otherClient := c.SocketManager.FindClientByUserID(chat.Receiver)
 
-	payload, err := json.Marshal(map[string]interface{}{"sender": chat.SenderUsername, "receiver": chat.ReceiverUsername, "gameID": chat.GameID, "text": chat.Text})
+	payload, err := json.Marshal(map[string]any{"sender": chat.SenderUsername, "receiver": chat.ReceiverUsername, "gameID": chat.GameID, "text": chat.Text})
 	if err != nil {
 		return errors.New("error marshalling chat payload")
 	}
@@ -268,5 +267,106 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 	client.Send(e)
 	otherClient.Send(e)
 
+	return nil
+}
+
+func Draw(c *Controller, event socket.Event, client *socket.Client) error {
+	var draw DRPayload
+	if err := json.Unmarshal(event.Payload, &draw); err != nil {
+		return err
+	}
+
+	if client.UserID != draw.PlayerID {
+		return errors.New("not the player")
+	}
+
+	gameID := draw.GameID
+
+	var foundGame *game.Game
+	var index int
+	for i, g := range c.GameManager.Games {
+		if g.ID == gameID {
+			foundGame = g
+			index = i
+		}
+	}
+
+	if foundGame == nil {
+		return errors.New("game not found")
+	}
+
+	if foundGame.Result != "ongoing" {
+		return errors.New("game has ended")
+	}
+
+	if foundGame.WhiteID != draw.PlayerID && foundGame.BlackID != draw.PlayerID {
+		return errors.New("not one of the players")
+	}
+
+	if foundGame.DrawOfferedBy == 0 {
+		foundGame.DrawOfferedBy = draw.PlayerID
+		payload, err := json.Marshal(map[string]any{"gameID": draw.GameID})
+		if err != nil {
+			return errors.New("error marshalling chat payload")
+		}
+
+		e := socket.Event{
+			Type:    "drawOffer",
+			Payload: json.RawMessage(payload),
+		}
+
+		var other int32
+		if draw.PlayerID == foundGame.BlackID {
+			other = foundGame.WhiteID
+		} else {
+			other = foundGame.BlackID
+		}
+
+		otherClient := c.SocketManager.FindClientByUserID(other)
+
+		otherClient.Send(e)
+	} else if foundGame.DrawOfferedBy != draw.PlayerID {
+		reason := "Draw by mutual agreement"
+		timeTaken := time.Since(foundGame.LastMoveTime)
+
+		if foundGame.Board.Position().Turn() == chess.White {
+			foundGame.TimeWhite -= timeTaken
+		} else {
+			foundGame.TimeBlack -= timeTaken
+		}
+
+		etlb := int32(foundGame.TimeBlack.Seconds())
+		etlw := int32(foundGame.TimeWhite.Seconds())
+
+		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
+			Result:           "1/2-1/2",
+			EndTimeLeftWhite: &etlw,
+			EndTimeLeftBlack: &etlb,
+			ResultReason:     &reason,
+			ID:               foundGame.ID,
+		})
+
+		if err != nil {
+			log.Println("error ending game with result", err)
+		}
+
+		payload, err := json.Marshal(map[string]any{"Result": "1/2-1/2", "Reason": reason})
+		if err != nil {
+			return err
+		}
+		e := socket.Event{
+			Type:    "gameDrawn",
+			Payload: json.RawMessage(payload),
+		}
+		c.SocketManager.Broadcast(e)
+
+		c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
+		c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
+	}
+
+	return nil
+}
+
+func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	return nil
 }
