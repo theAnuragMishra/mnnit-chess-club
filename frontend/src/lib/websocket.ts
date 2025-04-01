@@ -28,6 +28,7 @@ class WebSocketStore {
 		const { type, payload } = data;
 
 		if (type === 'Init_Game') {
+			console.log('init game received');
 			goto(`/game/${payload.GameID}`);
 		}
 
