@@ -70,7 +70,7 @@
 
 		if (payload.Result !== '') {
 			result = payload.Result;
-			reason = payload.Reason;
+			reason = payload.message;
 		}
 		ground?.set({
 			fen: payload.move.MoveFen,
