@@ -59,7 +59,7 @@
 
 <div class="flex w-full items-center justify-center gap-2 text-white">
 	<button
-		class={`rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
+		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
 		onclick={handleDraw}
 	>
 		1/2
@@ -67,7 +67,7 @@
 	<button
 		aria-label="resign"
 		onclick={handleResign}
-		class={`rounded-lg px-4 py-2 hover:bg-gray-600 ${resignSelected && 'bg-red-600'}`}
+		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-red-600 ${resignSelected && 'bg-red-600'}`}
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
