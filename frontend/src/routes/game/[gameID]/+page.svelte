@@ -99,7 +99,7 @@
 		<ResultModal {result} {reason} />
 	{/if}
 	<div class="flex w-full items-center justify-around">
-		{#if result !== '1-0' && result !== '0-1'}
+		{#if result === '' || result === 'ongoing'}
 			<div class="flex w-1/4 flex-col gap-10">
 				<Chat
 					username={data.user.username}
