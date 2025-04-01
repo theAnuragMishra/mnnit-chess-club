@@ -6,6 +6,7 @@ import { Key } from "chessground/types";
 
 interface ChessState {
   board: Chess;
+  hi: string;
   whiteusername: string;
   blackusername: string;
   whiteID: string;
@@ -36,10 +37,12 @@ interface ChessState {
   setTimeBlack: (time: number) => void;
   setTimeWhite: (time: number) => void;
   setActiveIndex: (index: number) => void;
+  setHi : (hi: string) => void;
 }
 
 const useChessStore = create<ChessState>()((set, get) => ({
   ground: null,
+  hi: "",
   whiteusername: "",
   blackusername: "",
   whiteID: "",
@@ -51,7 +54,9 @@ const useChessStore = create<ChessState>()((set, get) => ({
   board: new Chess(),
   moveHistory: null,
   activeIndex: -1,
-
+setHi: (hi: string) => {
+    set({hi})
+},
   setActiveIndex: (index: number) => set({ activeIndex: index }),
 
   setUserNames: (white: string, black: string) =>
@@ -95,10 +100,10 @@ const useChessStore = create<ChessState>()((set, get) => ({
   setReason: (reason: string) => set({ reason }),
 
   updateFen: (fen: string) => {
-    get().board.load(fen);
-    // const newBoard = get().board ; // Clone or create a new board instance
-    // newBoard.load(fen);
-    // set({ board: newBoard }); // Now Zustand detects a change
+    // get().board.load(fen);
+    const newBoard = get().board ; // Clone or create a new board instance
+    newBoard.load(fen);
+    set({ board: newBoard }); // Now Zustand detects a change
   },
 
   setHistory: (his: any) => {

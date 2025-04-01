@@ -58,6 +58,7 @@ const useWebSocketStore = create<WebSocketState>()(() => {
             setResult,
             setReason,
             moveHistory,
+              setHi
           } = useChessStore.getState();
           // console.log(data.payload.move);
           // console.log(data.payload);
@@ -69,6 +70,7 @@ const useWebSocketStore = create<WebSocketState>()(() => {
           setTimeWhite(data.payload.timeWhite);
           setTimeBlack(data.payload.timeBlack);
           setActiveIndex(moveHistory ? moveHistory.length : -1);
+          setHi(data.payload.move.MoveFen)
 
           if (data.payload.Result !== "") {
             // useChessStore.setState(() => ({ result: data.payload.Result }));
@@ -76,6 +78,7 @@ const useWebSocketStore = create<WebSocketState>()(() => {
             setReason(data.payload.message);
           }
           useChessStore.getState().ground?.playPremove();
+          console.log("finished move response");
         }
         if (data.type === "chat") {
           // console.log(data);

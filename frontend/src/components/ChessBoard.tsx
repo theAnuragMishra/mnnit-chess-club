@@ -11,8 +11,9 @@ import { Square } from "chess.js";
 
 export default function ChessBoard(props: { gameID: number }) {
   const boardRef = useRef<HTMLDivElement>(null);
+  const hi = useChessStore(state=>state.hi);
   const chess = useChessStore((state) => state.board);
-  const check = useChessStore(state=>state.board.isCheck())
+  const check = useChessStore((state) => state.board.isCheck());
   const setGround = useChessStore((state) => state.setGround);
   const sendMessage = useWebSocketStore((state) => state.sendMessage);
   const white = useChessStore((state) => state.whiteusername);
@@ -20,8 +21,9 @@ export default function ChessBoard(props: { gameID: number }) {
   const result = useChessStore((state) => state.result);
 
   useEffect(() => {
+    console.log("effect ran");
     if (!boardRef.current) return;
-
+console.log(hi);
     // Initialize Chessground
     const ground = Chessground(boardRef.current, {
       fen: chess.fen(),
@@ -71,7 +73,17 @@ export default function ChessBoard(props: { gameID: number }) {
     setGround(ground);
 
     return () => ground.destroy();
-  }, [chess, props.gameID, sendMessage, setGround, white, username, result,  check]);
+  }, [
+    chess,
+    props.gameID,
+    sendMessage,
+    setGround,
+    white,
+    username,
+    result,
+    check,
+      hi
+  ]);
 
   return <div ref={boardRef} className="w-[644px] h-[644px]" />;
 }
