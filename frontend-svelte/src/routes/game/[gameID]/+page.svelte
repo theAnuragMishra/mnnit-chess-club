@@ -10,10 +10,11 @@
 	import { websocketStore } from '$lib/websocket.js';
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	// import type { Api } from 'chessground/api';
+	import type { Api } from 'chessground/api';
+	import { getValidMoves } from '$lib/utils.js';
 	let { data } = $props();
 	// console.log(data);
-	// let ground: Api | null = $state(null);
+	let ground: Api | null = $state(null);
 	let whiteUsername = data.gameData.game.WhiteUsername;
 	let blackUsername = data.gameData.game.BlackUsername;
 	let whiteID = data.gameData.game.WhiteID;
@@ -43,9 +44,9 @@
 	};
 	const gameID = Number(page.params.gameID);
 
-	// const setGround = (g: Api) => {
-	// 	ground = g;
-	// };
+	const setGround = (g: Api) => {
+		ground = g;
+	};
 
 	const handleTimeUp = (payload: any) => {
 		if (payload.gameID != gameID) return;
@@ -71,7 +72,14 @@
 			result = payload.Result;
 			reason = payload.Reason;
 		}
-		// ground?.playPremove();
+		ground?.set({
+			fen: payload.move.MoveFen,
+			turnColor: chessLatest.turn() === 'w' ? 'white' : 'black',
+			movable: { dests: getValidMoves(chessLatest) }
+		});
+		// console.log('finished movehandler');
+		ground?.playPremove();
+		// console.log(x);
 	};
 
 	onMount(() => {
@@ -116,6 +124,7 @@
 		{/if}
 		<div class="flex items-center justify-center">
 			<Chessboard
+				{setGround}
 				username={data.user.username}
 				{gameID}
 				chess={chessForView}

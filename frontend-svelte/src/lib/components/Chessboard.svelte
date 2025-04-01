@@ -9,7 +9,7 @@
 
 	let boardContainer: HTMLDivElement;
 
-	let { username, gameID, chess, white, lastMove, viewOnly } = $props();
+	let { username, gameID, chess, white, lastMove, viewOnly, setGround } = $props();
 
 	$effect(() => {
 		// console.log('effect ran');
@@ -63,8 +63,9 @@
 			},
 			highlight: { lastMove: true, check: true }
 		});
-		// setGround(cg);
-		return () => cg.destroy(); // Cleanup on unmount
+		setGround(cg);
+
+		return () => cg.destroy();
 	});
 </script>
 
