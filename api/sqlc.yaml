@@ -13,7 +13,7 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
-          - db_type: "pg_catalog.timestamp"
+          - db_type: "timestamptz"
             go_type:
               import: "time"
               type: "Time"
@@ -22,7 +22,7 @@ sql:
               import: "github.com/google/uuid"
               type: "UUID"
             nullable: true
-          - db_type: "pg_catalog.timestamp"
+          - db_type: "timestamptz"
             go_type:
               import: "time"
               type: "Time"

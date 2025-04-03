@@ -11,6 +11,7 @@ import (
 type CsrfToken struct {
 	SessionID string
 	Token     string
+	CreatedAt time.Time
 	ExpiresAt time.Time
 }
 
@@ -46,6 +47,7 @@ type Move struct {
 type Session struct {
 	ID        string
 	UserID    int32
+	CreatedAt time.Time
 	ExpiresAt time.Time
 }
 

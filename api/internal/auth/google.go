@@ -87,7 +87,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	err = h.queries.CreateSession(r.Context(), database.CreateSessionParams{
 		ID:        sessionToken,
 		UserID:    databaseUser.ID,
-		ExpiresAt: time.Now().UTC().Add(24 * time.Hour * 30),
+		ExpiresAt: time.Now().Add(24 * time.Hour * 30),
 	})
 	if err != nil {
 		log.Println(err, "failed to create session")

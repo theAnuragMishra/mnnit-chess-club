@@ -52,24 +52,34 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 }
 
 const getCSRFTokenBySession = `-- name: GetCSRFTokenBySession :one
-SELECT session_id, token, expires_at from csrf_tokens WHERE session_id = $1
+SELECT session_id, token, created_at, expires_at from csrf_tokens WHERE session_id = $1
 `
 
 func (q *Queries) GetCSRFTokenBySession(ctx context.Context, sessionID string) (CsrfToken, error) {
 	row := q.db.QueryRow(ctx, getCSRFTokenBySession, sessionID)
 	var i CsrfToken
-	err := row.Scan(&i.SessionID, &i.Token, &i.ExpiresAt)
+	err := row.Scan(
+		&i.SessionID,
+		&i.Token,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+	)
 	return i, err
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, user_id, expires_at FROM sessions WHERE id = $1
+SELECT id, user_id, created_at, expires_at FROM sessions WHERE id = $1
 `
 
 func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
 	row := q.db.QueryRow(ctx, getSession, id)
 	var i Session
-	err := row.Scan(&i.ID, &i.UserID, &i.ExpiresAt)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+	)
 	return i, err
 }
 

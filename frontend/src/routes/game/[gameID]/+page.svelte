@@ -15,6 +15,9 @@
 	let { data } = $props();
 	// console.log(data);
 	let ground: Api | null = $state(null);
+	const baseTime = data.gameData.game.BaseTime;
+	const increment = data.gameData.game.Increment;
+	const createdAt = new Date(data.gameData.game.CreatedAt);
 	let whiteUsername = data.gameData.game.WhiteUsername;
 	let blackUsername = data.gameData.game.BlackUsername;
 	let whiteID = data.gameData.game.WhiteID;
@@ -120,7 +123,15 @@
 				/>
 			</div>
 		{:else}
-			<GameInfo />
+			<GameInfo
+				{whiteUsername}
+				{blackUsername}
+				{result}
+				{createdAt}
+				{baseTime}
+				{increment}
+				{reason}
+			/>
 		{/if}
 		<div class="flex items-center justify-center">
 			<Chessboard
