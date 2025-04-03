@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 
 export const ssr = false;
 
-export async function load() {
+export async function load({ route }) {
 	const res = await fetch(`${getBaseURL()}/me`, { credentials: 'include' });
 
 	if (!res.ok) {
@@ -11,7 +11,7 @@ export async function load() {
 	}
 
 	const user = await res.json();
-	if (!user.username) redirect(303, '/set-username');
+	if (route.id !== '/set-username' && !user.username) redirect(303, '/set-username');
 
 	return { user };
 }

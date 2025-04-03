@@ -4,7 +4,7 @@
 
 	let { data } = $props();
 
-	if (data.user.username) goto('/');
+	if (!data.user || data.user.username) goto('/');
 
 	let username = $state('');
 	let loading = $state(false);
@@ -32,14 +32,12 @@
 	};
 </script>
 
-<div
-	class="mt-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-gray-100 p-6 shadow-md"
->
+<div class="mt-10 flex flex-col items-center justify-center gap-4 rounded-lg p-6">
 	<input
 		type="text"
 		placeholder="Enter your username"
 		bind:value={username}
-		class="rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-400 focus:outline-none"
+		class="rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-black focus:border-transparent focus:ring-2 focus:ring-blue-400 focus:outline-none"
 	/>
 
 	{#if error}
