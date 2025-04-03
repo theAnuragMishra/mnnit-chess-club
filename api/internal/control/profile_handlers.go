@@ -2,11 +2,12 @@ package control
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
-	"net/http"
 )
 
 func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +22,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	if user.Username != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Username can only be set once")
 	}
-	
+
 	var usernamePayload UserNamePayload
 
 	err = json.NewDecoder(r.Body).Decode(&usernamePayload)
@@ -34,10 +35,9 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		Username: &usernamePayload.Username,
 		ID:       session.UserID,
 	})
-
-	fmt.Println(err)
-
 	if err != nil {
+
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Username already in use")
 		return
 	}
