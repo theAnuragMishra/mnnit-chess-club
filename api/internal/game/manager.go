@@ -1,7 +1,7 @@
 package game
 
 type Manager struct {
-	Games            []*Game
+	Games            map[int32]*Game
 	PendingUserName1 string
 	PendingUserID1   int32
 	PendingUserName2 string
@@ -13,6 +13,6 @@ type Manager struct {
 
 func NewManager() *Manager {
 	return &Manager{
-		Games: []*Game{},
+		Games: make(map[int32]*Game),
 	}
 }

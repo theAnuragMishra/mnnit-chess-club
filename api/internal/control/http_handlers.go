@@ -92,7 +92,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 		}
 
 		createdGame.ID = id
-		c.GameManager.Games = append(c.GameManager.Games, createdGame)
+		c.GameManager.Games[id] = createdGame
 
 		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
 		otherClient := c.SocketManager.FindClientByUserID(*PendingUserID)
@@ -155,16 +155,13 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	var serverGame *game.Game
 	var ongoing bool
 	var timeBlack int32
 	var timeWhite int32
-	for _, g := range c.GameManager.Games {
-		if g.ID == gameID {
-			serverGame = g
-		}
-	}
-	if serverGame == nil {
+
+	serverGame, exists := c.GameManager.Games[gameID]
+
+	if !exists {
 		ongoing = false
 		if foundGame.EndTimeLeftWhite != nil {
 			timeWhite = *foundGame.EndTimeLeftWhite

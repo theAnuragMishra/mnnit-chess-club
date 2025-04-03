@@ -10,7 +10,6 @@ import (
 	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
@@ -23,16 +22,9 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	gameID := move.GameID
 
-	var foundGame *game.Game
-	var index int
-	for i, g := range c.GameManager.Games {
-		if g.ID == gameID {
-			foundGame = g
-			index = i
-		}
-	}
+	foundGame, exists := c.GameManager.Games[gameID]
 
-	if foundGame == nil {
+	if !exists {
 		return errors.New("game not found")
 	}
 
@@ -112,8 +104,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
-		c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
-		c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
+		delete(c.GameManager.Games, gameID)
 	}
 
 	return nil
@@ -127,16 +118,9 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 
 	gameID := timeupData.GameID
 
-	var foundGame *game.Game
-	var index int
-	for i, g := range c.GameManager.Games {
-		if g.ID == gameID {
-			foundGame = g
-			index = i
-		}
-	}
+	foundGame, exists := c.GameManager.Games[gameID]
 
-	if foundGame == nil {
+	if !exists {
 		return errors.New("game not found")
 	}
 
@@ -175,10 +159,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 				Payload: json.RawMessage(payload),
 			}
 			c.SocketManager.Broadcast(e)
-
-			c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
-			c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
-
+			delete(c.GameManager.Games, gameID)
 			return nil
 		}
 	}
@@ -210,8 +191,7 @@ func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
 			}
 			c.SocketManager.Broadcast(e)
 
-			c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
-			c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
+			delete(c.GameManager.Games, gameID)
 
 			return nil
 		}
@@ -233,14 +213,9 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 	if chat.Sender != client.UserID {
 		return errors.New("client not the sender")
 	}
-	var foundGame *game.Game
-	for _, g := range c.GameManager.Games {
-		if g.ID == chat.GameID {
-			foundGame = g
-		}
-	}
 
-	if foundGame == nil {
+	foundGame, exists := c.GameManager.Games[chat.GameID]
+	if !exists {
 		return errors.New("game not found")
 	}
 	// fmt.Println(foundGame.Result)
@@ -282,16 +257,9 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 
 	gameID := draw.GameID
 
-	var foundGame *game.Game
-	var index int
-	for i, g := range c.GameManager.Games {
-		if g.ID == gameID {
-			foundGame = g
-			index = i
-		}
-	}
+	foundGame, exists := c.GameManager.Games[gameID]
 
-	if foundGame == nil {
+	if !exists {
 		return errors.New("game not found")
 	}
 
@@ -358,9 +326,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Payload: json.RawMessage(payload),
 		}
 		c.SocketManager.Broadcast(e)
-
-		c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
-		c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
+		delete(c.GameManager.Games, gameID)
 	}
 
 	return nil
@@ -378,16 +344,9 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 
 	gameID := resign.GameID
 
-	var foundGame *game.Game
-	var index int
-	for i, g := range c.GameManager.Games {
-		if g.ID == gameID {
-			foundGame = g
-			index = i
-		}
-	}
+	foundGame, exists := c.GameManager.Games[gameID]
 
-	if foundGame == nil {
+	if !exists {
 		return errors.New("game not found")
 	}
 
@@ -441,8 +400,6 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.Broadcast(e)
-
-	c.GameManager.Games[index] = c.GameManager.Games[len(c.GameManager.Games)-1]
-	c.GameManager.Games = c.GameManager.Games[:len(c.GameManager.Games)-1]
+	delete(c.GameManager.Games, gameID)
 	return nil
 }
