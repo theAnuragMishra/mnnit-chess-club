@@ -35,7 +35,8 @@ WHERE id = $5;
 SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
 
 -- name: GetLatestMove :one
 SELECT move_number, move_notation, orig, dest, move_fen

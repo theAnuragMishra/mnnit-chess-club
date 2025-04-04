@@ -206,7 +206,14 @@ SELECT id, base_time, increment, white_username, black_username, result, game_le
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
 ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
 `
+
+type GetPlayerGamesParams struct {
+	WhiteUsername *string
+	Limit         int32
+	Offset        int32
+}
 
 type GetPlayerGamesRow struct {
 	ID            int32
@@ -220,8 +227,8 @@ type GetPlayerGamesRow struct {
 	CreatedAt     time.Time
 }
 
-func (q *Queries) GetPlayerGames(ctx context.Context, whiteUsername *string) ([]GetPlayerGamesRow, error) {
-	rows, err := q.db.Query(ctx, getPlayerGames, whiteUsername)
+func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) ([]GetPlayerGamesRow, error) {
+	rows, err := q.db.Query(ctx, getPlayerGames, arg.WhiteUsername, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

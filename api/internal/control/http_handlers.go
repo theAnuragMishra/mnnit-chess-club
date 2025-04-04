@@ -124,17 +124,6 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(c.GameManager)
 }
 
-func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
-	username := chi.URLParam(r, "username")
-	profileInfo, err := c.Queries.GetPlayerGames(r.Context(), &username)
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-	}
-
-	utils.RespondWithJSON(w, http.StatusOK, profileInfo)
-}
-
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameIDStr, err := strconv.ParseInt(chi.URLParam(r, "gameID"), 10, 32)
 	if err != nil {
