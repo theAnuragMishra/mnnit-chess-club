@@ -57,21 +57,8 @@ func DatabaseGameToGame(game *database.Game) *Game {
 	}
 }
 
-func (g *Game) MakeMove(player int32, move string) (string, string) {
-	if g.Board.Position().Turn() == chess.White && player != g.WhiteID {
-		return "not your turn", ""
-	}
-	if g.Board.Position().Turn() == chess.Black && player != g.BlackID {
-		return "not your turn", ""
-	}
-
-	if g.Board.Outcome() != "*" {
-		return "game has ended", ""
-	}
-
+func (g *Game) MakeMove(move string) (string, string) {
 	moveTime := time.Since(g.LastMoveTime)
-
-	// fmt.Println(moveTime)
 
 	if g.Board.Position().Turn() == chess.White {
 		if moveTime > g.TimeWhite {
@@ -94,30 +81,25 @@ func (g *Game) MakeMove(player int32, move string) (string, string) {
 		}
 	}
 
+	g.LastMoveTime = time.Now()
+
 	if err := g.Board.MoveStr(move); err != nil {
 		log.Println(err)
 		return "error making move", ""
 	}
 
 	g.DrawOfferedBy = 0
-	// log.Println(g.Board.Position().Board().Draw())
+	err := g.Board.Draw(chess.ThreefoldRepetition)
+
+	if err != nil {
+		g.Board.Draw(chess.FiftyMoveRule)
+	}
 
 	if g.Board.Outcome() != "*" {
 		g.Result = string(g.Board.Outcome())
 		return g.Board.Method().String(), string(g.Board.Outcome())
 	}
 
-	// fmt.Println(g.Board.Position())
-	// fmt.Println(g.Board.Position().Board())
-	// fmt.Println(g.Board)
-	g.LastMoveTime = time.Now()
-
 	return "move successful", ""
 
-	// moveStr := "{\"move\": " + move + "}"
-
-	//g.Socket.Broadcast(socket.Event{
-	//	Type:    socket.EventMove,
-	//	Payload: json.RawMessage(moveStr),
-	//})
 }

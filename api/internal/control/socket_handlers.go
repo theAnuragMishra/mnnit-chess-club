@@ -28,22 +28,21 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	if foundGame.BlackID != client.UserID && foundGame.WhiteID != client.UserID {
-		return errors.New("not one of the players")
-	}
-
 	if foundGame.Result != "ongoing" {
 		return errors.New("game has ended")
 	}
 
-	if foundGame.WhiteID == 0 || foundGame.BlackID == 0 {
-		return errors.New("game not started")
+	if foundGame.Board.Position().Turn() == chess.White && client.UserID != foundGame.WhiteID {
+		return errors.New("not your turn")
+	}
+	if foundGame.Board.Position().Turn() == chess.Black && client.UserID != foundGame.BlackID {
+		return errors.New("not your turn")
 	}
 
-	message, result := foundGame.MakeMove(client.UserID, move.MoveStr)
+	message, result := foundGame.MakeMove(move.MoveStr)
 
-	if message == "game has ended" {
-		return errors.New("game has ended")
+	if message == "error making move" {
+		return errors.New("error making move")
 	}
 
 	var x int32
@@ -88,7 +87,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	c.SocketManager.Broadcast(e)
 
-	if message == "White Time Out" || message == "Black Time Out" || message == "Checkmate" || message == "Stalemate" {
+	if result != "" {
 		// log.Println("game ho gya over")
 
 		etlb := int32(foundGame.TimeBlack.Seconds())
