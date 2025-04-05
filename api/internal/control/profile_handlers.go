@@ -48,7 +48,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
-	//log.Println("request received")
+	// log.Println("request received")
 	username := chi.URLParam(r, "username")
 	page := r.URL.Query().Get("page")
 
@@ -67,7 +67,7 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 		Limit:         15,
 		Offset:        offSet,
 	})
-	//log.Println(profileInfo, err)
+	// log.Println(profileInfo, err)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")

@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { navigating, page } from '$app/state';
-	import { getBGColorForGameListItem } from '$lib/utils.js';
-	import { untrack } from 'svelte';
+	import { page } from '$app/state';
+	import { getBaseURL, getBGColorForGameListItem } from '$lib/utils.js';
 	let { data } = $props();
 	// console.log('mounted');
-	const items: any = $state([]);
-	$effect.pre(() => {
-		if (!data.member) return;
-		const i = data.member;
-		untrack(() => items.push(...i));
-	});
+	let pageNumber = $state(1);
+	let hasMore = $state(true);
+	let loading = $state(false);
+	const items: any = $state(data.member ? data.member : []);
+
 	function intersect(node: any, callback: any) {
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -31,6 +28,26 @@
 				observer.disconnect();
 			}
 		};
+	}
+
+	async function fetchGames() {
+		if (!hasMore) return;
+		loading = true;
+		try {
+			const response = await fetch(
+				`${getBaseURL()}/profile/${page.params.username}?page=${pageNumber}`,
+				{
+					credentials: 'include'
+				}
+			);
+			const memberData = await response.json();
+			if (memberData) items.push(...memberData);
+			loading = false;
+			hasMore = memberData && memberData.length >= 15;
+		} catch (e) {
+			loading = false;
+			console.error(e);
+		}
 	}
 </script>
 
@@ -66,17 +83,16 @@
 				<span class="w-1/3 text-right">{item.BlackUsername}</span></a
 			>
 		{/each}
-		{#if data.hasMore}
+		{#if hasMore}
 			<div
 				class="h-[20px] bg-transparent"
-				use:intersect={() =>
-					!navigating.to &&
-					goto(`/member/${page.params.username}?page=${data.page + 1}`, {
-						replaceState: true,
-						noScroll: true,
-						keepFocus: true
-					})}
-			></div>
+				use:intersect={() => {
+					pageNumber += 1;
+					fetchGames();
+				}}
+			>
+				{#if loading}Loading...{/if}
+			</div>
 		{/if}
 	</div>
 </div>
