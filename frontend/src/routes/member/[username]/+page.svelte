@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getBaseURL, getBGColorForGameListItem } from '$lib/utils.js';
+	import { getBaseURL } from '$lib/utils.js';
 	let { data } = $props();
 	// console.log('mounted');
 	let pageNumber = $state(1);
@@ -55,11 +55,16 @@
 	<div class="mb-4 text-center text-5xl">{page.params.username}'s Games</div>
 	<div class="flex w-full flex-col items-center gap-2">
 		{#each items as item}
+			{@const color =
+				(item.WhiteUsername === page.params.username && item.Result === '1-0') ||
+				(item.BlackUsername === page.params.username && item.Result === '0-1')
+					? 'bg-green-700'
+					: item.Result === 'ongoing' || item.Result === '1/2-1/2'
+						? 'bg-gray-600'
+						: 'bg-red-500'}
 			<a href={`/game/${item.ID}`} class="flex w-4/5 gap-2 rounded-sm bg-gray-800 px-8 py-4">
 				<span class="w-1/3 text-left">{item.WhiteUsername}</span>
-				<span
-					class={`flex w-1/3 items-center justify-center ${getBGColorForGameListItem(item, page.params.username)}`}
-				>
+				<span class={`flex w-1/3 items-center justify-center ${color}`}>
 					{#if item.Result !== 'ongoing'}
 						{item.Result}
 					{:else}

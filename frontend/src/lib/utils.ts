@@ -64,19 +64,3 @@ export function formatPostgresTimestamp(dateObj: Date): string {
 	};
 	return dateObj.toLocaleDateString('en-GB', options).replace(',', '');
 }
-
-export const getBGColorForGameListItem = (
-	item: { WhiteUsername: string; BlackUsername: string; Result: string },
-	username: string
-) => {
-	let x = 'bg-red-500';
-	if (
-		(item.WhiteUsername === username && item.Result === '1-0') ||
-		(item.BlackUsername === username && item.Result === '0-1')
-	) {
-		x = 'bg-green-700';
-	} else if (item.Result === 'ongoing' || item.Result === '1/2-1/2') {
-		x = 'bg-gray-600';
-	}
-	return x;
-};
