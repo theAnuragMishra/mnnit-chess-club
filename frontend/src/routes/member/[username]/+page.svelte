@@ -4,7 +4,7 @@
 	let { data } = $props();
 	// console.log('mounted');
 	let pageNumber = $state(1);
-	let hasMore = $state(true);
+	let hasMore = $state(data.member ? data.member.length == 15 : false);
 	let loading = $state(false);
 	const items: any = $state(data.member ? data.member : []);
 
@@ -43,7 +43,7 @@
 			const memberData = await response.json();
 			if (memberData) items.push(...memberData);
 			loading = false;
-			hasMore = memberData && memberData.length >= 15;
+			hasMore = memberData && memberData.length == 15;
 		} catch (e) {
 			loading = false;
 			console.error(e);
