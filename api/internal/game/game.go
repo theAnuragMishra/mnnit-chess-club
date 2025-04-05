@@ -22,6 +22,7 @@ type Game struct {
 	TimeWhite     time.Duration
 	TimeBlack     time.Duration
 	DrawOfferedBy int32
+	Timer         *time.Timer
 }
 
 func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
@@ -90,7 +91,6 @@ func (g *Game) MakeMove(move string) (string, string) {
 
 	g.DrawOfferedBy = 0
 	err := g.Board.Draw(chess.ThreefoldRepetition)
-
 	if err != nil {
 		g.Board.Draw(chess.FiftyMoveRule)
 	}
@@ -101,5 +101,4 @@ func (g *Game) MakeMove(move string) (string, string) {
 	}
 
 	return "move successful", ""
-
 }

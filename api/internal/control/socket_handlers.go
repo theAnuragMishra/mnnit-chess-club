@@ -39,6 +39,8 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("not your turn")
 	}
 
+	foundGame.Timer.Stop()
+	foundGame.Timer = nil
 	message, result := foundGame.MakeMove(move.MoveStr)
 
 	if message == "error making move" {

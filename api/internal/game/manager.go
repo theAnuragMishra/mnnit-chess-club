@@ -1,6 +1,9 @@
 package game
 
+import "sync"
+
 type Manager struct {
+	sync.Mutex
 	Games            map[int32]*Game
 	PendingUserName1 string
 	PendingUserID1   int32
