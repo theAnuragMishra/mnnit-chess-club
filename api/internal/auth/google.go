@@ -62,16 +62,15 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 
 		}
-	} else {
-		databaseUser, err = h.queries.UpdateUserAvatar(r.Context(), database.UpdateUserAvatarParams{
+	} else if *databaseUser.AvatarUrl != googleUser.Picture {
+		err = h.queries.UpdateUserAvatar(r.Context(), database.UpdateUserAvatarParams{
 			AvatarUrl: &googleUser.Picture,
 			ID:        databaseUser.ID,
+			UpdatedAt: time.Now(),
 		})
 
 		if err != nil {
 			log.Println(err, " failed to update avatar")
-			http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
-			return
 		}
 	}
 

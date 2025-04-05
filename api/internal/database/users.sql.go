@@ -100,28 +100,19 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (User
 	return i, err
 }
 
-const updateUserAvatar = `-- name: UpdateUserAvatar :one
-UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, email, created_at, updated_at, username, avatar_url, google_id
+const updateUserAvatar = `-- name: UpdateUserAvatar :exec
+UPDATE users SET avatar_url = $1, updated_at = $2 WHERE id = $3
 `
 
 type UpdateUserAvatarParams struct {
 	AvatarUrl *string
+	UpdatedAt time.Time
 	ID        int32
 }
 
-func (q *Queries) UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUserAvatar, arg.AvatarUrl, arg.ID)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Username,
-		&i.AvatarUrl,
-		&i.GoogleID,
-	)
-	return i, err
+func (q *Queries) UpdateUserAvatar(ctx context.Context, arg UpdateUserAvatarParams) error {
+	_, err := q.db.Exec(ctx, updateUserAvatar, arg.AvatarUrl, arg.UpdatedAt, arg.ID)
+	return err
 }
 
 const updateUsername = `-- name: UpdateUsername :exec
