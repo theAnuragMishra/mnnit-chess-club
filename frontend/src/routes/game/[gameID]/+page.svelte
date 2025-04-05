@@ -87,11 +87,13 @@
 
 	onMount(() => {
 		websocketStore.onMessage('timeup', handleTimeUp);
+		websocketStore.onMessage('game_abort', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
 		websocketStore.onMessage('resignation', handleResignation);
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);
+		websocketStore.offMessage('game_abort', handleTimeUp);
 		websocketStore.offMessage('Move_Response', handleMoveResponse);
 		websocketStore.offMessage('resignation', handleResignation);
 	});
