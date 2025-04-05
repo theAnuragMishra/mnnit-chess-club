@@ -28,7 +28,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	// authenticated routes
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
-		router.Post("/logout", authHandler.HandleLogout)
+		router.Post("/logout", controller.HandleLogout)
 		router.Get("/me", authHandler.HandleMe)
 		router.Post("/set-username", controller.UpdateUsername)
 		router.HandleFunc("/ws", controller.SocketManager.ServeWS)

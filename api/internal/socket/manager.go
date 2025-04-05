@@ -88,8 +88,8 @@ func (m *Manager) addClient(id int32, client *Client) {
 	m.clients[id] = client
 }
 
-// removeClient will remove the client and clean up
-func (m *Manager) removeClient(id int32) {
+// RemoveClient will remove the client and clean up
+func (m *Manager) RemoveClient(id int32) {
 	m.Lock()
 	defer m.Unlock()
 

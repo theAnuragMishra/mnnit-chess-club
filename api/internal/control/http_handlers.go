@@ -184,3 +184,23 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondWithJSON(w, http.StatusOK, response)
 }
+
+func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
+
+	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
+
+	c.SocketManager.RemoveClient(session.UserID)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HttpOnly: true,
+		Path:     "/",
+	})
+
+	err := c.Queries.DeleteSession(r.Context(), session.ID)
+	if err != nil {
+		log.Printf("error deleting session: %v", err)
+		return
+	}
+}
