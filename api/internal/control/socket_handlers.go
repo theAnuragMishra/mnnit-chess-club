@@ -71,7 +71,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		} else {
 			foundGame.ClockTimer.Reset(foundGame.TimeBlack)
 		}
-
 	}
 
 	var x int32
@@ -131,6 +130,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
+		foundGame.ClockTimer.Stop()
 		delete(c.GameManager.Games, gameID)
 	}
 
@@ -267,6 +267,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Payload: json.RawMessage(payload),
 		}
 		c.SocketManager.Broadcast(e)
+		foundGame.ClockTimer.Stop()
 		delete(c.GameManager.Games, gameID)
 	}
 
@@ -345,6 +346,8 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.Broadcast(e)
+
+	foundGame.ClockTimer.Stop()
 	delete(c.GameManager.Games, gameID)
 	return nil
 }
