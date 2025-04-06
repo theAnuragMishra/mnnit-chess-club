@@ -128,7 +128,6 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 		otherClient.Send(e)
 
 	}
-
 	// fmt.Println(c.GameManager)
 }
 

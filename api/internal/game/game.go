@@ -23,6 +23,7 @@ type Game struct {
 	TimeBlack     time.Duration
 	DrawOfferedBy int32
 	AbortTimer    *time.Timer
+	ClockTimer    *time.Timer
 }
 
 func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
@@ -62,24 +63,11 @@ func (g *Game) MakeMove(move string) (string, string) {
 	moveTime := time.Since(g.LastMoveTime)
 
 	if g.Board.Position().Turn() == chess.White {
-		if moveTime > g.TimeWhite {
-			g.TimeWhite = 0
-			g.Result = "0-1"
-			return "White Time Out", "0-1"
-		} else {
-			g.TimeWhite -= moveTime
-			g.TimeWhite += g.Increment
-		}
-	}
-	if g.Board.Position().Turn() == chess.Black {
-		if moveTime > g.TimeBlack {
-			g.TimeBlack = 0
-			g.Result = "1-0"
-			return "Black Time Out", "1-0"
-		} else {
-			g.TimeBlack -= moveTime
-			g.TimeBlack += g.Increment
-		}
+		g.TimeWhite -= moveTime
+		g.TimeWhite += g.Increment
+	} else {
+		g.TimeBlack -= moveTime
+		g.TimeBlack += g.Increment
 	}
 
 	g.LastMoveTime = time.Now()

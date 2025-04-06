@@ -38,8 +38,17 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	if foundGame.Board.Position().Turn() == chess.Black && client.UserID != foundGame.BlackID {
 		return errors.New("not your turn")
 	}
+
+	message, result := foundGame.MakeMove(move.MoveStr)
+
+	if message == "error making move" {
+		return errors.New("error making move")
+	}
+
+	foundGame.GameLength += 1
+
 	if foundGame.AbortTimer != nil {
-		if foundGame.GameLength == 0 {
+		if foundGame.GameLength == 1 {
 			foundGame.AbortTimer.Reset(time.Second * 20)
 		} else {
 			foundGame.AbortTimer.Stop()
@@ -47,10 +56,22 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 	}
 
-	message, result := foundGame.MakeMove(move.MoveStr)
+	if foundGame.GameLength == 2 {
+		var t time.Duration
+		if foundGame.Board.Position().Turn() == chess.White {
+			t = foundGame.TimeWhite
+		} else {
+			t = foundGame.TimeBlack
+		}
+		timer := time.AfterFunc(t, func() { c.handleGameTimeout(foundGame) })
+		foundGame.ClockTimer = timer
+	} else if foundGame.GameLength > 2 {
+		if foundGame.Board.Position().Turn() == chess.White {
+			foundGame.ClockTimer.Reset(foundGame.TimeWhite)
+		} else {
+			foundGame.ClockTimer.Reset(foundGame.TimeBlack)
+		}
 
-	if message == "error making move" {
-		return errors.New("error making move")
 	}
 
 	var x int32
@@ -71,7 +92,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	if err != nil {
 		log.Println(err)
 	}
-	foundGame.GameLength += 1
 
 	err = c.Queries.UpdateGameLengthAndFEN(context.Background(), database.UpdateGameLengthAndFENParams{
 		Fen:        foundGame.Board.FEN(),
@@ -115,96 +135,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	return nil
-}
-
-func TimeUp(c *Controller, event socket.Event, client *socket.Client) error {
-	var timeupData timeupPayload
-	if err := json.Unmarshal(event.Payload, &timeupData); err != nil {
-		return err
-	}
-
-	gameID := timeupData.GameID
-
-	foundGame, exists := c.GameManager.Games[gameID]
-
-	if !exists {
-		return errors.New("game not found")
-	}
-
-	if foundGame.Result != "ongoing" {
-		return errors.New("game has ended")
-	}
-
-	moveTime := time.Since(foundGame.LastMoveTime)
-
-	// fmt.Println(moveTime)
-
-	if foundGame.Board.Position().Turn() == chess.White {
-		if moveTime > foundGame.TimeWhite {
-			foundGame.TimeWhite = 0
-			foundGame.Result = "0-1"
-			reason := "White Time Out"
-
-			etlb := int32(foundGame.TimeBlack.Seconds())
-			etlw := int32(0)
-			err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-				Result:           "0-1",
-				ID:               foundGame.ID,
-				EndTimeLeftBlack: &etlb,
-				EndTimeLeftWhite: &etlw,
-				ResultReason:     &reason,
-			})
-			if err != nil {
-				log.Println("error ending game with result", err)
-			}
-			payload, err := json.Marshal(map[string]any{"Result": "0-1", "Reason": reason, "gameID": gameID})
-			if err != nil {
-				return err
-			}
-			e := socket.Event{
-				Type:    "timeup",
-				Payload: json.RawMessage(payload),
-			}
-			c.SocketManager.Broadcast(e)
-			delete(c.GameManager.Games, gameID)
-			return nil
-		}
-	}
-	if foundGame.Board.Position().Turn() == chess.Black {
-		if moveTime > foundGame.TimeBlack {
-			foundGame.TimeBlack = 0
-			foundGame.Result = "1-0"
-			reason := "Black Time Out"
-
-			etlb := int32(0)
-			etlw := int32(foundGame.TimeWhite.Seconds())
-			err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-				Result:           "1-0",
-				ID:               foundGame.ID,
-				EndTimeLeftWhite: &etlw,
-				EndTimeLeftBlack: &etlb,
-				ResultReason:     &reason,
-			})
-			if err != nil {
-				log.Println("error ending game with result", err)
-			}
-			payload, err := json.Marshal(map[string]any{"Result": "1-0", "Reason": reason, "gameID": gameID})
-			if err != nil {
-				return err
-			}
-			e := socket.Event{
-				Type:    "timeup",
-				Payload: json.RawMessage(payload),
-			}
-			c.SocketManager.Broadcast(e)
-
-			delete(c.GameManager.Games, gameID)
-
-			return nil
-		}
-	}
-
-	return errors.New("time not actually up")
 }
 
 func Chat(c *Controller, event socket.Event, client *socket.Client) error {
