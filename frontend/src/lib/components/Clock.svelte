@@ -1,7 +1,7 @@
 <script lang="ts">
 	const { initialTime, active } = $props();
 
-	let time = $state(initialTime * 1000);
+	let time = $state(initialTime);
 
 	$effect(() => {
 		time = initialTime * 1000;

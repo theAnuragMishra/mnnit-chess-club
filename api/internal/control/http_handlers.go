@@ -175,8 +175,8 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		serverGame.LastMoveTime = time.Now()
 		ongoing = true
-		timeBlack = int32(serverGame.TimeBlack.Seconds())
-		timeWhite = int32(serverGame.TimeWhite.Seconds())
+		timeBlack = int32(serverGame.TimeBlack.Milliseconds())
+		timeWhite = int32(serverGame.TimeWhite.Milliseconds())
 	}
 
 	// fmt.Println(serverGame.Result)

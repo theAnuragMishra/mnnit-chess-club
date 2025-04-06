@@ -17,7 +17,7 @@ func (c *Controller) abortGame(g *game.Game) {
 	defer c.GameManager.Unlock()
 
 	reason := "Game Aborted"
-	etl := int32(g.BaseTime.Seconds())
+	etl := int32(g.BaseTime.Milliseconds())
 
 	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           "aborted",
@@ -51,12 +51,12 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 
 	if g.Board.Position().Turn() == chess.White {
 		etlw = 0
-		etlb = int32(g.TimeBlack.Seconds())
+		etlb = int32(g.TimeBlack.Milliseconds())
 		result = "0-1"
 		reason = "White Timeout"
 	} else {
 		etlb = 0
-		etlw = int32(g.TimeWhite.Seconds())
+		etlw = int32(g.TimeWhite.Milliseconds())
 		result = "1-0"
 		reason = "Black Timeout"
 	}

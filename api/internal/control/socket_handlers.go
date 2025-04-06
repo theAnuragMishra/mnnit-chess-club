@@ -104,7 +104,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	// log.Println(foundGame.Board.Position().Turn())
 
-	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Seconds(), "timeWhite": foundGame.TimeWhite.Seconds()})
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds()})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -118,8 +118,8 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	if result != "" {
 		// log.Println("game ho gya over")
 
-		etlb := int32(foundGame.TimeBlack.Seconds())
-		etlw := int32(foundGame.TimeWhite.Seconds())
+		etlb := int32(foundGame.TimeBlack.Milliseconds())
+		etlw := int32(foundGame.TimeWhite.Milliseconds())
 
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,
@@ -244,8 +244,8 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			foundGame.TimeBlack -= timeTaken
 		}
 
-		etlb := int32(foundGame.TimeBlack.Seconds())
-		etlw := int32(foundGame.TimeWhite.Seconds())
+		etlb := int32(foundGame.TimeBlack.Milliseconds())
+		etlw := int32(foundGame.TimeWhite.Milliseconds())
 
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           "1/2-1/2",
@@ -322,8 +322,8 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		foundGame.TimeBlack -= timeTaken
 	}
 
-	etlb := int32(foundGame.TimeBlack.Seconds())
-	etlw := int32(foundGame.TimeWhite.Seconds())
+	etlb := int32(foundGame.TimeBlack.Milliseconds())
+	etlw := int32(foundGame.TimeWhite.Milliseconds())
 
 	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           result,
