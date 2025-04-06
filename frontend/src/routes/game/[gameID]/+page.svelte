@@ -115,14 +115,16 @@
 					{whiteUsername}
 					{blackUsername}
 				/>
-				<DrawResign
-					{gameID}
-					userID={data.user.userID}
-					setResultReason={(res: string, rea: string) => {
-						result = res;
-						reason = rea;
-					}}
-				/>
+				{#if moveHistory && moveHistory.length > 1}
+					<DrawResign
+						{gameID}
+						userID={data.user.userID}
+						setResultReason={(res: string, rea: string) => {
+							result = res;
+							reason = rea;
+						}}
+					/>
+				{/if}
 			</div>
 		{:else}
 			<GameInfo
