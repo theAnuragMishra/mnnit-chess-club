@@ -81,7 +81,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	insertedMove, err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
 		GameID:       gameID,
-		MoveNumber:   int32(foundGame.GameLength + 1),
+		MoveNumber:   int32(foundGame.GameLength),
 		PlayerID:     &x,
 		MoveNotation: move.MoveStr,
 		Orig:         move.Orig,

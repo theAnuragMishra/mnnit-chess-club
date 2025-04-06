@@ -151,14 +151,13 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	var ongoing bool
 	var timeBlack int32
 	var timeWhite int32
 
 	serverGame, exists := c.GameManager.Games[gameID]
 
 	if !exists {
-		ongoing = false
+
 		if foundGame.EndTimeLeftWhite != nil {
 			timeWhite = *foundGame.EndTimeLeftWhite
 		}
@@ -174,7 +173,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 			serverGame.TimeBlack = max(serverGame.TimeBlack-timePassed, 0)
 		}
 		serverGame.LastMoveTime = time.Now()
-		ongoing = true
+
 		timeBlack = int32(serverGame.TimeBlack.Milliseconds())
 		timeWhite = int32(serverGame.TimeWhite.Milliseconds())
 	}
@@ -184,7 +183,6 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	response := GameResponse{
 		Game:      foundGame,
 		Moves:     moves,
-		Ongoing:   ongoing,
 		TimeBlack: timeBlack,
 		TimeWhite: timeWhite,
 	}

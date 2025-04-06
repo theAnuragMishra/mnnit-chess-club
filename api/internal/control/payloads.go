@@ -19,7 +19,6 @@ type UserNamePayload struct {
 type GameResponse struct {
 	Game      any   `json:"game"`
 	Moves     any   `json:"moves"`
-	Ongoing   bool  `json:"ongoing"`
 	TimeBlack int32 `json:"timeBlack"`
 	TimeWhite int32 `json:"timeWhite"`
 }
