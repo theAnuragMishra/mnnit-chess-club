@@ -100,7 +100,7 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 			c.abortGame(createdGame)
 		})
 
-		createdGame.Timer = timer
+		createdGame.AbortTimer = timer
 
 		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
 		otherClient := c.SocketManager.FindClientByUserID(*PendingUserID)

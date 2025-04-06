@@ -22,7 +22,7 @@ type Game struct {
 	TimeWhite     time.Duration
 	TimeBlack     time.Duration
 	DrawOfferedBy int32
-	Timer         *time.Timer
+	AbortTimer    *time.Timer
 }
 
 func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {

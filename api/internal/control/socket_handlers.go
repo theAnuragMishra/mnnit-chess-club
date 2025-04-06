@@ -38,9 +38,13 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	if foundGame.Board.Position().Turn() == chess.Black && client.UserID != foundGame.BlackID {
 		return errors.New("not your turn")
 	}
-	if foundGame.Timer != nil {
-		foundGame.Timer.Stop()
-		foundGame.Timer = nil
+	if foundGame.AbortTimer != nil {
+		if foundGame.GameLength == 0 {
+			foundGame.AbortTimer.Reset(time.Second * 20)
+		} else {
+			foundGame.AbortTimer.Stop()
+			foundGame.AbortTimer = nil
+		}
 	}
 
 	message, result := foundGame.MakeMove(move.MoveStr)
