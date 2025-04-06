@@ -4,7 +4,7 @@
 	let time = $state(initialTime);
 
 	$effect(() => {
-		time = initialTime * 1000;
+		time = initialTime;
 	});
 
 	let animationFrame: number | null;
@@ -16,7 +16,7 @@
 			const tick = (currentTime: number) => {
 				if (!startTime) return;
 				const elapsed = currentTime - startTime;
-				const newTime = initialTime * 1000 - elapsed;
+				const newTime = initialTime - elapsed;
 
 				if (newTime <= 0) {
 					time = 0;
