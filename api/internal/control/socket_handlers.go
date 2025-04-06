@@ -270,6 +270,10 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
+	if foundGame.GameLength < 2 {
+		return errors.New("cannot resign a game where one or both sides haven't played")
+	}
+
 	if foundGame.Result != "ongoing" {
 		return errors.New("game has ended")
 	}
@@ -355,6 +359,10 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if !exists {
 		return errors.New("game not found")
+	}
+
+	if foundGame.GameLength < 2 {
+		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
 
 	if foundGame.Result != "ongoing" {
