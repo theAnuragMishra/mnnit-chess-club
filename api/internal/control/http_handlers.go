@@ -94,38 +94,13 @@ func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		createdGame.ID = id
+		c.GameManager.Games[id] = createdGame
 		timer := time.AfterFunc(time.Second*20, func() {
-			c.GameManager.Lock()
-			defer c.GameManager.Unlock()
-			delete(c.GameManager.Games, id)
-			reason := "Game Aborted"
-			etl := int32(baseTime.Seconds())
-
-			err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-				Result:           "aborted",
-				EndTimeLeftWhite: &etl,
-				EndTimeLeftBlack: &etl,
-				ResultReason:     &reason,
-				ID:               id,
-			})
-			if err != nil {
-				log.Println("error ending game with result", err)
-				return
-			}
-			payload, err := json.Marshal(map[string]any{"gameID": id, "Result": "Aborted", "Reason": reason})
-			if err != nil {
-				log.Println(err)
-			}
-			e := socket.Event{
-				Type:    "game_abort",
-				Payload: json.RawMessage(payload),
-			}
-			c.SocketManager.Broadcast(e)
+			c.abortGame(createdGame)
 		})
 
-		createdGame.ID = id
 		createdGame.Timer = timer
-		c.GameManager.Games[id] = createdGame
 
 		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
 		otherClient := c.SocketManager.FindClientByUserID(*PendingUserID)
