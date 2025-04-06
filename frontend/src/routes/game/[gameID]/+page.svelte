@@ -151,14 +151,6 @@
 			<p class="mb-1 flex w-full items-center justify-between">
 				{whiteUp ? whiteUsername : blackUsername}
 				<Clock
-					onTimeUp={() => {
-						websocketStore.sendMessage({
-							type: 'timeup',
-							payload: {
-								gameID: gameID
-							}
-						});
-					}}
 					initialTime={whiteUp ? timeWhite : timeBlack}
 					active={result !== 'ongoing' && result !== ''
 						? false
@@ -180,14 +172,6 @@
 			<p class="mb-1 flex w-full items-center justify-between">
 				{data.user.username}
 				<Clock
-					onTimeUp={() => {
-						websocketStore.sendMessage({
-							type: 'timeup',
-							payload: {
-								gameID: gameID
-							}
-						});
-					}}
 					initialTime={whiteUp ? timeBlack : timeWhite}
 					active={result !== 'ongoing' && result !== ''
 						? false

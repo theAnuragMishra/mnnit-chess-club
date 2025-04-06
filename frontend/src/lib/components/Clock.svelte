@@ -1,5 +1,5 @@
 <script lang="ts">
-	const { initialTime, onTimeUp, active } = $props();
+	const { initialTime, active } = $props();
 
 	let time = $state(initialTime * 1000);
 
@@ -20,7 +20,6 @@
 
 				if (newTime <= 0) {
 					time = 0;
-					onTimeUp();
 					return;
 				}
 
