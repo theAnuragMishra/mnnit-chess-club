@@ -7,9 +7,7 @@
 	});
 </script>
 
-<div
-	class="relative flex h-[60px] w-full bg-gray-800 px-4 py-2 text-lg md:h-[310px] md:min-w-[200px]"
->
+<div class="relative flex h-[60px] w-full bg-gray-800 px-4 py-2 text-lg md:h-[310px]">
 	{#if moveHistory}
 		<button
 			aria-label="go to previous move"

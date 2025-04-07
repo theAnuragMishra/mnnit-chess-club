@@ -2,7 +2,7 @@
 	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
 
-	const { userID, gameID, setResultReason } = $props();
+	const { userID, gameID, setResultReason, isDisabled } = $props();
 	let offer = $state(false);
 	let resignSelected = $state(false);
 
@@ -62,12 +62,14 @@
 	<button
 		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
 		onclick={handleDraw}
+		disabled={isDisabled}
 	>
 		1/2
 	</button>
 	<button
 		aria-label="resign"
 		onclick={handleResign}
+		disabled={isDisabled}
 		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-red-600 ${resignSelected && 'bg-red-600'}`}
 	>
 		<svg

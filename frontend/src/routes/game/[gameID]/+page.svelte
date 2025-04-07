@@ -156,8 +156,9 @@
 					<p>{whiteUp ? whiteUsername : blackUsername}</p>
 				</section>
 				<div class="flex flex-col md:flex-col-reverse">
-					{#if moveHistory && moveHistory.length > 1}
+					{#if result == '' || result == 'ongoing'}
 						<DrawResign
+							isDisabled={moveHistory.length < 2}
 							{gameID}
 							userID={data.user.userID}
 							setResultReason={(res: string, rea: string) => {
