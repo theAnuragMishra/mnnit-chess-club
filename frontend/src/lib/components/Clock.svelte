@@ -54,7 +54,7 @@
 </script>
 
 <span
-	class={`my-2 rounded-md px-2 py-1 text-4xl ${
+	class={`my-2 w-fit rounded-md px-2 py-1 text-2xl md:text-3xl lg:text-4xl ${
 		active ? 'font-bold ' : 'bg-black text-gray-400'
 	} ${active && time > 10000 ? 'bg-white text-black' : ''} ${time < 10000 ? 'bg-red-500 text-white' : ''}`}
 >

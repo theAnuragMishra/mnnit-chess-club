@@ -6,25 +6,33 @@
 	const createdAtString = formatPostgresTimestamp(createdAt);
 </script>
 
-<div class="flex h-64 w-1/4 flex-col gap-3 rounded border p-4 shadow-lg">
-	<div class="flex items-center justify-around">
+<div class="flex h-30 w-full flex-col justify-around gap-1 rounded border p-4 shadow-lg md:h-40">
+	<div class="text-[16px] leading-tight">
+		<div class="flex items-center">
+			{baseTime / 60} + {increment} Rated Bullet
+		</div>
+		<div class="flex items-center">{createdAtString}</div>
+	</div>
+	<div class="hidden flex-col md:flex">
 		<div class="flex items-center gap-2">
-			<div class="inline-block h-[24px] w-[24px] rounded-full border-2 border-black bg-white"></div>
+			<div class="inline-block h-[16px] w-[16px] rounded-full border-2 bg-white"></div>
 			{whiteUsername}
 		</div>
-		<div>Vs</div>
+
 		<div class="flex items-center gap-2">
-			<div class="inline-block h-[24px] w-[24px] rounded-full border-2 border-white bg-black"></div>
+			<div class="inline-block h-[16px] w-[16px] rounded-full border-2 bg-black"></div>
 			{blackUsername}
 		</div>
 	</div>
-	<div class="flex items-center justify-around">{createdAtString}</div>
-	<div class="flex items-center justify-around">Time Control: {baseTime / 60} + {increment}</div>
-	<div class="flex items-center justify-center text-[20px]">
-		{reason} | {result === '1-0'
-			? 'White is victorious'
-			: result === '0-1'
-				? 'Black is victorious'
-				: 'Game Drawn'}
-	</div>
+
+	{#if result != '' && result != 'ongoing'}
+		<div class="h-[1px] w-full bg-gray-500 opacity-50"></div>
+		<div class=" flex items-center justify-center">
+			{reason} | {result === '1-0'
+				? 'White is victorious'
+				: result === '0-1'
+					? 'Black is victorious'
+					: 'Game Drawn'}
+		</div>
+	{/if}
 </div>

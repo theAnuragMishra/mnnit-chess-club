@@ -58,7 +58,7 @@
 	});
 </script>
 
-<div class="flex w-full items-center justify-center gap-2 text-white">
+<div class="flex items-center justify-center gap-2 text-2xl text-white">
 	<button
 		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
 		onclick={handleDraw}

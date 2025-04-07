@@ -99,34 +99,12 @@
 	});
 </script>
 
-<div class="px-5 text-2xl">
+<div class="px-5">
 	{#if result !== 'ongoing' && result !== ''}
 		<ResultModal {result} {reason} />
 	{/if}
-	<div class="flex w-full items-center justify-around">
-		{#if result === '' || result === 'ongoing'}
-			<div class="flex w-1/4 flex-col gap-10">
-				<Chat
-					username={data.user.username}
-					userID={data.user.userID}
-					{blackID}
-					{whiteID}
-					{gameID}
-					{whiteUsername}
-					{blackUsername}
-				/>
-				{#if moveHistory && moveHistory.length > 1}
-					<DrawResign
-						{gameID}
-						userID={data.user.userID}
-						setResultReason={(res: string, rea: string) => {
-							result = res;
-							reason = rea;
-						}}
-					/>
-				{/if}
-			</div>
-		{:else}
+	<div class="flex flex-col-reverse items-center justify-around gap-5 xl:flex-row">
+		<div class="flex w-4/5 flex-col gap-10 md:w-fit md:flex-row xl:w-1/4 xl:flex-col">
 			<GameInfo
 				{whiteUsername}
 				{blackUsername}
@@ -136,52 +114,80 @@
 				{increment}
 				{reason}
 			/>
-		{/if}
-		<div class="flex items-center justify-center">
-			<Chessboard
-				{setGround}
+			<!-- {#if result === '' || result === 'ongoing'} -->
+			<Chat
 				username={data.user.username}
+				userID={data.user.userID}
+				{blackID}
+				{whiteID}
 				{gameID}
-				chess={chessForView}
-				white={whiteUsername}
-				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
-				viewOnly={(result != 'ongoing' && result != '') ||
-					(moveHistory && activeIndex !== moveHistory.length - 1)}
+				{whiteUsername}
+				{blackUsername}
 			/>
+			<!-- {/if} -->
 		</div>
-		<div class="flex h-full w-1/4 flex-col gap-2">
-			<p class="mb-1 flex w-full items-center justify-between">
-				{whiteUp ? whiteUsername : blackUsername}
-				<Clock
-					initialTime={whiteUp ? timeWhite : timeBlack}
-					active={result !== 'ongoing' && result !== ''
-						? false
-						: whiteUp
-							? chessLatest.turn() === 'w'
-							: chessLatest.turn() === 'b'}
+		<div class="flex w-3/4 flex-col gap-3 md:flex-row xl:w-3/4">
+			<div class="flex flex-col items-center justify-center">
+				<!--clock for sm-->
+				<Chessboard
+					{setGround}
+					username={data.user.username}
+					{gameID}
+					chess={chessForView}
+					white={whiteUsername}
+					lastMove={moveHistory
+						? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
+						: []}
+					viewOnly={(result != 'ongoing' && result != '') ||
+						(moveHistory && activeIndex !== moveHistory.length - 1)}
 				/>
-			</p>
+				<!--clock for sm-->
+			</div>
+			<div class="flex flex-col gap-2">
+				<section class="mb-1 hidden justify-between md:flex md:flex-col">
+					<Clock
+						initialTime={whiteUp ? timeWhite : timeBlack}
+						active={result !== 'ongoing' && result !== ''
+							? false
+							: whiteUp
+								? chessLatest.turn() === 'w'
+								: chessLatest.turn() === 'b'}
+					/>
+					<p>{whiteUp ? whiteUsername : blackUsername}</p>
+				</section>
+				<div class="flex flex-col md:flex-col-reverse">
+					{#if moveHistory && moveHistory.length > 1}
+						<DrawResign
+							{gameID}
+							userID={data.user.userID}
+							setResultReason={(res: string, rea: string) => {
+								result = res;
+								reason = rea;
+							}}
+						/>
+					{/if}
+					<HistoryTable
+						{moveHistory}
+						{setActiveIndex}
+						{activeIndex}
+						highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
+							(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
+							(result === 'ongoing' || result === '')}
+					/>
+				</div>
 
-			<HistoryTable
-				{moveHistory}
-				{setActiveIndex}
-				{activeIndex}
-				highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
-					(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
-					(result === 'ongoing' || result === '')}
-			/>
-
-			<p class="mb-1 flex w-full items-center justify-between">
-				{data.user.username}
-				<Clock
-					initialTime={whiteUp ? timeBlack : timeWhite}
-					active={result !== 'ongoing' && result !== ''
-						? false
-						: whiteUp
-							? chessLatest.turn() === 'b'
-							: chessLatest.turn() === 'w'}
-				/>
-			</p>
+				<section class="mb-1 hidden justify-between md:flex md:flex-col">
+					<p>{data.user.username}</p>
+					<Clock
+						initialTime={whiteUp ? timeBlack : timeWhite}
+						active={result !== 'ongoing' && result !== ''
+							? false
+							: whiteUp
+								? chessLatest.turn() === 'b'
+								: chessLatest.turn() === 'w'}
+					/>
+				</section>
+			</div>
 		</div>
 	</div>
 </div>

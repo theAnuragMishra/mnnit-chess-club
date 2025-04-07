@@ -69,4 +69,23 @@
 	});
 </script>
 
-<div bind:this={boardContainer} class="h-[630px] w-[630px]"></div>
+<div bind:this={boardContainer} class="bcontainer"></div>
+
+<style>
+	.bcontainer {
+		height: 90vw;
+		width: 90vw;
+	}
+	@media (width >= 768px) {
+		.bcontainer {
+			height: 60vw;
+			width: 60vw;
+		}
+	}
+	@media (width >= 64rem) {
+		.bcontainer {
+			height: 630px;
+			width: 630px;
+		}
+	}
+</style>

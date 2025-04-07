@@ -51,7 +51,7 @@
 	});
 </script>
 
-<div class="rounded border p-4 shadow-lg">
+<div class="w-full rounded border p-4 shadow-lg">
 	<div class="mb-2 h-64 overflow-y-auto border-b p-2 text-lg">
 		{#each messages as msg}
 			{#if msg.gameID == gameID}
@@ -63,7 +63,7 @@
 		{/each}
 		<div use:scrollToBottom={() => messages}></div>
 	</div>
-	<div class="flex w-full gap-2 text-sm">
+	<div class="flex gap-2 text-sm">
 		<input
 			type="text"
 			bind:value={text}
