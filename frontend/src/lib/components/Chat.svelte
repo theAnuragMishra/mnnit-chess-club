@@ -51,7 +51,7 @@
 	});
 </script>
 
-<div class="w-full rounded border p-4 shadow-lg">
+<div class="w-full rounded bg-[#1c1d1e] p-4 shadow-lg">
 	<div class="mb-2 h-64 overflow-y-auto border-b p-2 text-lg">
 		{#each messages as msg}
 			{#if msg.gameID == gameID}

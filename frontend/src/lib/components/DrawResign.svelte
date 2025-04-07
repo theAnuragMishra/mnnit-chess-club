@@ -58,9 +58,9 @@
 	});
 </script>
 
-<div class="flex items-center justify-center gap-2 text-2xl text-white">
+<div class="flex items-center justify-center gap-2 text-xl text-white md:text-2xl">
 	<button
-		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-gray-600 ${offer && 'animate-pulse bg-blue-600'}`}
+		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-gray-600 md:px-4 md:py-2 ${offer && 'animate-pulse bg-blue-600'}`}
 		onclick={handleDraw}
 		disabled={isDisabled}
 	>
@@ -70,12 +70,11 @@
 		aria-label="resign"
 		onclick={handleResign}
 		disabled={isDisabled}
-		class={`cursor-pointer rounded-lg px-4 py-2 hover:bg-red-600 ${resignSelected && 'bg-red-600'}`}
+		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-red-600 md:px-4 md:py-2 ${resignSelected && 'bg-red-600'}`}
 	>
 		<svg
+			class="h-[24px] w-[24px] md:h-[32px] md:w-[32px]"
 			xmlns="http://www.w3.org/2000/svg"
-			width="32"
-			height="32"
 			fill="#ffffff"
 			viewBox="0 0 256 256"
 			><path
@@ -86,9 +85,12 @@
 	{#if resignSelected}
 		<button
 			aria-label="cancel resignation attempt"
-			class="rounded-lg px-1.5 py-2 hover:bg-gray-600"
+			class="rounded-lg px-1.5 py-1 hover:bg-gray-600 md:py-2"
 			onclick={() => (resignSelected = false)}
-			><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"
+			><svg
+				class="h-[16px] w-[16px] md:h-[24px] md:w-[24px]"
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 16 16"
 				><path
 					fill="currentColor"
 					d="M15.854 12.854L11 8l4.854-4.854a.503.503 0 0 0 0-.707L13.561.146a.5.5 0 0 0-.707 0L8 5L3.146.146a.5.5 0 0 0-.707 0L.146 2.439a.5.5 0 0 0 0 .707L5 8L.146 12.854a.5.5 0 0 0 0 .707l2.293 2.293a.5.5 0 0 0 .707 0L8 11l4.854 4.854a.5.5 0 0 0 .707 0l2.293-2.293a.5.5 0 0 0 0-.707"

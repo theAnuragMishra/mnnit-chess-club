@@ -8,7 +8,7 @@
 	console.log(websocketStore.socket?.readyState);
 </script>
 
-<main class="min-h-screen flex-col items-center bg-gray-900 text-white">
+<main class="min-h-screen flex-col items-center bg-gray-900 p-2 text-white">
 	<Navbar {data} />
 	{@render children()}
 </main>

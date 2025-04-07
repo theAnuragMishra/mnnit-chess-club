@@ -73,8 +73,8 @@
 
 <style>
 	.bcontainer {
-		height: 90vw;
-		width: 90vw;
+		height: 80vw;
+		width: 80vw;
 	}
 	@media (width >= 768px) {
 		.bcontainer {

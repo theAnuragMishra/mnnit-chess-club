@@ -6,7 +6,9 @@
 	const createdAtString = formatPostgresTimestamp(createdAt);
 </script>
 
-<div class="flex h-30 w-full flex-col justify-around gap-1 rounded border p-4 shadow-lg md:h-40">
+<div
+	class="flex h-30 w-full flex-col justify-around gap-1 rounded bg-[#1c1d1e] p-4 shadow-lg md:h-40"
+>
 	<div class="text-[16px] leading-tight">
 		<div class="flex items-center">
 			{baseTime / 60} + {increment} Rated Bullet

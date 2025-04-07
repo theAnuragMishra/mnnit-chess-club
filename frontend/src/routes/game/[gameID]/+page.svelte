@@ -99,12 +99,12 @@
 	});
 </script>
 
-<div class="px-5">
+<div>
 	{#if result !== 'ongoing' && result !== ''}
 		<ResultModal {result} {reason} />
 	{/if}
 	<div class="flex flex-col-reverse items-center justify-around gap-5 xl:flex-row">
-		<div class="flex w-4/5 flex-col gap-10 md:w-fit md:flex-row xl:w-1/4 xl:flex-col">
+		<div class="flex w-4/5 flex-col gap-5 md:flex-row xl:w-1/4 xl:flex-col">
 			<GameInfo
 				{whiteUsername}
 				{blackUsername}
@@ -126,9 +126,8 @@
 			/>
 			<!-- {/if} -->
 		</div>
-		<div class="flex w-3/4 flex-col gap-3 md:flex-row xl:w-3/4">
-			<div class="flex flex-col items-center justify-center">
-				<!--clock for sm-->
+		<div class="acontainer xl:w-3/4">
+			<div class="board">
 				<Chessboard
 					{setGround}
 					username={data.user.username}
@@ -141,54 +140,128 @@
 					viewOnly={(result != 'ongoing' && result != '') ||
 						(moveHistory && activeIndex !== moveHistory.length - 1)}
 				/>
-				<!--clock for sm-->
 			</div>
-			<div class="flex flex-col gap-2">
-				<section class="mb-1 hidden justify-between md:flex md:flex-col">
-					<Clock
-						initialTime={whiteUp ? timeWhite : timeBlack}
-						active={result !== 'ongoing' && result !== ''
-							? false
-							: whiteUp
-								? chessLatest.turn() === 'w'
-								: chessLatest.turn() === 'b'}
-					/>
-					<p>{whiteUp ? whiteUsername : blackUsername}</p>
-				</section>
-				<div class="flex flex-col md:flex-col-reverse">
-					{#if result == '' || result == 'ongoing'}
-						<DrawResign
-							isDisabled={moveHistory.length < 2}
-							{gameID}
-							userID={data.user.userID}
-							setResultReason={(res: string, rea: string) => {
-								result = res;
-								reason = rea;
-							}}
-						/>
-					{/if}
-					<HistoryTable
-						{moveHistory}
-						{setActiveIndex}
-						{activeIndex}
-						highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
-							(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
-							(result === 'ongoing' || result === '')}
+			<div class="clockt h-fit">
+				<Clock
+					initialTime={whiteUp ? timeWhite : timeBlack}
+					active={result !== 'ongoing' && result !== ''
+						? false
+						: whiteUp
+							? chessLatest.turn() === 'w'
+							: chessLatest.turn() === 'b'}
+				/>
+			</div>
+
+			<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
+
+			{#if result == '' || result == 'ongoing'}
+				<div class="draw-resign h-fit">
+					<DrawResign
+						isDisabled={moveHistory && moveHistory.length < 2}
+						{gameID}
+						userID={data.user.userID}
+						setResultReason={(res: string, rea: string) => {
+							result = res;
+							reason = rea;
+						}}
 					/>
 				</div>
+			{/if}
+			<div class="history">
+				<HistoryTable
+					{moveHistory}
+					{setActiveIndex}
+					{activeIndex}
+					highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
+						(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
+						(result === 'ongoing' || result === '')}
+				/>
+			</div>
 
-				<section class="mb-1 hidden justify-between md:flex md:flex-col">
-					<p>{data.user.username}</p>
-					<Clock
-						initialTime={whiteUp ? timeBlack : timeWhite}
-						active={result !== 'ongoing' && result !== ''
-							? false
-							: whiteUp
-								? chessLatest.turn() === 'b'
-								: chessLatest.turn() === 'w'}
-					/>
-				</section>
+			<p class="nameb h-fit">{data.user.username}</p>
+			<div class="clockb h-fit">
+				<Clock
+					initialTime={whiteUp ? timeBlack : timeWhite}
+					active={result !== 'ongoing' && result !== ''
+						? false
+						: whiteUp
+							? chessLatest.turn() === 'b'
+							: chessLatest.turn() === 'w'}
+				/>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	.acontainer {
+		display: grid;
+		row-gap: 1px;
+		/* grid-template-columns: auto auto;
+		grid-template-rows: auto auto auto auto auto; */
+		grid-template-areas:
+			'namet clockt'
+			'board board'
+			'nameb clockb'
+			'draw-resign draw-resign'
+			'history history';
+	}
+	.namet {
+		grid-area: namet;
+		justify-self: start;
+	}
+	.nameb {
+		grid-area: nameb;
+		justify-self: start;
+	}
+	.board {
+		grid-area: board;
+		justify-self: center;
+	}
+	.draw-resign {
+		grid-area: draw-resign;
+	}
+	.clockt {
+		grid-area: clockt;
+		justify-self: end;
+	}
+	.clockb {
+		grid-area: clockb;
+		justify-self: end;
+	}
+	.history {
+		grid-area: history;
+		justify-self: center;
+	}
+	@media (width>= 768px) {
+		.acontainer {
+			column-gap: 10px;
+			align-content: end;
+			grid-template-areas:
+				'board clockt'
+				'board namet'
+				'board history'
+				'board draw-resign'
+				'board nameb'
+				'board clockb';
+		}
+		.nameb {
+			justify-self: auto;
+		}
+		.namet {
+			justify-self: auto;
+		}
+		.clockt {
+			justify-self: auto;
+		}
+		.clockb {
+			justify-self: auto;
+		}
+		.history {
+			justify-self: auto;
+		}
+		.board {
+			justify-self: auto;
+		}
+	}
+</style>
