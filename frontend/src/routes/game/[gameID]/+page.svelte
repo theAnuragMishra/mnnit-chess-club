@@ -173,7 +173,7 @@
 		</div>
 		<div class="acontainer xl:w-3/4">
 			<div class="abortt">
-				{#if true || ((result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1))}
+				{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
 					<AbortTimer
 						time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
 						tb="t"
@@ -195,7 +195,7 @@
 				/>
 			</div>
 			<div class="abortb">
-				{#if true || ((result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0))}
+				{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
 					<AbortTimer
 						time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
 						tb="b"
