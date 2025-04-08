@@ -172,13 +172,15 @@
 			<!-- {/if} -->
 		</div>
 		<div class="acontainer xl:w-3/4">
-			<div class="board flex flex-col justify-center">
-				{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
+			<div class="abortt">
+				{#if true || ((result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1))}
 					<AbortTimer
 						time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
 						tb="t"
 					/>
 				{/if}
+			</div>
+			<div class="board flex flex-col justify-center">
 				<Chessboard
 					{setGround}
 					username={data.user.username}
@@ -191,7 +193,9 @@
 					viewOnly={(result != 'ongoing' && result != '') ||
 						(moveHistory && activeIndex !== moveHistory.length - 1)}
 				/>
-				{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
+			</div>
+			<div class="abortb">
+				{#if true || ((result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0))}
 					<AbortTimer
 						time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
 						tb="b"
@@ -223,7 +227,7 @@
 					/>
 				{/if}
 			</div>
-			<div class="history">
+			<div class="history w-full">
 				<HistoryTable
 					{moveHistory}
 					{setActiveIndex}
@@ -257,7 +261,9 @@
 		grid-template-rows: auto auto auto auto auto; */
 		grid-template-areas:
 			'namet clockt'
+			'abortt abortt'
 			'board board'
+			'abortb abortb'
 			'nameb clockb'
 			'draw-resign draw-resign'
 			'history history';
@@ -289,6 +295,12 @@
 		grid-area: history;
 		justify-self: center;
 	}
+	.abortt {
+		grid-area: abortt;
+	}
+	.abortb {
+		grid-area: abortb;
+	}
 	@media (width>= 768px) {
 		.acontainer {
 			row-gap: 3px;
@@ -299,8 +311,10 @@
 				'board .'
 				'board clockt'
 				'board namet'
+				'board abortt'
 				'board history'
 				'board draw-resign'
+				'board abortb'
 				'board nameb'
 				'board clockb'
 				'board .';
