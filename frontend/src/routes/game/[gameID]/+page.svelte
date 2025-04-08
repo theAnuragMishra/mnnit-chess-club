@@ -126,7 +126,7 @@
 			/>
 			<!-- {/if} -->
 		</div>
-		<div class="acontainer">
+		<div class="acontainer xl:w-3/4">
 			<div class="board">
 				<Chessboard
 					{setGround}
@@ -153,7 +153,7 @@
 			</div>
 
 			<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
-			<div class="draw-resign h-fit">
+			<div class="draw-resign h-fit w-full">
 				{#if result == '' || result == 'ongoing'}
 					<DrawResign
 						isDisabled={moveHistory && moveHistory.length < 2}

@@ -114,7 +114,7 @@
 		.movescontainer::before {
 			content: '';
 			position: absolute;
-			background-color: #111e31;
+			background-color: rgb(39, 35, 35);
 			width: 100%;
 			height: 18%;
 			top: 0;

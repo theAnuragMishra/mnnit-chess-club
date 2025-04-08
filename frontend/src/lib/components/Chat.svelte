@@ -63,13 +63,16 @@
 		{/each}
 		<div use:scrollToBottom={() => messages}></div>
 	</div>
-	<div class="flex gap-2 text-sm">
+	<div class="flex text-sm">
 		<input
 			type="text"
 			bind:value={text}
 			class="flex-1 rounded border p-2"
 			placeholder="Type a message..."
+			onkeydown={(e) => {
+				if (e.key === 'Enter') handleSend();
+			}}
 		/>
-		<button onclick={handleSend} class="rounded bg-blue-500 px-4 py-2 text-white"> Send </button>
+		<!-- <button onclick={handleSend} class="rounded bg-blue-500 px-4 py-2 text-white"> Send </button> -->
 	</div>
 </div>
