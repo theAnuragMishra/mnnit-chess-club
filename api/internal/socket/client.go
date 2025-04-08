@@ -34,7 +34,6 @@ func (c *Client) readMessages() {
 	defer func() {
 		log.Println("client disconnected ", c.UserID)
 		c.manager.RemoveClient(c.UserID)
-
 	}()
 	for {
 		_, payload, err := c.connection.ReadMessage()
@@ -66,7 +65,6 @@ func (c *Client) writeMessages() {
 	defer func() {
 		log.Println("Closing write connection for client:", c.UserID)
 		c.manager.RemoveClient(c.UserID)
-
 	}()
 	for {
 		select {

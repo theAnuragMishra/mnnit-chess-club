@@ -8,17 +8,16 @@ class WebSocketStore {
 
 	constructor(url: string) {
 		this.url = url;
-		this.connect();
 	}
 
-	private connect(): void {
+	connect(): void {
 		this.ws = new WebSocket(this.url);
 
 		this.ws.onopen = () => console.log('✅ WebSocket Connected');
 		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 		this.ws.onclose = () => {
-			console.warn('⚠️ WebSocket Disconnected. Reconnecting...');
-			setTimeout(() => this.connect(), this.reconnectDelay);
+			console.warn('⚠️ WebSocket Disconnected');
+			// setTimeout(() => this.connect(), this.reconnectDelay);
 		};
 		this.ws.onerror = (error: Event) => console.error('WebSocket Error:', error);
 	}

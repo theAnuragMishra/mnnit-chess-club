@@ -5,7 +5,10 @@
 
 	let { data, children } = $props();
 
-	console.log(websocketStore.socket?.readyState);
+	// console.log(websocketStore.socket?.readyState);
+	if (data.user) {
+		websocketStore.connect();
+	}
 </script>
 
 <main class="min-h-screen flex-col items-center bg-gray-900 p-2 text-white">
