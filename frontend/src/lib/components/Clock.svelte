@@ -1,48 +1,5 @@
 <script lang="ts">
-	const { initialTime, active } = $props();
-
-	let time = $state(initialTime);
-
-	$effect(() => {
-		time = initialTime;
-	});
-
-	let animationFrame: number | null;
-	let startTime: DOMHighResTimeStamp | null;
-
-	$effect(() => {
-		if (active) {
-			startTime = performance.now();
-			const tick = (currentTime: number) => {
-				if (!startTime) return;
-				const elapsed = currentTime - startTime;
-				const newTime = initialTime - elapsed;
-
-				if (newTime <= 0) {
-					time = 0;
-					return;
-				}
-
-				time = newTime;
-				animationFrame = requestAnimationFrame(tick);
-			};
-
-			animationFrame = requestAnimationFrame(tick);
-		} else {
-			if (animationFrame !== null) {
-				cancelAnimationFrame(animationFrame);
-				animationFrame = null;
-				startTime = null;
-			}
-		}
-		return () => {
-			if (animationFrame !== null) {
-				cancelAnimationFrame(animationFrame);
-				animationFrame = null;
-				startTime = null;
-			}
-		};
-	});
+	const { time, active } = $props();
 
 	const formatTime = (time: number): string => {
 		const minutes = Math.floor(time / 60000);

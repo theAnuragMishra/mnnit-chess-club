@@ -12,6 +12,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import type { Api } from 'chessground/api';
 	import { getValidMoves } from '$lib/utils.js';
+	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	let { data } = $props();
 	// console.log(data);
 	let ground: Api | null = $state(null);
@@ -85,6 +86,50 @@
 		// console.log(x);
 	};
 
+	//timer setup
+	let btime = $derived(timeBlack);
+	let wtime = $derived(timeWhite);
+	let animationFrame: number | null;
+	let startTime: DOMHighResTimeStamp | null;
+
+	$effect(() => {
+		if (result === 'ongoing' || result === '') {
+			let trn = chessLatest.turn();
+			startTime = performance.now();
+			const tick = (currentTime: number) => {
+				if (!startTime) return;
+				const elapsed = currentTime - startTime;
+				const newTime = (trn == 'w' ? timeWhite : timeBlack) - elapsed;
+
+				if (newTime <= 0) {
+					if (trn == 'w') wtime = 0;
+					else btime = 0;
+					return;
+				}
+				if (trn == 'w') wtime = newTime;
+				else btime = newTime;
+
+				animationFrame = requestAnimationFrame(tick);
+			};
+
+			animationFrame = requestAnimationFrame(tick);
+		} else {
+			if (animationFrame !== null) {
+				cancelAnimationFrame(animationFrame);
+				animationFrame = null;
+				startTime = null;
+			}
+		}
+
+		return () => {
+			if (animationFrame !== null) {
+				cancelAnimationFrame(animationFrame);
+				animationFrame = null;
+				startTime = null;
+			}
+		};
+	});
+
 	onMount(() => {
 		websocketStore.onMessage('timeup', handleTimeUp);
 		websocketStore.onMessage('game_abort', handleTimeUp);
@@ -128,6 +173,9 @@
 		</div>
 		<div class="acontainer xl:w-3/4">
 			<div class="board">
+				{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
+					<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))} />
+				{/if}
 				<Chessboard
 					{setGround}
 					username={data.user.username}
@@ -140,10 +188,13 @@
 					viewOnly={(result != 'ongoing' && result != '') ||
 						(moveHistory && activeIndex !== moveHistory.length - 1)}
 				/>
+				{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
+					<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))} />
+				{/if}
 			</div>
 			<div class="clockt h-fit">
 				<Clock
-					initialTime={whiteUp ? timeWhite : timeBlack}
+					time={whiteUp ? wtime : btime}
 					active={result !== 'ongoing' && result !== ''
 						? false
 						: whiteUp
@@ -180,7 +231,7 @@
 			<p class="nameb h-fit">{data.user.username}</p>
 			<div class="clockb h-fit">
 				<Clock
-					initialTime={whiteUp ? timeBlack : timeWhite}
+					time={whiteUp ? btime : wtime}
 					active={result !== 'ongoing' && result !== ''
 						? false
 						: whiteUp
