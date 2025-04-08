@@ -103,7 +103,7 @@
 	{#if result !== 'ongoing' && result !== ''}
 		<ResultModal {result} {reason} />
 	{/if}
-	<div class="flex flex-col-reverse items-center justify-around gap-5 xl:flex-row">
+	<div class="flex flex-col-reverse items-center justify-center gap-5 xl:flex-row">
 		<div class="flex w-4/5 flex-col gap-5 md:flex-row xl:w-1/4 xl:flex-col">
 			<GameInfo
 				{whiteUsername}
@@ -126,7 +126,7 @@
 			/>
 			<!-- {/if} -->
 		</div>
-		<div class="acontainer xl:w-3/4">
+		<div class="acontainer">
 			<div class="board">
 				<Chessboard
 					{setGround}
@@ -153,9 +153,8 @@
 			</div>
 
 			<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
-
-			{#if result == '' || result == 'ongoing'}
-				<div class="draw-resign h-fit">
+			<div class="draw-resign h-fit">
+				{#if result == '' || result == 'ongoing'}
 					<DrawResign
 						isDisabled={moveHistory && moveHistory.length < 2}
 						{gameID}
@@ -165,8 +164,8 @@
 							reason = rea;
 						}}
 					/>
-				</div>
-			{/if}
+				{/if}
+			</div>
 			<div class="history">
 				<HistoryTable
 					{moveHistory}
@@ -235,15 +234,19 @@
 	}
 	@media (width>= 768px) {
 		.acontainer {
+			row-gap: 3px;
 			column-gap: 10px;
-			align-content: end;
+			place-content: start;
+			place-items: start;
 			grid-template-areas:
+				'board .'
 				'board clockt'
 				'board namet'
 				'board history'
 				'board draw-resign'
 				'board nameb'
-				'board clockb';
+				'board clockb'
+				'board .';
 		}
 		.nameb {
 			justify-self: auto;
@@ -253,9 +256,11 @@
 		}
 		.clockt {
 			justify-self: auto;
+			/* margin-top: auto; */
 		}
 		.clockb {
 			justify-self: auto;
+			/* margin-bottom: auto; */
 		}
 		.history {
 			justify-self: auto;

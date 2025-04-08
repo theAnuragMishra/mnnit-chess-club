@@ -8,10 +8,10 @@
 </script>
 
 <div
-	class="movescontainer w-[80vw h-[40px] bg-gray-800 px-3 text-sm md:h-[310px] md:w-fit md:text-lg"
+	class="movescontainer relative z-0 h-[40px] w-[80vw] bg-gray-800 text-sm md:h-[200px] md:w-[250px] md:px-3 md:text-lg"
 >
 	<div
-		class="moves flex w-full items-center overflow-x-auto md:grid md:h-[250px] md:grid-cols-[1fr_16fr_16fr] md:place-items-center md:content-start md:overflow-x-hidden md:overflow-y-auto"
+		class="moves flex w-full items-center overflow-x-auto md:grid md:h-[150px] md:grid-cols-[1fr_5fr_5fr] md:place-items-center md:content-start md:items-center md:overflow-x-hidden md:overflow-y-auto"
 	>
 		{#each moveHistory as move, index}
 			{#if index % 2 == 0}
@@ -22,7 +22,7 @@
 				onclick={() => {
 					setActiveIndex(index);
 				}}
-				class={`h-fit w-fit cursor-pointer px-3 py-1.5 ${activeIndex == index ? 'bg-gray-700' : ''}`}
+				class={`h-fit w-fit cursor-pointer px-1 py-1.5 md:px-3 ${activeIndex == index ? 'bg-gray-700' : ''}`}
 			>
 				{move.MoveNotation}
 			</button>
@@ -31,7 +31,7 @@
 	{#if moveHistory}
 		<button
 			aria-label="go to first move"
-			class="first flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
+			class="first flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 			onclick={() => {
 				setActiveIndex(0);
 			}}
@@ -42,7 +42,7 @@
 		</button>
 		<button
 			aria-label="go to previous move"
-			class="prev flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
+			class="prev flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 			onclick={() => {
 				setActiveIndex(activeIndex - 1);
 			}}
@@ -52,7 +52,7 @@
 		>
 		<button
 			aria-label="go to next move"
-			class="next flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
+			class="next flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 			onclick={() => {
 				setActiveIndex(activeIndex + 1);
 			}}
@@ -62,7 +62,7 @@
 		>
 		<button
 			aria-label="go to latest move"
-			class={`last flex w-1/5 cursor-pointer items-center justify-center py-1 hover:bg-gray-700 ${highlightLastArrow && 'animate-pulse bg-blue-700'}`}
+			class={`last flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700 ${highlightLastArrow && 'animate-pulse bg-blue-700'}`}
 			onclick={() => {
 				setActiveIndex(moveHistory.length - 1);
 			}}
@@ -102,14 +102,27 @@
 
 	@media (width >=768px) {
 		.movescontainer {
+			gap: 10px;
+			/* grid-template-columns: 1fr 1fr 1fr 1fr; */
+			align-items: center;
+			align-content: start;
 			grid-template-areas:
 				'first prev next last'
 				'moves moves moves moves';
-			justify-content: space-between;
+			padding-top: 2px;
+		}
+		.movescontainer::before {
+			content: '';
+			position: absolute;
+			background-color: #111e31;
+			width: 100%;
+			height: 18%;
+			top: 0;
+			z-index: -1;
 		}
 		.last,
 		.first {
-			display: inline-block;
+			display: flex;
 		}
 	}
 </style>
