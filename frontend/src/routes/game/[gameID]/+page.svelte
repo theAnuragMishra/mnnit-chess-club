@@ -172,9 +172,12 @@
 			<!-- {/if} -->
 		</div>
 		<div class="acontainer xl:w-3/4">
-			<div class="board">
+			<div class="board flex flex-col justify-center">
 				{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
-					<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))} />
+					<AbortTimer
+						time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
+						tb="t"
+					/>
 				{/if}
 				<Chessboard
 					{setGround}
@@ -189,7 +192,10 @@
 						(moveHistory && activeIndex !== moveHistory.length - 1)}
 				/>
 				{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
-					<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))} />
+					<AbortTimer
+						time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
+						tb="b"
+					/>
 				{/if}
 			</div>
 			<div class="clockt h-fit">

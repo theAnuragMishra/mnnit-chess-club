@@ -13,7 +13,7 @@
 	};
 </script>
 
-<div class="flex px-4 py-4 text-xl">
+<div class="flex px-4 py-1 text-xl">
 	<ul class="flex w-full justify-between">
 		<li class="text-xl md:text-2xl">
 			<a href="/" class="rounded-lg hover:bg-gray-800"> MNNIT Chess Club </a>

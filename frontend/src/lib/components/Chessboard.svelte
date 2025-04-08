@@ -84,8 +84,8 @@
 	}
 	@media (width >= 64rem) {
 		.bcontainer {
-			height: 630px;
-			width: 630px;
+			height: 600px;
+			width: 600px;
 		}
 	}
 </style>
