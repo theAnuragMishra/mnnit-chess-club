@@ -3,14 +3,57 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"github.com/notnil/chess"
+	"errors"
 	"log"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/notnil/chess"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
+
+func (c *Controller) createGame(p1, p2 int32, p1un, p2un string, timeControl string) (*game.Game, error) {
+	parts := strings.Split(timeControl, "+")
+	if len(parts) != 2 {
+		return nil, errors.New("not a valid time control format")
+	}
+
+	baseTime, err1 := strconv.Atoi(parts[0])
+	increment, err2 := strconv.Atoi(parts[1])
+
+	if err1 != nil || err2 != nil {
+		return nil, errors.New("not a valid time control format")
+	}
+
+	createdGame := game.NewGame(time.Duration(baseTime)*time.Minute, time.Duration(increment)*time.Second, p1, p2)
+
+	id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+		BaseTime:      int32(baseTime * 60),
+		Increment:     int32(increment),
+		WhiteID:       &p1,
+		BlackID:       &p2,
+		WhiteUsername: &p1un,
+		BlackUsername: &p2un,
+		Fen:           createdGame.Board.FEN(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	createdGame.ID = id
+	c.GameManager.Games[id] = createdGame
+	timer := time.AfterFunc(time.Second*20, func() {
+		c.abortGame(createdGame)
+	})
+
+	createdGame.AbortTimer = timer
+	return createdGame, nil
+}
 
 func (c *Controller) abortGame(g *game.Game) {
 	c.GameManager.Lock()
@@ -68,7 +111,6 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		ResultReason:     &reason,
 		ID:               g.ID,
 	})
-
 	if err != nil {
 		log.Println("error ending game on timeout", err)
 	}

@@ -8,8 +8,7 @@ type movePayload struct {
 }
 
 type InitGamePayload struct {
-	Username  string `json:"username"`
-	TimerCode int16  `json:"timerCode"`
+	TimeControl string `json:"timeControl"`
 }
 
 type UserNamePayload struct {

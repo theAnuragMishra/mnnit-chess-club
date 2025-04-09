@@ -1,8 +1,6 @@
 package control
 
 import (
-	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,124 +10,8 @@ import (
 	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
-
-func (c *Controller) InitGame(w http.ResponseWriter, r *http.Request) {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
-	// fmt.Println(event)
-	// Todo: check if the username from payload is the same as the session user
-	var initGamePayload InitGamePayload
-	err := json.NewDecoder(r.Body).Decode(&initGamePayload)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
-
-	log.Println("inside init game :)")
-
-	var PendingUserID *int32
-	var PendingUserName *string
-	var baseTime time.Duration
-	var increment time.Duration
-
-	switch initGamePayload.TimerCode {
-	case 1:
-		PendingUserID = &c.GameManager.PendingUserID1
-		PendingUserName = &c.GameManager.PendingUserName1
-		baseTime = time.Minute
-		increment = time.Duration(0)
-	case 2:
-		PendingUserID = &c.GameManager.PendingUserID2
-		PendingUserName = &c.GameManager.PendingUserName2
-		baseTime = time.Minute * 3
-		increment = time.Second * 2
-	case 3:
-		PendingUserID = &c.GameManager.PendingUserID3
-		PendingUserName = &c.GameManager.PendingUserName3
-		baseTime = time.Minute * 10
-		increment = time.Duration(0)
-	default:
-		PendingUserName = nil
-		PendingUserID = nil
-
-	}
-
-	if PendingUserID == nil || PendingUserName == nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid timerCode")
-		return
-	}
-
-	// if there's no pending game, create one, else, add the player to the game
-	if *PendingUserID == 0 {
-		log.Println("no pending game, creating...")
-		*PendingUserName = initGamePayload.Username
-		*PendingUserID = session.UserID
-
-	} else {
-
-		if *PendingUserName == initGamePayload.Username {
-			utils.RespondWithError(w, http.StatusBadRequest, "You can't play both sides")
-			return
-		}
-
-		createdGame := game.NewGame(baseTime, increment, *PendingUserID, session.UserID)
-
-		id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-			BaseTime:      int32(baseTime.Seconds()),
-			Increment:     int32(increment.Seconds()),
-			WhiteID:       PendingUserID,
-			BlackID:       &session.UserID,
-			WhiteUsername: PendingUserName,
-			BlackUsername: &initGamePayload.Username,
-			Fen:           createdGame.Board.FEN(),
-		})
-		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		createdGame.ID = id
-		c.GameManager.Games[id] = createdGame
-		timer := time.AfterFunc(time.Second*20, func() {
-			c.abortGame(createdGame)
-		})
-
-		createdGame.AbortTimer = timer
-
-		thisClient := c.SocketManager.FindClientByUserID(session.UserID)
-		otherClient := c.SocketManager.FindClientByUserID(*PendingUserID)
-		if thisClient == nil || otherClient == nil {
-			log.Println("player not found")
-			return
-		}
-
-		*PendingUserID = 0
-		*PendingUserName = ""
-		payload := map[string]any{
-			"GameID": createdGame.ID,
-		}
-		rawPayload, err := json.Marshal(payload)
-		if err != nil {
-			log.Println("error marshalling new createdGame payload")
-			return
-		}
-		e := socket.Event{
-			Type:    "Init_Game",
-			Payload: json.RawMessage(rawPayload),
-		}
-
-		thisClient.Send(e)
-		otherClient.Send(e)
-
-	}
-	// fmt.Println(c.GameManager)
-}
 
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameIDStr, err := strconv.ParseInt(chi.URLParam(r, "gameID"), 10, 32)

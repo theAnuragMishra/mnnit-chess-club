@@ -31,7 +31,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 		router.Post("/logout", controller.HandleLogout)
 		router.Get("/me", authHandler.HandleMe)
 		router.Post("/set-username", controller.UpdateUsername)
-		router.HandleFunc("/ws", controller.SocketManager.ServeWS)
+		router.HandleFunc("/ws", controller.ServeWS)
 	})
 
 	// routes that don't need authentication
@@ -48,7 +48,6 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	gameRouter := chi.NewRouter()
 	gameRouter.Use(authHandler.AuthMiddleware)
 	gameRouter.Get("/{gameID}", controller.WriteGameInfo)
-	gameRouter.Post("/init", controller.InitGame)
 
 	// mounting subrouters
 	router.Mount("/game", gameRouter)

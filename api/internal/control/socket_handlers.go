@@ -13,6 +13,56 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
+func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var initGamePayload InitGamePayload
+	if err := json.Unmarshal(event.Payload, &initGamePayload); err != nil {
+		return err
+	}
+
+	log.Println("inside init game :)")
+
+	pendingUser, exists := c.GameManager.PendingUsers[initGamePayload.TimeControl]
+
+	if !exists {
+		log.Println("no pending game, creating...")
+		c.GameManager.PendingUsers[initGamePayload.TimeControl] = client.UserID
+	} else {
+		delete(c.GameManager.PendingUsers, initGamePayload.TimeControl)
+		if pendingUser == client.UserID {
+			return errors.New("same player tryna play both sides")
+		}
+		otherClient := c.SocketManager.FindClientByUserID(pendingUser)
+		if otherClient == nil {
+			return errors.New("other player not connected when trying to send init game")
+		}
+
+		createdGame, err := c.createGame(pendingUser, client.UserID, otherClient.UserName, client.UserName, initGamePayload.TimeControl)
+		if err != nil {
+			return err
+		}
+
+		payload := map[string]any{
+			"GameID": createdGame.ID,
+		}
+		rawPayload, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		e := socket.Event{
+			Type:    "Init_Game",
+			Payload: json.RawMessage(rawPayload),
+		}
+
+		client.Send(e)
+		otherClient.Send(e)
+
+	}
+	return nil
+	// fmt.Println(c.GameManager)
+}
+
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(string(event.Payload))
 

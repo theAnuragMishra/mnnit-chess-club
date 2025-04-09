@@ -7,30 +7,28 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// ClientList is a map used to help manage a map of clients
 type ClientList map[int32]*Client
 
-// Client is a websocket client, basically a frontend visitor
 type Client struct {
 	// the websocket connection
 	connection *websocket.Conn
 	UserID     int32
-	// manager is the manager used to manage the client
-	manager *Manager
-	egress  chan Event
+	UserName   string
+	manager    *Manager
+	egress     chan Event
 }
 
-// NewClient is used to initialize a new Client with all required values initialized
-func NewClient(conn *websocket.Conn, manager *Manager, userID int32) *Client {
+func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username string) *Client {
 	return &Client{
 		UserID:     userID,
+		UserName:   username,
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
 	}
 }
 
-func (c *Client) readMessages() {
+func (c *Client) ReadMessages() {
 	defer func() {
 		log.Println("client disconnected ", c.UserID)
 		c.manager.RemoveClient(c.UserID)
@@ -50,9 +48,6 @@ func (c *Client) readMessages() {
 			log.Printf("error marshalling event %v", err)
 			break
 		}
-		//if err := c.manager.routeEvent(request, c); err != nil {
-		//	log.Println("error handling message: ", err)
-		//}
 
 		if err := c.manager.OnMessage(request, c); err != nil {
 			log.Printf("error on message %v", err)
@@ -61,7 +56,7 @@ func (c *Client) readMessages() {
 	}
 }
 
-func (c *Client) writeMessages() {
+func (c *Client) WriteMessages() {
 	defer func() {
 		log.Println("Closing write connection for client:", c.UserID)
 		c.manager.RemoveClient(c.UserID)
@@ -87,12 +82,10 @@ func (c *Client) writeMessages() {
 	}
 }
 
-// Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
 	c.egress <- event
 }
 
-// Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map
 	defer m.RUnlock()
