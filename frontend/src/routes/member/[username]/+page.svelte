@@ -51,7 +51,7 @@
 	}
 </script>
 
-<div class="flex-col rounded-xl bg-black p-4 text-xl">
+<div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl">
 	<div class="mb-4 text-center text-5xl">{page.params.username}'s Games</div>
 	<div class="flex w-full flex-col items-center gap-2">
 		{#each items as item}

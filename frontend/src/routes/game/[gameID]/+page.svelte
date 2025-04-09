@@ -217,7 +217,7 @@
 			<div class="draw-resign h-fit w-full">
 				{#if result == '' || result == 'ongoing'}
 					<DrawResign
-						isDisabled={moveHistory && moveHistory.length < 2}
+						isDisabled={!moveHistory || moveHistory.length < 2}
 						{gameID}
 						userID={data.user.userID}
 						setResultReason={(res: string, rea: string) => {
