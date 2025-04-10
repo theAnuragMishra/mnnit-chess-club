@@ -8,7 +8,7 @@ import (
 type Manager struct {
 	clients ClientList
 	sync.RWMutex
-
+	Rooms     map[int32]map[*Client]bool
 	OnMessage func(event Event, client *Client) error
 
 	// handlers map[string]EventHandler
@@ -18,9 +18,8 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 	m := &Manager{
 		clients:   make(ClientList),
 		OnMessage: onMessage,
-		// handlers: make(map[string]EventHandler),
+		Rooms:     make(map[int32]map[*Client]bool),
 	}
-	// m.setupEventHandlers()
 	return m
 }
 
@@ -45,6 +44,7 @@ func (m *Manager) RemoveClient(id int32) {
 			return
 		}
 		// remove
+		delete(m.Rooms[client.Room], client)
 		delete(m.clients, id)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,6 +13,44 @@ import (
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
+
+func RoomChange(c *Controller, event socket.Event, client *socket.Client) error {
+	log.Println("inside room change")
+	c.SocketManager.Lock()
+	defer c.SocketManager.Unlock()
+	var roomChangePayload RoomChangePayload
+	if err := json.Unmarshal(event.Payload, &roomChangePayload); err != nil {
+		return err
+	}
+	if client.Room == roomChangePayload.RoomID {
+		return nil
+	}
+	delete(c.SocketManager.Rooms[client.Room], client)
+	client.Room = roomChangePayload.RoomID
+	if c.SocketManager.Rooms[roomChangePayload.RoomID] == nil {
+		c.SocketManager.Rooms[roomChangePayload.RoomID] = make(map[*socket.Client]bool)
+	}
+	c.SocketManager.Rooms[roomChangePayload.RoomID][client] = true
+	for _, x := range c.SocketManager.Rooms {
+		for y := range x {
+			fmt.Println(y)
+		}
+	}
+	return nil
+}
+
+func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
+	log.Println("inside room leave")
+	c.SocketManager.Lock()
+	defer c.SocketManager.Unlock()
+	var roomChangePayload RoomChangePayload
+	if err := json.Unmarshal(event.Payload, &roomChangePayload); err != nil {
+		return err
+	}
+	delete(c.SocketManager.Rooms[client.Room], client)
+	client.Room = 0
+	return nil
+}
 
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	c.GameManager.Lock()
@@ -106,21 +145,10 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 	}
 
-	if foundGame.GameLength == 2 {
-		var t time.Duration
-		if foundGame.Board.Position().Turn() == chess.White {
-			t = foundGame.TimeWhite
-		} else {
-			t = foundGame.TimeBlack
-		}
-		timer := time.AfterFunc(t, func() { c.handleGameTimeout(foundGame) })
-		foundGame.ClockTimer = timer
-	} else if foundGame.GameLength > 2 {
-		if foundGame.Board.Position().Turn() == chess.White {
-			foundGame.ClockTimer.Reset(foundGame.TimeWhite)
-		} else {
-			foundGame.ClockTimer.Reset(foundGame.TimeBlack)
-		}
+	if foundGame.Board.Position().Turn() == chess.White {
+		foundGame.ClockTimer.Reset(foundGame.TimeWhite)
+	} else {
+		foundGame.ClockTimer.Reset(foundGame.TimeBlack)
 	}
 
 	var x int32
@@ -162,7 +190,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "Move_Response",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, gameID)
 
 	if result != "" {
 		// log.Println("game ho gya over")
@@ -316,7 +344,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Type:    "gameDrawn",
 			Payload: json.RawMessage(payload),
 		}
-		c.SocketManager.Broadcast(e)
+		c.SocketManager.BroadcastToRoom(e, gameID)
 		foundGame.ClockTimer.Stop()
 		delete(c.GameManager.Games, gameID)
 	}
@@ -395,7 +423,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "resignation",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, gameID)
 
 	foundGame.ClockTimer.Stop()
 	delete(c.GameManager.Games, gameID)

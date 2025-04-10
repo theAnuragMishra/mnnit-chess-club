@@ -30,6 +30,10 @@ func (c *Controller) createGame(p1, p2 int32, p1un, p2un string, timeControl str
 		return nil, errors.New("not a valid time control format")
 	}
 
+	if baseTime*60 <= 20 {
+		return nil, errors.New("only supporting time controls greater than 20 seconds of base time")
+	}
+
 	createdGame := game.NewGame(time.Duration(baseTime)*time.Minute, time.Duration(increment)*time.Second, p1, p2)
 
 	id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
@@ -47,11 +51,17 @@ func (c *Controller) createGame(p1, p2 int32, p1un, p2un string, timeControl str
 
 	createdGame.ID = id
 	c.GameManager.Games[id] = createdGame
-	timer := time.AfterFunc(time.Second*20, func() {
+	//var t time.Duration
+	//if createdGame.BaseTime < time.Second*20 {
+	//	t = time.Second * 20
+	//}
+	abortTimer := time.AfterFunc(time.Second*20, func() {
 		c.abortGame(createdGame)
 	})
+	clockTimer := time.AfterFunc(createdGame.BaseTime, func() { c.handleGameTimeout(createdGame) })
 
-	createdGame.AbortTimer = timer
+	createdGame.AbortTimer = abortTimer
+	createdGame.ClockTimer = clockTimer
 	return createdGame, nil
 }
 
@@ -59,6 +69,7 @@ func (c *Controller) abortGame(g *game.Game) {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
 
+	g.ClockTimer.Stop()
 	reason := "Game Aborted"
 	etl := int32(g.BaseTime.Milliseconds())
 
@@ -73,7 +84,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		log.Println("error ending game with result", err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "Aborted", "Reason": reason})
+	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "aborted", "Reason": reason})
 	if err != nil {
 		log.Println(err)
 	}
@@ -81,7 +92,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		Type:    "game_abort",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, g.ID)
 	delete(c.GameManager.Games, g.ID)
 }
 
@@ -122,7 +133,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		Type:    "timeup",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, g.ID)
 
 	delete(c.GameManager.Games, g.ID)
 }

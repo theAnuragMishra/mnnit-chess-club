@@ -134,12 +134,14 @@
 		websocketStore.onMessage('game_abort', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
 		websocketStore.onMessage('resignation', handleResignation);
+		websocketStore.sendMessage({ type: 'room_change', payload: { room: gameID } });
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);
 		websocketStore.offMessage('game_abort', handleTimeUp);
 		websocketStore.offMessage('Move_Response', handleMoveResponse);
 		websocketStore.offMessage('resignation', handleResignation);
+		websocketStore.sendMessage({ type: 'leave_room', payload: { room: gameID } });
 	});
 </script>
 

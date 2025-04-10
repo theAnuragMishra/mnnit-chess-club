@@ -16,6 +16,7 @@ type Client struct {
 	UserName   string
 	manager    *Manager
 	egress     chan Event
+	Room       int32
 }
 
 func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username string) *Client {
@@ -86,6 +87,18 @@ func (c *Client) Send(event Event) {
 	c.egress <- event
 }
 
+func (m *Manager) BroadcastToRoom(event Event, room int32) {
+	m.RLock()
+	defer m.RUnlock()
+	for client := range m.Rooms[room] {
+		select {
+		case client.egress <- event:
+		default:
+			log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
+		}
+	}
+}
+
 func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map
 	defer m.RUnlock()
@@ -93,9 +106,7 @@ func (m *Manager) Broadcast(event Event) {
 	for _, client := range m.clients {
 		select {
 		case client.egress <- event:
-			// Successfully enqueued the event
 		default:
-			// Client's channel is full; log and handle as needed
 			log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
 		}
 	}

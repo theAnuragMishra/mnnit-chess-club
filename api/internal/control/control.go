@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -27,7 +28,10 @@ func NewController(queries *database.Queries) *Controller {
 		log.Println("error getting ongoing games", err)
 	}
 	for _, ongoingGame := range games {
-		c.GameManager.Games[ongoingGame.ID] = game.DatabaseGameToGame(&ongoingGame)
+		g := game.DatabaseGameToGame(&ongoingGame)
+		c.GameManager.Games[ongoingGame.ID] = g
+		timer := time.AfterFunc(g.BaseTime, func() { c.handleGameTimeout(g) })
+		g.ClockTimer = timer
 	}
 
 	return &c

@@ -11,6 +11,10 @@ type InitGamePayload struct {
 	TimeControl string `json:"timeControl"`
 }
 
+type RoomChangePayload struct {
+	RoomID int32 `json:"room"`
+}
+
 type UserNamePayload struct {
 	Username string `json:"username"`
 }
