@@ -64,3 +64,17 @@ export function formatPostgresTimestamp(dateObj: Date): string {
 	};
 	return dateObj.toLocaleDateString('en-GB', options).replace(',', '');
 }
+
+export function formatResultAndReason(result: string, reason: string) {
+	if (result === 'aborted') return 'Game Aborted';
+	if (result === '1/2-1/2') {
+		if (reason === 'ThreefoldRepetition') return 'Draw by threefold repetition';
+		else if (reason === 'FivefoldRepetition') return 'Draw by fivefold repetition';
+		else if (reason === 'FiftyMoveRule') return 'Draw by 50 move rule';
+		else if (reason === 'SeventyFiveMoveRule') return 'Draw by 75 move rule';
+		else if (reason === 'Stalemate') return 'Draw by stalemate';
+		else if (reason === 'InsufficientMaterial') return 'Draw by insufficient Material';
+		else return reason;
+	}
+	return `${reason} | ${result === '1-0' ? 'White ' : 'Black '} is victorious`;
+}
