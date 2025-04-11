@@ -129,7 +129,8 @@
 		};
 	});
 
-	onMount(() => {
+	onMount(async () => {
+		await websocketStore.connect();
 		websocketStore.onMessage('timeup', handleTimeUp);
 		websocketStore.onMessage('game_abort', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);

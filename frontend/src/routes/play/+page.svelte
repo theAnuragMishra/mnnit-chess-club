@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { getBaseURL } from '$lib/utils';
 	import { websocketStore } from '$lib/websocket.js';
+	import { onMount } from 'svelte';
 
 	const { data } = $props();
 
@@ -25,6 +26,10 @@
 		'30+0',
 		'30+20'
 	];
+
+	onMount(async () => {
+		await websocketStore.connect();
+	});
 </script>
 
 <div class="box">

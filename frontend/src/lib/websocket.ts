@@ -1,25 +1,62 @@
 import { goto } from '$app/navigation';
-
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
-	private reconnectDelay: number = 2000;
+	// private reconnectDelay: number = 2000;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
 		this.url = url;
 	}
 
-	connect(): void {
-		this.ws = new WebSocket(this.url);
+	tryConnect(): Promise<void> {
+		if (this.ws?.readyState === WebSocket.OPEN) return Promise.resolve();
+		console.log('inside tryconnect');
+		let settled = false;
+		return new Promise((resolve, reject) => {
+			this.ws = new WebSocket(this.url);
 
-		this.ws.onopen = () => console.log('✅ WebSocket Connected');
-		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
-		this.ws.onclose = () => {
-			console.warn('⚠️ WebSocket Disconnected');
-			// setTimeout(() => this.connect(), this.reconnectDelay);
-		};
-		this.ws.onerror = (error: Event) => console.error('WebSocket Error:', error);
+			this.ws.onopen = () => {
+				if (settled) return;
+				settled = true;
+				console.log('✅ WebSocket Connected');
+				resolve();
+			};
+			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
+			this.ws.onclose = () => {
+				console.warn('⚠️ WebSocket Disconnected');
+				// setTimeout(() => this.connect(), this.reconnectDelay);
+			};
+			this.ws.onerror = (error: Event) => {
+				if (settled) return;
+				settled = true;
+				console.error('WebSocket Error:', error);
+
+				reject(error);
+			};
+		});
+	}
+
+	async retryConnect(retries = 5): Promise<void> {
+		console.log('insde retryconnect');
+		for (let i = 0; i < retries; i++) {
+			try {
+				await this.tryConnect();
+				return; // success
+			} catch (error) {
+				console.error(error);
+				console.warn(`Retrying... (${i + 1}/${retries})`);
+			}
+		}
+	}
+
+	async connect(): Promise<void> {
+		try {
+			await this.tryConnect();
+		} catch (err) {
+			console.log(err, 'Initial connect failed. Retrying...');
+			await this.retryConnect();
+		}
 	}
 
 	private handleMessage(event: MessageEvent): void {
@@ -57,6 +94,7 @@ class WebSocketStore {
 	sendMessage(message: unknown): void {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			this.ws.send(JSON.stringify(message));
+			console.log('message sent');
 		} else {
 			console.warn('WebSocket not open. Message not sent.');
 		}
