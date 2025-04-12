@@ -60,7 +60,7 @@
 
 <div class="flex items-center justify-center gap-2 text-xl text-white md:text-2xl">
 	<button
-		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-gray-600 md:px-4 md:py-2 ${offer && 'animate-pulse bg-blue-600'}`}
+		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-gray-600 md:px-4 md:py-2 ${offer && 'animate-pulse bg-blue-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 		onclick={handleDraw}
 		disabled={isDisabled}
 	>
@@ -70,7 +70,7 @@
 		aria-label="resign"
 		onclick={handleResign}
 		disabled={isDisabled}
-		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-red-600 md:px-4 md:py-2 ${resignSelected && 'bg-red-600'}`}
+		class={`cursor-pointer rounded-lg px-2 py-1 hover:bg-red-600 md:px-4 md:py-2 ${resignSelected && 'bg-red-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 	>
 		<svg
 			class="h-[24px] w-[24px] md:h-[32px] md:w-[32px]"

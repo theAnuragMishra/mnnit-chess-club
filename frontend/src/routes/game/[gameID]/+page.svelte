@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Chess } from 'chess.js';
 	import { page } from '$app/state';
-	import ResultModal from '$lib/components/ResultModal.svelte';
 	import Chat from '$lib/components/Chat.svelte';
 	import DrawResign from '$lib/components/DrawResign.svelte';
 	import GameInfo from '$lib/components/GameInfo.svelte';
@@ -144,111 +143,98 @@
 	});
 </script>
 
-<div>
-	{#if result !== 'ongoing' && result !== ''}
-		<ResultModal {result} {reason} />
-	{/if}
-	<div class="flex flex-col-reverse items-center justify-center gap-5 xl:flex-row">
-		<div class="flex w-4/5 flex-col gap-5 md:flex-row xl:w-1/4 xl:flex-col">
-			<GameInfo
-				{whiteUsername}
-				{blackUsername}
-				{result}
-				{createdAt}
-				{baseTime}
-				{increment}
-				{reason}
-			/>
-			<!-- {#if result === '' || result === 'ongoing'} -->
-			<Chat
-				username={data.user.username}
-				userID={data.user.userID}
-				{blackID}
-				{whiteID}
-				{gameID}
-				{whiteUsername}
-				{blackUsername}
-			/>
-			<!-- {/if} -->
+<div class="flex flex-col-reverse items-center justify-center gap-5 xl:flex-row">
+	<div class="flex w-4/5 flex-col gap-5 md:flex-row xl:w-1/4 xl:flex-col">
+		<GameInfo
+			{whiteUsername}
+			{blackUsername}
+			{result}
+			{createdAt}
+			{baseTime}
+			{increment}
+			{reason}
+		/>
+		<!-- {#if result === '' || result === 'ongoing'} -->
+		<Chat
+			username={data.user.username}
+			userID={data.user.userID}
+			{blackID}
+			{whiteID}
+			{gameID}
+			{whiteUsername}
+			{blackUsername}
+		/>
+		<!-- {/if} -->
+	</div>
+	<div class="acontainer xl:w-3/4">
+		<div class="abortt">
+			{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
+				<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))} tb="t" />
+			{/if}
 		</div>
-		<div class="acontainer xl:w-3/4">
-			<div class="abortt">
-				{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
-					<AbortTimer
-						time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
-						tb="t"
-					/>
-				{/if}
-			</div>
-			<div class="board flex flex-col justify-center">
-				<Chessboard
-					{setGround}
-					username={data.user.username}
+		<div class="board flex flex-col justify-center">
+			<Chessboard
+				{setGround}
+				username={data.user.username}
+				{gameID}
+				chess={chessForView}
+				white={whiteUsername}
+				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
+				viewOnly={(result != 'ongoing' && result != '') ||
+					(moveHistory && activeIndex !== moveHistory.length - 1)}
+			/>
+		</div>
+		<div class="abortb">
+			{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
+				<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))} tb="b" />
+			{/if}
+		</div>
+		<div class="clockt h-fit">
+			<Clock
+				time={whiteUp ? wtime : btime}
+				active={result !== 'ongoing' && result !== ''
+					? false
+					: whiteUp
+						? chessLatest.turn() === 'w'
+						: chessLatest.turn() === 'b'}
+			/>
+		</div>
+
+		<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
+		<div class="draw-resign h-fit w-full">
+			{#if result == '' || result == 'ongoing'}
+				<DrawResign
+					isDisabled={!moveHistory || moveHistory.length < 2}
 					{gameID}
-					chess={chessForView}
-					white={whiteUsername}
-					lastMove={moveHistory
-						? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
-						: []}
-					viewOnly={(result != 'ongoing' && result != '') ||
-						(moveHistory && activeIndex !== moveHistory.length - 1)}
+					userID={data.user.userID}
+					setResultReason={(res: string, rea: string) => {
+						result = res;
+						reason = rea;
+					}}
 				/>
-			</div>
-			<div class="abortb">
-				{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
-					<AbortTimer
-						time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
-						tb="b"
-					/>
-				{/if}
-			</div>
-			<div class="clockt h-fit">
-				<Clock
-					time={whiteUp ? wtime : btime}
-					active={result !== 'ongoing' && result !== ''
-						? false
-						: whiteUp
-							? chessLatest.turn() === 'w'
-							: chessLatest.turn() === 'b'}
-				/>
-			</div>
+			{/if}
+		</div>
+		<div class="history w-full">
+			<HistoryTable
+				{moveHistory}
+				{setActiveIndex}
+				{activeIndex}
+				highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
+					(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
+					(result === 'ongoing' || result === '')}
+			/>
+		</div>
 
-			<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
-			<div class="draw-resign h-fit w-full">
-				{#if result == '' || result == 'ongoing'}
-					<DrawResign
-						isDisabled={moveHistory && moveHistory.length < 2}
-						{gameID}
-						userID={data.user.userID}
-						setResultReason={(res: string, rea: string) => {
-							result = res;
-							reason = rea;
-						}}
-					/>
-				{/if}
-			</div>
-			<div class="history w-full">
-				<HistoryTable
-					{moveHistory}
-					{setActiveIndex}
-					{activeIndex}
-					highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
-						(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
-						(result === 'ongoing' || result === '')}
-				/>
-			</div>
-
-			<p class="nameb h-fit">{data.user.username}</p>
-			<div class="clockb h-fit">
-				<Clock
-					time={whiteUp ? btime : wtime}
-					active={result !== 'ongoing' && result !== ''
-						? false
-						: whiteUp
-							? chessLatest.turn() === 'b'
-							: chessLatest.turn() === 'w'}
-				/>
-			</div>
+		<p class="nameb h-fit">{data.user.username}</p>
+		<div class="clockb h-fit">
+			<Clock
+				time={whiteUp ? btime : wtime}
+				active={result !== 'ongoing' && result !== ''
+					? false
+					: whiteUp
+						? chessLatest.turn() === 'b'
+						: chessLatest.turn() === 'w'}
+			/>
 		</div>
 	</div>
 </div>
