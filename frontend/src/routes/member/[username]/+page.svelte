@@ -59,7 +59,7 @@
 				(item.WhiteUsername === page.params.username && item.Result === '1-0') ||
 				(item.BlackUsername === page.params.username && item.Result === '0-1')
 					? 'bg-green-700'
-					: item.Result === 'ongoing' || item.Result === '1/2-1/2'
+					: item.Result === 'ongoing' || item.Result === '1/2-1/2' || item.Result === 'aborted'
 						? 'bg-gray-600'
 						: 'bg-red-500'}
 			<a href={`/game/${item.ID}`} class="flex w-4/5 gap-2 rounded-sm bg-gray-800 px-8 py-4">
