@@ -13,6 +13,49 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
+func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var initGamePayload InitGamePayload
+	if err := json.Unmarshal(event.Payload, &initGamePayload); err != nil {
+		return err
+	}
+	pendingUser, exists := c.GameManager.PendingUsers[initGamePayload.TimeControl]
+	if !exists {
+		log.Println("no pending game, creating...")
+		c.GameManager.PendingUsers[initGamePayload.TimeControl] = client.UserID
+	} else {
+		log.Println("match found...")
+		delete(c.GameManager.PendingUsers, initGamePayload.TimeControl)
+		if pendingUser == client.UserID {
+			return errors.New("same player tryna play both sides")
+		}
+		un1, err1 := c.Queries.GetUsernameByUserID(context.Background(), pendingUser)
+		un2, err2 := c.Queries.GetUsernameByUserID(context.Background(), client.UserID)
+		if err1 != nil || err2 != nil {
+			return errors.New("server error while fetching usernames")
+		}
+		createdGame, err := c.createGame(pendingUser, client.UserID, *un1, *un2, initGamePayload.TimeControl)
+		if err != nil {
+			return err
+		}
+		payload := map[string]any{"GameID": createdGame.ID}
+		rawPayload, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		e := socket.Event{Type: "GoToGame", Payload: json.RawMessage(rawPayload)}
+		otherClient := c.SocketManager.FindClientByUserID(pendingUser)
+		if client != nil {
+			client.Send(e)
+		}
+		if otherClient != nil {
+			otherClient.Send(e)
+		}
+	}
+	return nil
+}
+
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(string(event.Payload))
 

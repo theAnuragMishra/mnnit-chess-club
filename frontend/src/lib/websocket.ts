@@ -26,8 +26,7 @@ class WebSocketStore {
 		const data = JSON.parse(event.data);
 		const { type, payload } = data;
 
-		if (type === 'Init_Game') {
-			console.log('init game received');
+		if (type === 'GoToGame') {
 			goto(`/game/${payload.GameID}`);
 		}
 

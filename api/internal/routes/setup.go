@@ -48,7 +48,6 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	gameRouter := chi.NewRouter()
 	gameRouter.Use(authHandler.AuthMiddleware)
 	gameRouter.Get("/{gameID}", controller.WriteGameInfo)
-	gameRouter.Post("/init", controller.InitGame)
 
 	// mounting subrouters
 	router.Mount("/game", gameRouter)
