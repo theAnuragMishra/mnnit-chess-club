@@ -3,8 +3,9 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"github.com/notnil/chess"
 	"log"
+
+	"github.com/notnil/chess"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 
@@ -30,7 +31,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		log.Println("error ending game with result", err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "Aborted", "Reason": reason})
+	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "aborted", "Reason": reason})
 	if err != nil {
 		log.Println(err)
 	}
@@ -68,7 +69,6 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		ResultReason:     &reason,
 		ID:               g.ID,
 	})
-
 	if err != nil {
 		log.Println("error ending game on timeout", err)
 	}
