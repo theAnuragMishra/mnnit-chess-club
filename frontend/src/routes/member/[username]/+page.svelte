@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getBaseURL } from '$lib/utils.js';
+	import { formatResultAndReason, getBaseURL, getTimeControl } from '$lib/utils.js';
 	let { data } = $props();
 	// console.log('mounted');
 	let pageNumber = $state(1);
@@ -51,42 +51,58 @@
 	}
 </script>
 
-<div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl">
+<div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl text-gray-300">
 	<div class="mb-4 text-center text-5xl">{page.params.username}'s Games</div>
 	<div class="flex w-full flex-col items-center gap-2">
 		{#each items as item}
 			{@const color =
 				(item.WhiteUsername === page.params.username && item.Result === '1-0') ||
 				(item.BlackUsername === page.params.username && item.Result === '0-1')
-					? 'bg-green-700'
+					? 'text-green-700'
 					: item.Result === 'ongoing' || item.Result === '1/2-1/2' || item.Result === 'aborted'
-						? 'bg-gray-600'
-						: 'bg-red-500'}
-			<a href={`/game/${item.ID}`} class="flex w-4/5 gap-2 rounded-sm bg-gray-800 px-8 py-4">
-				<span class="w-1/3 text-left">{item.WhiteUsername}</span>
-				<span class={`flex w-1/3 items-center justify-center ${color}`}>
-					{#if item.Result !== 'ongoing'}
-						{item.Result}
-					{:else}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="lucide lucide-asterisk-icon lucide-asterisk"
-							><path d="M12 6v12" /><path d="M17.196 9 6.804 15" /><path
-								d="m6.804 9 10.392 6"
-							/></svg
+						? 'text-gray-300'
+						: 'text-red-500'}
+			<div class="relative flex w-4/5 flex-col gap-2 rounded-sm bg-gray-800 px-8 py-4">
+				<a
+					aria-label="game link"
+					href={`/game/${item.ID}`}
+					class="absolute top-0 left-0 z-2 h-full w-full"
+				></a>
+
+				<div>
+					{item.BaseTime / 60}+{item.Increment}
+					{getTimeControl(item.BaseTime, item.Increment)}
+				</div>
+				<div class="flex w-full items-center justify-center gap-5">
+					<div class="flex flex-col items-center justify-center">
+						<span class="text-2xl">{item.WhiteUsername}</span><span class="text-[16px]"
+							><span>{item.RatingW}</span>&nbsp;&nbsp;<span
+								class={`${item.ChangeW > 0 ? 'text-green-500' : item.ChangeW < 0 ? 'text-red-500' : ''}`}
+								>{`${item.ChangeW > 0 ? '+' : ''}`}{item.ChangeW}</span
+							></span
 						>
+					</div>
+					<div>Vs</div>
+					<div class="flex flex-col items-center justify-center">
+						<span class="text-2xl">{item.BlackUsername}</span><span class="text-[16px]"
+							><span>{item.RatingB}</span>&nbsp;&nbsp;<span
+								class={`${item.ChangeB > 0 ? 'text-green-500' : item.ChangeB < 0 ? 'text-red-500' : ''}`}
+								>{`${item.ChangeB > 0 ? '+' : ''}`}{item.ChangeB}</span
+							></span
+						>
+					</div>
+				</div>
+				<div class={`text-[14px] ${color} w-full text-center`}>
+					{#if item.Result !== 'ongoing'}
+						{formatResultAndReason(item.Result, item.ResultReason)}
+					{:else}
+						Playing right now
 					{/if}
-				</span>
-				<span class="w-1/3 text-right">{item.BlackUsername}</span></a
-			>
+				</div>
+				<div class="text-lg">
+					{Math.ceil(item.GameLength / 2)} move{`${Math.ceil(item.GameLength / 2) > 1 ? 's' : ''}`}
+				</div>
+			</div>
 		{/each}
 		{#if hasMore}
 			<div

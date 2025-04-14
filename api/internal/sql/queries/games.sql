@@ -32,7 +32,7 @@ SET result = $1, end_time_left_white = $2, end_time_left_black = $3, result_reas
 WHERE id = $7;
 
 -- name: GetPlayerGames :many
-SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at
+SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at, rating_w, rating_b, change_w, change_b
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
 ORDER BY created_at DESC

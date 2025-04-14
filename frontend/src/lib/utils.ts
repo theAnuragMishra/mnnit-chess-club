@@ -78,3 +78,14 @@ export function formatResultAndReason(result: string, reason: string) {
 	}
 	return `${reason} | ${result === '1-0' ? 'White' : 'Black'} is victorious`;
 }
+
+export function getTimeControl(baseTime: number, increment: number) {
+	const totalTime = baseTime / 60 + (increment * 2) / 3;
+	return totalTime < 3
+		? 'Bullet'
+		: totalTime < 15
+			? 'Blitz'
+			: totalTime < 60
+				? 'Rapid'
+				: 'Classical';
+}

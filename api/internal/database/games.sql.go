@@ -218,7 +218,7 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 }
 
 const getPlayerGames = `-- name: GetPlayerGames :many
-SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at
+SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at, rating_w, rating_b, change_w, change_b
 FROM games
 WHERE (white_username = $1 OR black_username = $1)
 ORDER BY created_at DESC
@@ -241,6 +241,10 @@ type GetPlayerGamesRow struct {
 	GameLength    int16
 	ResultReason  *string
 	CreatedAt     time.Time
+	RatingW       int32
+	RatingB       int32
+	ChangeW       *int32
+	ChangeB       *int32
 }
 
 func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) ([]GetPlayerGamesRow, error) {
@@ -262,6 +266,10 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 			&i.GameLength,
 			&i.ResultReason,
 			&i.CreatedAt,
+			&i.RatingW,
+			&i.RatingB,
+			&i.ChangeW,
+			&i.ChangeB,
 		); err != nil {
 			return nil, err
 		}

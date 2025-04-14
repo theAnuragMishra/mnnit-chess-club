@@ -1,12 +1,10 @@
 <script>
-	import { formatPostgresTimestamp, formatResultAndReason } from '$lib/utils';
+	import { formatPostgresTimestamp, formatResultAndReason, getTimeControl } from '$lib/utils';
 
 	const { whiteUsername, blackUsername, result, baseTime, increment, createdAt, reason } = $props();
 	// console.log(createdAt);
 	const createdAtString = formatPostgresTimestamp(createdAt);
-	const totalTime = baseTime / 60 + (increment * 2) / 3;
-	const format =
-		totalTime < 3 ? 'Bullet' : totalTime < 15 ? 'Blitz' : totalTime < 60 ? 'Rapid' : 'Classical';
+	const format = getTimeControl(baseTime, increment);
 </script>
 
 <div
