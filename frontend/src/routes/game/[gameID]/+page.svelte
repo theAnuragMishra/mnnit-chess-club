@@ -43,7 +43,9 @@
 	let chessForView = $derived(
 		moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
-
+	const isPlayer =
+		data.user.username === data.gameData.game.WhiteUsername ||
+		data.user.username === data.gameData.game.BlackUsername;
 	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
 	const setActiveIndex = (index: number) => {
 		if (index > moveHistory.length - 1 || index < 0) return;
@@ -190,7 +192,8 @@
 				chess={chessForView}
 				white={whiteUsername}
 				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
-				viewOnly={(result != 'ongoing' && result != '') ||
+				viewOnly={!isPlayer ||
+					(result != 'ongoing' && result != '') ||
 					(moveHistory && activeIndex !== moveHistory.length - 1)}
 			/>
 		</div>
@@ -223,7 +226,7 @@
 			>
 		</div>
 		<div class="draw-resign h-fit w-full">
-			{#if result == '' || result == 'ongoing'}
+			{#if isPlayer && (result == '' || result == 'ongoing')}
 				<DrawResign
 					isDisabled={!moveHistory || moveHistory.length < 2}
 					{gameID}
