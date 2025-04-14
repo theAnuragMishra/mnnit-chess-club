@@ -1,6 +1,6 @@
 -- name: CreateGame :one
-INSERT INTO games (base_time, increment, white_id, black_id, white_username, black_username, fen)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO games (base_time, increment, white_id, black_id, white_username, black_username, fen, rating_w, rating_b)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;
 
 -- name: InsertMove :one
@@ -28,8 +28,8 @@ WHERE id = $3;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, end_time_left_white = $2, end_time_left_black = $3, result_reason = $4
-WHERE id = $5;
+SET result = $1, end_time_left_white = $2, end_time_left_black = $3, result_reason = $4, change_w = $5, change_b = $6
+WHERE id = $7;
 
 -- name: GetPlayerGames :many
 SELECT id, base_time, increment, white_username, black_username, result, game_length, result_reason, created_at

@@ -30,12 +30,12 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if pendingUser == client.UserID {
 			return errors.New("same player tryna play both sides")
 		}
-		un1, err1 := c.Queries.GetUsernameByUserID(context.Background(), pendingUser)
-		un2, err2 := c.Queries.GetUsernameByUserID(context.Background(), client.UserID)
+		u1, err1 := c.Queries.GetUsernameAndRating(context.Background(), pendingUser)
+		u2, err2 := c.Queries.GetUsernameAndRating(context.Background(), client.UserID)
 		if err1 != nil || err2 != nil {
 			return errors.New("server error while fetching usernames")
 		}
-		createdGame, err := c.createGame(pendingUser, client.UserID, *un1, *un2, initGamePayload.TimeControl)
+		createdGame, err := c.createGame(pendingUser, client.UserID, *u1.Username, *u2.Username, initGamePayload.TimeControl, u1.Rating, u2.Rating)
 		if err != nil {
 			return err
 		}
@@ -145,8 +145,21 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	// log.Println(foundGame.Board.Position().Turn())
+	var cw, cb int
+	if result != "" {
+		// log.Println("game ho gya over")
 
-	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds()})
+		etlb := int32(foundGame.TimeBlack.Milliseconds())
+		etlw := int32(foundGame.TimeWhite.Milliseconds())
+
+		cw, cb, err = c.endGame(foundGame.ID, &etlw, &etlb, result, &message, foundGame.WhiteID, foundGame.BlackID)
+		if err != nil {
+			log.Println("error ending game with result", err)
+		}
+		foundGame.ClockTimer.Stop()
+		delete(c.GameManager.Games, gameID)
+	}
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds(), "changeW": cw, "changeB": cb})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -156,26 +169,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.Broadcast(e)
-
-	if result != "" {
-		// log.Println("game ho gya over")
-
-		etlb := int32(foundGame.TimeBlack.Milliseconds())
-		etlw := int32(foundGame.TimeWhite.Milliseconds())
-
-		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-			Result:           result,
-			ID:               foundGame.ID,
-			EndTimeLeftBlack: &etlb,
-			EndTimeLeftWhite: &etlw,
-			ResultReason:     &message,
-		})
-		if err != nil {
-			log.Println("error ending game with result", err)
-		}
-		foundGame.ClockTimer.Stop()
-		delete(c.GameManager.Games, gameID)
-	}
 
 	return nil
 }
@@ -290,18 +283,12 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
 
-		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-			Result:           "1/2-1/2",
-			EndTimeLeftWhite: &etlw,
-			EndTimeLeftBlack: &etlb,
-			ResultReason:     &reason,
-			ID:               foundGame.ID,
-		})
+		cw, cb, err := c.endGame(foundGame.ID, &etlw, &etlb, "1/2-1/2", &reason, foundGame.WhiteID, foundGame.BlackID)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
 
-		payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": "1/2-1/2", "Reason": reason})
+		payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": "1/2-1/2", "Reason": reason, "changeW": cw, "changeB": cb})
 		if err != nil {
 			return err
 		}
@@ -369,18 +356,12 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	etlb := int32(foundGame.TimeBlack.Milliseconds())
 	etlw := int32(foundGame.TimeWhite.Milliseconds())
 
-	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-		Result:           result,
-		EndTimeLeftWhite: &etlw,
-		EndTimeLeftBlack: &etlb,
-		ResultReason:     &reason,
-		ID:               foundGame.ID,
-	})
+	cw, cb, err := c.endGame(foundGame.ID, &etlw, &etlb, result, &reason, foundGame.WhiteID, foundGame.BlackID)
 	if err != nil {
 		log.Println("error ending game with result", err)
 	}
 
-	payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": result, "Reason": reason})
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": result, "Reason": reason, "changeW": cw, "changeB": cb})
 	if err != nil {
 		return err
 	}

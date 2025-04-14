@@ -20,3 +20,12 @@ UPDATE users SET avatar_url = $1, updated_at = $2 WHERE id = $3;
 
 -- name: UpdateUsername :exec
 UPDATE users SET username = $1 WHERE id = $2;
+
+-- name: GetRatingInfo :one
+SELECT rating, rd, volatility FROM users WHERE id = $1;
+
+-- name: GetUsernameAndRating :one
+SELECT username, rating FROM users WHERE id = $1;
+
+-- name: UpdateRating :exec
+UPDATE users SET rating = $1, rd = $2, volatility = $3 WHERE id = $4;

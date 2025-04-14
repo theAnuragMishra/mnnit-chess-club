@@ -13,7 +13,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users(updated_at, email, avatar_url, google_id)
 VALUES ($1, $2, $3, $4)
-RETURNING id, email, created_at, updated_at, username, avatar_url, google_id
+RETURNING id, email, created_at, updated_at, username, avatar_url, google_id, rating, rd, volatility
 `
 
 type CreateUserParams struct {
@@ -39,12 +39,32 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.AvatarUrl,
 		&i.GoogleID,
+		&i.Rating,
+		&i.Rd,
+		&i.Volatility,
 	)
 	return i, err
 }
 
+const getRatingInfo = `-- name: GetRatingInfo :one
+SELECT rating, rd, volatility FROM users WHERE id = $1
+`
+
+type GetRatingInfoRow struct {
+	Rating     float64
+	Rd         float64
+	Volatility float64
+}
+
+func (q *Queries) GetRatingInfo(ctx context.Context, id int32) (GetRatingInfoRow, error) {
+	row := q.db.QueryRow(ctx, getRatingInfo, id)
+	var i GetRatingInfoRow
+	err := row.Scan(&i.Rating, &i.Rd, &i.Volatility)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, created_at, updated_at, username, avatar_url, google_id FROM users WHERE email = $1
+SELECT id, email, created_at, updated_at, username, avatar_url, google_id, rating, rd, volatility FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -58,12 +78,15 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Username,
 		&i.AvatarUrl,
 		&i.GoogleID,
+		&i.Rating,
+		&i.Rd,
+		&i.Volatility,
 	)
 	return i, err
 }
 
 const getUserByUserID = `-- name: GetUserByUserID :one
-SELECT id, email, created_at, updated_at, username, avatar_url, google_id FROM users WHERE id = $1
+SELECT id, email, created_at, updated_at, username, avatar_url, google_id, rating, rd, volatility FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByUserID(ctx context.Context, id int32) (User, error) {
@@ -77,12 +100,15 @@ func (q *Queries) GetUserByUserID(ctx context.Context, id int32) (User, error) {
 		&i.Username,
 		&i.AvatarUrl,
 		&i.GoogleID,
+		&i.Rating,
+		&i.Rd,
+		&i.Volatility,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, email, created_at, updated_at, username, avatar_url, google_id FROM users WHERE username = $1
+SELECT id, email, created_at, updated_at, username, avatar_url, google_id, rating, rd, volatility FROM users WHERE username = $1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (User, error) {
@@ -96,7 +122,26 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (User
 		&i.Username,
 		&i.AvatarUrl,
 		&i.GoogleID,
+		&i.Rating,
+		&i.Rd,
+		&i.Volatility,
 	)
+	return i, err
+}
+
+const getUsernameAndRating = `-- name: GetUsernameAndRating :one
+SELECT username, rating FROM users WHERE id = $1
+`
+
+type GetUsernameAndRatingRow struct {
+	Username *string
+	Rating   float64
+}
+
+func (q *Queries) GetUsernameAndRating(ctx context.Context, id int32) (GetUsernameAndRatingRow, error) {
+	row := q.db.QueryRow(ctx, getUsernameAndRating, id)
+	var i GetUsernameAndRatingRow
+	err := row.Scan(&i.Username, &i.Rating)
 	return i, err
 }
 
@@ -109,6 +154,27 @@ func (q *Queries) GetUsernameByUserID(ctx context.Context, id int32) (*string, e
 	var username *string
 	err := row.Scan(&username)
 	return username, err
+}
+
+const updateRating = `-- name: UpdateRating :exec
+UPDATE users SET rating = $1, rd = $2, volatility = $3 WHERE id = $4
+`
+
+type UpdateRatingParams struct {
+	Rating     float64
+	Rd         float64
+	Volatility float64
+	ID         int32
+}
+
+func (q *Queries) UpdateRating(ctx context.Context, arg UpdateRatingParams) error {
+	_, err := q.db.Exec(ctx, updateRating,
+		arg.Rating,
+		arg.Rd,
+		arg.Volatility,
+		arg.ID,
+	)
+	return err
 }
 
 const updateUserAvatar = `-- name: UpdateUserAvatar :exec

@@ -30,6 +30,10 @@ type Game struct {
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
 	ResultReason     *string
+	RatingW          int32
+	RatingB          int32
+	ChangeW          *int32
+	ChangeB          *int32
 }
 
 type Move struct {
@@ -52,11 +56,14 @@ type Session struct {
 }
 
 type User struct {
-	ID        int32
-	Email     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Username  *string
-	AvatarUrl *string
-	GoogleID  string
+	ID         int32
+	Email      string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	Username   *string
+	AvatarUrl  *string
+	GoogleID   string
+	Rating     float64
+	Rd         float64
+	Volatility float64
 }

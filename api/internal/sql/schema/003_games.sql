@@ -13,7 +13,11 @@ CREATE TABLE games (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     end_time_left_white INT,
     end_time_left_black INT,
-    result_reason VARCHAR(100)
+    result_reason VARCHAR(100),
+    rating_w INT NOT NULL,
+    rating_b INT NOT NULL,
+    change_w INT,
+    change_b INT
 );
 
 CREATE TABLE moves (

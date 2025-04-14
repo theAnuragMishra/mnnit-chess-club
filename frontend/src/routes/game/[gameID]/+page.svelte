@@ -24,6 +24,10 @@
 	let blackID = data.gameData.game.BlackID;
 	let timeBlack = $state(data.gameData.timeBlack);
 	let timeWhite = $state(data.gameData.timeWhite);
+	let ratingWhite = data.gameData.game.RatingW;
+	let ratingBlack = data.gameData.game.RatingB;
+	let changeWhite = $state(data.gameData.game.ChangeW ?? 0);
+	let changeBlack = $state(data.gameData.game.ChangeB ?? 0);
 	let result = $state(data.gameData.game.Result);
 	let reason = $state(
 		data.gameData.game.Result != 'ongoing' && data.gameData.game.Result != ''
@@ -55,12 +59,16 @@
 		if (payload.gameID != gameID) return;
 		result = payload.Result;
 		reason = payload.Reason;
+		changeBlack = payload.changeB;
+		changeWhite = payload.changeW;
 	};
 
 	const handleResignation = (payload: any) => {
 		if (payload.gameID != gameID) return;
 		result = payload.Result;
 		reason = payload.Reason;
+		changeBlack = payload.changeB;
+		changeWhite = payload.changeW;
 	};
 
 	const handleMoveResponse = (payload: any) => {
@@ -74,6 +82,8 @@
 		if (payload.Result !== '') {
 			result = payload.Result;
 			reason = payload.message;
+			changeBlack = payload.changeB;
+			changeWhite = payload.changeW;
 		}
 		ground?.set({
 			fen: payload.move.MoveFen,
@@ -200,16 +210,29 @@
 			/>
 		</div>
 
-		<p class="namet h-fit">{whiteUp ? whiteUsername : blackUsername}</p>
+		<div class="namet flex h-fit justify-between md:w-[300px]">
+			<span>{whiteUp ? whiteUsername : blackUsername}&nbsp;&nbsp;</span><span
+				>{whiteUp ? ratingWhite : ratingBlack}&nbsp;&nbsp;<span
+					class={`${whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
+					>{result != '' && result != 'ongoing'
+						? whiteUp
+							? `${changeWhite > 0 ? '+' : ''}${changeWhite}`
+							: `${changeBlack > 0 ? '+' : ''}${changeBlack}`
+						: ''}</span
+				></span
+			>
+		</div>
 		<div class="draw-resign h-fit w-full">
 			{#if result == '' || result == 'ongoing'}
 				<DrawResign
 					isDisabled={!moveHistory || moveHistory.length < 2}
 					{gameID}
 					userID={data.user.userID}
-					setResultReason={(res: string, rea: string) => {
+					setResultReason={(res: string, rea: string, cw: number, cb: number) => {
 						result = res;
 						reason = rea;
+						changeBlack = cb;
+						changeWhite = cw;
 					}}
 				/>
 			{/if}
@@ -225,7 +248,19 @@
 			/>
 		</div>
 
-		<p class="nameb h-fit">{data.user.username}</p>
+		<div class="nameb flex h-fit justify-between md:w-[300px]">
+			<span>{data.user.username}&nbsp;&nbsp;</span>
+			<span
+				>{whiteUp ? ratingBlack : ratingWhite}&nbsp;&nbsp;<span
+					class={`${!whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
+					>{result != '' && result != 'ongoing'
+						? whiteUp
+							? `${changeBlack > 0 ? '+' : ''}${changeBlack}`
+							: `${changeWhite > 0 ? '+' : ''}${changeWhite}`
+						: ''}</span
+				></span
+			>
+		</div>
 		<div class="clockb h-fit">
 			<Clock
 				time={whiteUp ? btime : wtime}
