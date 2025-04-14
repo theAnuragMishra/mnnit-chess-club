@@ -18,6 +18,7 @@ type Client struct {
 	// manager is the manager used to manage the client
 	manager *Manager
 	egress  chan Event
+	Room    int32
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
@@ -90,6 +91,18 @@ func (c *Client) writeMessages() {
 // Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
 	c.egress <- event
+}
+
+func (m *Manager) BroadcastToRoom(event Event, room int32) {
+	m.RLock()
+	defer m.RUnlock()
+	for client := range m.Rooms[room] {
+		select {
+		case client.egress <- event:
+		default:
+			log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
+		}
+	}
 }
 
 // Broadcast sends the event to every client

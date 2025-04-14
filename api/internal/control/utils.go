@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 
 	"github.com/notnil/chess"
 
@@ -73,7 +74,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		Type:    "game_abort",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, g.ID)
 	delete(c.GameManager.Games, g.ID)
 }
 
@@ -108,13 +109,12 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		Type:    "timeup",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.Broadcast(e)
+	c.SocketManager.BroadcastToRoom(e, g.ID)
 
 	delete(c.GameManager.Games, g.ID)
 }
 
 func (c *Controller) endGame(gameID int32, etlw, etlb *int32, result string, reason *string, id1, id2 int32) (int, int, error) {
-
 	if result == "aborted" {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,

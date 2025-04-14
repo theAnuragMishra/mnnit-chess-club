@@ -15,6 +15,10 @@ type UserNamePayload struct {
 	Username string `json:"username"`
 }
 
+type RoomPayload struct {
+	RoomID int32 `json:"room"`
+}
+
 type GameResponse struct {
 	Game      any   `json:"game"`
 	Moves     any   `json:"moves"`
