@@ -3,23 +3,33 @@ import { goto } from '$app/navigation';
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
-	private reconnectDelay: number = 2000;
+	//private reconnectDelay: number = 2000;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
 		this.url = url;
 	}
 
-	connect(): void {
-		this.ws = new WebSocket(this.url);
+	connect(): Promise<void> {
+		if (this.ws?.readyState === WebSocket.OPEN) return Promise.resolve();
 
-		this.ws.onopen = () => console.log('✅ WebSocket Connected');
-		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
-		this.ws.onclose = () => {
-			console.warn('⚠️ WebSocket Disconnected');
-			// setTimeout(() => this.connect(), this.reconnectDelay);
-		};
-		this.ws.onerror = (error: Event) => console.error('WebSocket Error:', error);
+		return new Promise((resolve, reject) => {
+			this.ws = new WebSocket(this.url);
+
+			this.ws.onopen = () => {
+				console.log('✅ WebSocket Connected');
+				resolve();
+			};
+			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
+			this.ws.onclose = () => {
+				console.warn('⚠️ WebSocket Disconnected');
+				// setTimeout(() => this.connect(), this.reconnectDelay);
+			};
+			this.ws.onerror = (error: Event) => {
+				console.error('WebSocket Error:', error);
+				reject(error);
+			};
+		});
 	}
 
 	private handleMessage(event: MessageEvent): void {
