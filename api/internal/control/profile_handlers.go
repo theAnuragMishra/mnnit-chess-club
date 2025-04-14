@@ -88,5 +88,12 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "user not found")
 		return
 	}
-	utils.RespondWithJSON(w, http.StatusOK, profile)
+
+	counts, err := c.Queries.GetGameNumbers(r.Context(), &username)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"CreatedAt": profile.CreatedAt, "AvatarUrl": profile.AvatarUrl, "Rating": profile.Rating, "Rd": profile.Rd, "GameCount": counts.GameCount, "DrawCount": counts.DrawCount, "WinCount": counts.WinCount, "LossCount": counts.LossCount})
 }

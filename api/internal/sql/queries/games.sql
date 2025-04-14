@@ -38,6 +38,14 @@ WHERE (white_username = $1 OR black_username = $1)
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
+-- name: GetGameNumbers :one
+SELECT
+COUNT(*) FILTER(WHERE white_username = $1 OR black_username = $1) AS game_count,
+COUNT(*) FILTER(WHERE (white_username = $1 AND result = '1-0') OR (black_username = $1 AND result = '0-1')) AS win_count,
+COUNT(*) FILTER(WHERE (white_username = $1 OR black_username = $1) AND result = '1/2-1/2') AS draw_count,
+COUNT(*) FILTER(WHERE (white_username = $1 AND result = '0-1') OR (black_username = $1 AND result = '1-0')) AS loss_count
+FROM games;
+
 -- name: GetLatestMove :one
 SELECT move_number, move_notation, orig, dest, move_fen
 FROM moves

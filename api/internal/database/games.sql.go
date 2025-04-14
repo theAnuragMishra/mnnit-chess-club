@@ -145,6 +145,34 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID int32) ([]GetGameMove
 	return items, nil
 }
 
+const getGameNumbers = `-- name: GetGameNumbers :one
+SELECT
+COUNT(*) FILTER(WHERE white_username = $1 OR black_username = $1) AS game_count,
+COUNT(*) FILTER(WHERE (white_username = $1 AND result = '1-0') OR (black_username = $1 AND result = '0-1')) AS win_count,
+COUNT(*) FILTER(WHERE (white_username = $1 OR black_username = $1) AND result = '1/2-1/2') AS draw_count,
+COUNT(*) FILTER(WHERE (white_username = $1 AND result = '0-1') OR (black_username = $1 AND result = '1-0')) AS loss_count
+FROM games
+`
+
+type GetGameNumbersRow struct {
+	GameCount int64
+	WinCount  int64
+	DrawCount int64
+	LossCount int64
+}
+
+func (q *Queries) GetGameNumbers(ctx context.Context, whiteUsername *string) (GetGameNumbersRow, error) {
+	row := q.db.QueryRow(ctx, getGameNumbers, whiteUsername)
+	var i GetGameNumbersRow
+	err := row.Scan(
+		&i.GameCount,
+		&i.WinCount,
+		&i.DrawCount,
+		&i.LossCount,
+	)
+	return i, err
+}
+
 const getLatestMove = `-- name: GetLatestMove :one
 SELECT move_number, move_notation, orig, dest, move_fen
 FROM moves

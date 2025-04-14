@@ -71,6 +71,12 @@
 			>
 				Rating Deviation: <span>{Math.ceil(data.profile.Rd)}</span>
 			</p>
+			<p>
+				{data.profile.GameCount} Game{`${data.profile.GameCount > 1 ? 's' : ''}`}, {data.profile
+					.WinCount} win{`${data.profile.WinCount > 1 ? 's' : ''}`},
+				{data.profile.LossCount} loss{`${data.profile.LossCount > 1 ? 'es' : ''}`},
+				{data.profile.DrawCount} draw{`${data.profile.DrawCount > 1 ? 's' : ''}`}
+			</p>
 		</div>
 	</div>
 	<div class="flex w-full flex-col items-center gap-2">
