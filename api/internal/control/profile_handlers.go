@@ -47,7 +47,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, "Username updated")
 }
 
-func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
 	// log.Println("request received")
 	username := chi.URLParam(r, "username")
 	page := r.URL.Query().Get("page")
@@ -62,16 +62,31 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 		offSet = 0
 	}
 
-	profileInfo, err := c.Queries.GetPlayerGames(r.Context(), database.GetPlayerGamesParams{
+	games, err := c.Queries.GetPlayerGames(r.Context(), database.GetPlayerGamesParams{
 		WhiteUsername: &username,
 		Limit:         15,
 		Offset:        offSet,
 	})
-	// log.Println(profileInfo, err)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, profileInfo)
+	utils.RespondWithJSON(w, http.StatusOK, games)
+}
+
+func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+
+	if username == "" {
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid username")
+		return
+	}
+	profile, err := c.Queries.GetUserPublicInfo(r.Context(), &username)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "user not found")
+		return
+	}
+	utils.RespondWithJSON(w, http.StatusOK, profile)
 }

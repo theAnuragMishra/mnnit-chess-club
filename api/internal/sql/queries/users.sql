@@ -21,6 +21,9 @@ UPDATE users SET avatar_url = $1, updated_at = $2 WHERE id = $3;
 -- name: UpdateUsername :exec
 UPDATE users SET username = $1 WHERE id = $2;
 
+-- name: GetUserPublicInfo :one
+SELECT created_at, avatar_url, rating, rd FROM users WHERE username = $1;
+
 -- name: GetRatingInfo :one
 SELECT rating, rd, volatility FROM users WHERE id = $1;
 

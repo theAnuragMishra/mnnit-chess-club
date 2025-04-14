@@ -129,6 +129,29 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (User
 	return i, err
 }
 
+const getUserPublicInfo = `-- name: GetUserPublicInfo :one
+SELECT created_at, avatar_url, rating, rd FROM users WHERE username = $1
+`
+
+type GetUserPublicInfoRow struct {
+	CreatedAt time.Time
+	AvatarUrl *string
+	Rating    float64
+	Rd        float64
+}
+
+func (q *Queries) GetUserPublicInfo(ctx context.Context, username *string) (GetUserPublicInfoRow, error) {
+	row := q.db.QueryRow(ctx, getUserPublicInfo, username)
+	var i GetUserPublicInfoRow
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.AvatarUrl,
+		&i.Rating,
+		&i.Rd,
+	)
+	return i, err
+}
+
 const getUsernameAndRating = `-- name: GetUsernameAndRating :one
 SELECT username, rating FROM users WHERE id = $1
 `

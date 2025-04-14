@@ -4,9 +4,11 @@
 	let { data } = $props();
 	// console.log('mounted');
 	let pageNumber = $state(1);
-	let hasMore = $state(data.member ? data.member.length == 15 : false);
+	let hasMore = $state(data.games ? data.games.length == 15 : false);
 	let loading = $state(false);
-	const items: any = $state(data.member ? data.member : []);
+	const items: any = $state(data.games ? data.games : []);
+
+	const memberSince = new Date(data.profile.CreatedAt);
 
 	function intersect(node: any, callback: any) {
 		const observer = new IntersectionObserver(
@@ -35,7 +37,7 @@
 		loading = true;
 		try {
 			const response = await fetch(
-				`${getBaseURL()}/profile/${page.params.username}?page=${pageNumber}`,
+				`${getBaseURL()}/games/${page.params.username}?page=${pageNumber}`,
 				{
 					credentials: 'include'
 				}
@@ -52,13 +54,31 @@
 </script>
 
 <div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl text-gray-300">
-	<div class="mb-4 text-center text-5xl">{page.params.username}'s Games</div>
+	<div class="mb-4">
+		<div class="text-3xl">{page.params.username}</div>
+		<div class="text-[1rem]">
+			<p>
+				Member since: {memberSince.toLocaleDateString('en-GB', {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric'
+				})}
+			</p>
+			<p>Rating: {Math.floor(data.profile.Rating)}{`${data.profile.Rd > 110 ? '?' : ''}`}</p>
+			<p
+				class="w-fit cursor-help"
+				title="Rating deviation shows how stable your rating is, lower is more stable. Your rating is provisional if it is above 110."
+			>
+				Rating Deviation: <span>{Math.ceil(data.profile.Rd)}</span>
+			</p>
+		</div>
+	</div>
 	<div class="flex w-full flex-col items-center gap-2">
 		{#each items as item}
 			{@const color =
 				(item.WhiteUsername === page.params.username && item.Result === '1-0') ||
 				(item.BlackUsername === page.params.username && item.Result === '0-1')
-					? 'text-green-700'
+					? 'text-green-500'
 					: item.Result === 'ongoing' || item.Result === '1/2-1/2' || item.Result === 'aborted'
 						? 'text-gray-300'
 						: 'text-red-500'}
