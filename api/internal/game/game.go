@@ -10,7 +10,7 @@ import (
 )
 
 type Game struct {
-	ID            int32
+	ID            string
 	Result        string
 	BaseTime      time.Duration
 	Increment     time.Duration

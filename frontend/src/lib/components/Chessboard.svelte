@@ -43,7 +43,7 @@
 									MoveStr: move.san,
 									orig: orig,
 									dest: dest,
-									GameID: Number(gameID)
+									GameID: gameID
 								}
 							});
 						} else {
@@ -54,7 +54,7 @@
 									MoveStr: move.san,
 									orig: orig,
 									dest: dest,
-									GameID: Number(gameID)
+									GameID: gameID
 								}
 							});
 						}

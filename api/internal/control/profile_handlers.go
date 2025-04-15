@@ -63,9 +63,9 @@ func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
 	}
 
 	games, err := c.Queries.GetPlayerGames(r.Context(), database.GetPlayerGamesParams{
-		WhiteUsername: &username,
-		Limit:         15,
-		Offset:        offSet,
+		Username: &username,
+		Limit:    15,
+		Offset:   offSet,
 	})
 	if err != nil {
 		log.Println(err)

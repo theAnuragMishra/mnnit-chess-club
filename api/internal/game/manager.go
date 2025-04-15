@@ -4,14 +4,14 @@ import "sync"
 
 type Manager struct {
 	sync.Mutex
-	Games        map[int32]*Game
+	Games        map[string]*Game
 	PendingUsers map[string]int32
 	// Users         []string
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		Games:        make(map[int32]*Game),
+		Games:        make(map[string]*Game),
 		PendingUsers: make(map[string]int32),
 	}
 }

@@ -16,13 +16,11 @@ type CsrfToken struct {
 }
 
 type Game struct {
-	ID               int32
+	ID               string
 	BaseTime         int32
 	Increment        int32
 	WhiteID          *int32
 	BlackID          *int32
-	WhiteUsername    *string
-	BlackUsername    *string
 	Fen              string
 	GameLength       int16
 	Result           string
@@ -38,7 +36,7 @@ type Game struct {
 
 type Move struct {
 	ID           int32
-	GameID       int32
+	GameID       string
 	MoveNumber   int32
 	PlayerID     *int32
 	MoveNotation string

@@ -4,7 +4,7 @@ type movePayload struct {
 	MoveStr string `json:"MoveStr"`
 	Orig    string `json:"orig"`
 	Dest    string `json:"dest"`
-	GameID  int32  `json:"GameId"`
+	GameID  string `json:"GameId"`
 }
 
 type InitGamePayload struct {
@@ -16,7 +16,7 @@ type UserNamePayload struct {
 }
 
 type RoomPayload struct {
-	RoomID int32 `json:"room"`
+	RoomID string `json:"room"`
 }
 
 type GameResponse struct {
@@ -32,10 +32,10 @@ type ChatPayload struct {
 	SenderUsername   string `json:"senderUsername"`
 	ReceiverUsername string `json:"receiverUsername"`
 	Text             string `json:"text"`
-	GameID           int32  `json:"gameID"`
+	GameID           string `json:"gameID"`
 }
 
 type DRPayload struct {
-	PlayerID int32 `json:"playerID"`
-	GameID   int32 `json:"gameID"`
+	PlayerID int32  `json:"playerID"`
+	GameID   string `json:"gameID"`
 }

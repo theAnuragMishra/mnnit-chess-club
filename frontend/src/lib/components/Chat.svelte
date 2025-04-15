@@ -5,7 +5,7 @@
 		sender: string;
 		receiver: string;
 		text: string;
-		gameID: number;
+		gameID: string;
 	}
 	let messages: MessageInterface[] = $state([]);
 	const { username, userID, gameID, whiteID, blackID, whiteUsername, blackUsername } = $props();

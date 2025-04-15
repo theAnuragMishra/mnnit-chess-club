@@ -18,7 +18,7 @@ type Client struct {
 	// manager is the manager used to manage the client
 	manager  *Manager
 	egress   chan Event
-	Room     int32
+	Room     string
 	Username string
 }
 
@@ -95,7 +95,7 @@ func (c *Client) Send(event Event) {
 	c.egress <- event
 }
 
-func (m *Manager) BroadcastToRoom(event Event, room int32) {
+func (m *Manager) BroadcastToRoom(event Event, room string) {
 	m.RLock()
 	defer m.RUnlock()
 	for client := range m.Rooms[room] {

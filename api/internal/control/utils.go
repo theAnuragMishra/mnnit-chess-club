@@ -19,7 +19,7 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) createGame(p1, p2 int32, p1un, p2un string, timeControl string, r1 float64, r2 float64) (*game.Game, error) {
+func (c *Controller) createGame(p1, p2 int32, timeControl string, r1 float64, r2 float64) (*game.Game, error) {
 	parts := strings.Split(timeControl, "+")
 	if len(parts) != 2 {
 		return nil, errors.New("invalid time control format")
@@ -31,17 +31,35 @@ func (c *Controller) createGame(p1, p2 int32, p1un, p2un string, timeControl str
 		return nil, errors.New("invalid time control format")
 	}
 
+	var id string
+	var err error
+
+	for {
+		id, err = game.GenerateGameID(12)
+		if err != nil {
+			log.Println("error generating game id:", err)
+			return nil, err
+		}
+		_, err := c.Queries.GetGameByID(context.Background(), id)
+
+		if err == nil {
+			log.Println("game found with id", err)
+			continue
+		}
+		break
+	}
+
 	createdGame := game.NewGame(time.Duration(baseTime)*time.Minute, time.Duration(increment)*time.Second, p1, p2)
-	id, err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-		BaseTime:      int32(baseTime * 60),
-		Increment:     int32(increment),
-		WhiteID:       &p1,
-		BlackID:       &p2,
-		WhiteUsername: &p1un,
-		BlackUsername: &p2un,
-		Fen:           createdGame.Board.FEN(),
-		RatingW:       int32(r1),
-		RatingB:       int32(r2),
+
+	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+		ID:        id,
+		BaseTime:  int32(baseTime * 60),
+		Increment: int32(increment),
+		WhiteID:   &p1,
+		BlackID:   &p2,
+		Fen:       createdGame.Board.FEN(),
+		RatingW:   int32(r1),
+		RatingB:   int32(r2),
 	})
 	if err != nil {
 		return nil, err
@@ -114,7 +132,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 	delete(c.GameManager.Games, g.ID)
 }
 
-func (c *Controller) endGame(gameID int32, etlw, etlb *int32, result string, reason *string, id1, id2 int32) (int, int, error) {
+func (c *Controller) endGame(gameID string, etlw, etlb *int32, result string, reason *string, id1, id2 int32) (int, int, error) {
 	if result == "aborted" {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,

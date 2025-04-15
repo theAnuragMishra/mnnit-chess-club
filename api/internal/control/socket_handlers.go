@@ -46,7 +46,7 @@ func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	delete(c.SocketManager.Rooms[client.Room], client)
-	client.Room = 0
+	client.Room = ""
 	// for _, x := range c.SocketManager.Rooms {
 	// 	for y := range x {
 	// 		fmt.Println(y)
@@ -72,12 +72,12 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if pendingUser == client.UserID {
 			return errors.New("same player tryna play both sides")
 		}
-		u1, err1 := c.Queries.GetUsernameAndRating(context.Background(), pendingUser)
-		u2, err2 := c.Queries.GetUsernameAndRating(context.Background(), client.UserID)
+		rating1, err1 := c.Queries.GetUserRating(context.Background(), pendingUser)
+		rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
 		if err1 != nil || err2 != nil {
 			return errors.New("server error while fetching usernames")
 		}
-		createdGame, err := c.createGame(pendingUser, client.UserID, *u1.Username, *u2.Username, initGamePayload.TimeControl, u1.Rating, u2.Rating)
+		createdGame, err := c.createGame(pendingUser, client.UserID, initGamePayload.TimeControl, rating1, rating2)
 		if err != nil {
 			return err
 		}

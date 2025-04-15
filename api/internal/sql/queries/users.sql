@@ -27,8 +27,8 @@ SELECT created_at, avatar_url, rating, rd FROM users WHERE username = $1;
 -- name: GetRatingInfo :one
 SELECT rating, rd, volatility FROM users WHERE id = $1;
 
--- name: GetUsernameAndRating :one
-SELECT username, rating FROM users WHERE id = $1;
+-- name: GetUserRating :one
+SELECT rating FROM users WHERE id = $1;
 
 -- name: UpdateRating :exec
 UPDATE users SET rating = $1, rd = $2, volatility = $3 WHERE id = $4;

@@ -3,7 +3,6 @@ package control
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,12 +13,7 @@ import (
 )
 
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
-	gameIDStr, err := strconv.ParseInt(chi.URLParam(r, "gameID"), 10, 32)
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
-	}
-	gameID := int32(gameIDStr)
+	gameID := chi.URLParam(r, "gameID")
 
 	// fmt.Println(gameID)
 	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)

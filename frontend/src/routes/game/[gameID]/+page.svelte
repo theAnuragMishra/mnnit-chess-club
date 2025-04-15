@@ -51,7 +51,7 @@
 		if (index > moveHistory.length - 1 || index < 0) return;
 		activeIndex = index;
 	};
-	const gameID = Number(page.params.gameID);
+	const gameID = page.params.gameID;
 
 	const setGround = (g: Api) => {
 		ground = g;

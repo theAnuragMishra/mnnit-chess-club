@@ -152,20 +152,15 @@ func (q *Queries) GetUserPublicInfo(ctx context.Context, username *string) (GetU
 	return i, err
 }
 
-const getUsernameAndRating = `-- name: GetUsernameAndRating :one
-SELECT username, rating FROM users WHERE id = $1
+const getUserRating = `-- name: GetUserRating :one
+SELECT rating FROM users WHERE id = $1
 `
 
-type GetUsernameAndRatingRow struct {
-	Username *string
-	Rating   float64
-}
-
-func (q *Queries) GetUsernameAndRating(ctx context.Context, id int32) (GetUsernameAndRatingRow, error) {
-	row := q.db.QueryRow(ctx, getUsernameAndRating, id)
-	var i GetUsernameAndRatingRow
-	err := row.Scan(&i.Username, &i.Rating)
-	return i, err
+func (q *Queries) GetUserRating(ctx context.Context, id int32) (float64, error) {
+	row := q.db.QueryRow(ctx, getUserRating, id)
+	var rating float64
+	err := row.Scan(&rating)
+	return rating, err
 }
 
 const getUsernameByUserID = `-- name: GetUsernameByUserID :one
