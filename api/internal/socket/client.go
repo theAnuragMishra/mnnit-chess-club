@@ -16,18 +16,20 @@ type Client struct {
 	connection *websocket.Conn
 	UserID     int32
 	// manager is the manager used to manage the client
-	manager *Manager
-	egress  chan Event
-	Room    int32
+	manager  *Manager
+	egress   chan Event
+	Room     int32
+	Username string
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
-func NewClient(conn *websocket.Conn, manager *Manager, userID int32) *Client {
+func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username string) *Client {
 	return &Client{
 		UserID:     userID,
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
+		Username:   username,
 	}
 }
 
