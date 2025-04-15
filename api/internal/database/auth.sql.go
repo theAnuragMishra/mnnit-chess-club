@@ -68,17 +68,26 @@ func (q *Queries) GetCSRFTokenBySession(ctx context.Context, sessionID string) (
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, user_id, created_at, expires_at FROM sessions WHERE id = $1
+SELECT sessions.id, sessions.user_id, sessions.created_at, sessions.expires_at,users.username FROM sessions JOIN users ON sessions.user_id = users.id WHERE sessions.id = $1
 `
 
-func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
+type GetSessionRow struct {
+	ID        string
+	UserID    int32
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	Username  *string
+}
+
+func (q *Queries) GetSession(ctx context.Context, id string) (GetSessionRow, error) {
 	row := q.db.QueryRow(ctx, getSession, id)
-	var i Session
+	var i GetSessionRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.CreatedAt,
 		&i.ExpiresAt,
+		&i.Username,
 	)
 	return i, err
 }

@@ -56,7 +56,7 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("new connection request")
 
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
+	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	// upgrading http to websocket connection
 

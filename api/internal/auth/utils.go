@@ -23,7 +23,7 @@ func generateToken(length int) string {
 	return base64.URLEncoding.EncodeToString(bytes)
 }
 
-func (h *Handler) ValidateSession(ctx context.Context, token string) (database.Session, error) {
+func (h *Handler) ValidateSession(ctx context.Context, token string) (database.GetSessionRow, error) {
 	session, err := h.queries.GetSession(ctx, token)
 	if err != nil {
 		return session, errors.New("no such session")

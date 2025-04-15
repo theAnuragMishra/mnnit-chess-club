@@ -14,7 +14,7 @@ import (
 )
 
 func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
+	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	user, err := c.Queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {

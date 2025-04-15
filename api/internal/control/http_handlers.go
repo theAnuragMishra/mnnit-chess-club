@@ -73,7 +73,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.Session)
+	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	c.SocketManager.RemoveClient(session.UserID)
 	http.SetCookie(w, &http.Cookie{
