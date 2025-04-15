@@ -37,14 +37,15 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
 			return
 		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_token",
-			Value:    sessionTokenCookie.Value,
-			Expires:  time.Now().Add(time.Hour * 24 * 30),
-			HttpOnly: true,
-			Path:     "/",
-		})
+		if time.Now().Add(time.Hour * 24 * 15).After(session.ExpiresAt) {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_token",
+				Value:    sessionTokenCookie.Value,
+				Expires:  time.Now().Add(time.Hour * 24 * 30),
+				HttpOnly: true,
+				Path:     "/",
+			})
+		}
 
 		// setting session context for use by the handler
 		ctx := context.WithValue(r.Context(), MiddlewareSentSession, session)
