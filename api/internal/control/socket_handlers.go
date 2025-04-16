@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"log"
 	"time"
 
@@ -75,9 +76,13 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		rating1, err1 := c.Queries.GetUserRating(context.Background(), pendingUser)
 		rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
 		if err1 != nil || err2 != nil {
-			return errors.New("server error while fetching usernames")
+			return errors.New("server error while fetching ratings")
 		}
-		createdGame, err := c.createGame(pendingUser, client.UserID, initGamePayload.TimeControl, rating1, rating2)
+		id, err := c.generateUniqueGameID()
+		if err != nil {
+			return err
+		}
+		createdGame, err := c.createGame(id, pendingUser, client.UserID, initGamePayload.TimeControl, rating1, rating2)
 		if err != nil {
 			return err
 		}
@@ -88,13 +93,73 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		e := socket.Event{Type: "GoToGame", Payload: json.RawMessage(rawPayload)}
 		otherClient := c.SocketManager.FindClientByUserID(pendingUser)
-		if client != nil {
-			client.Send(e)
-		}
+
+		client.Send(e)
+
 		if otherClient != nil {
 			otherClient.Send(e)
 		}
 	}
+	return nil
+}
+
+func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var challengePayload InitGamePayload
+	if err := json.Unmarshal(event.Payload, &challengePayload); err != nil {
+		return err
+	}
+	id, err := c.generateUniqueGameID()
+	if err != nil {
+		return err
+	}
+	c.GameManager.PendingChallenges[id] = game.Challenge{
+		TimeControl:     challengePayload.TimeControl,
+		Creator:         client.UserID,
+		CreatorUsername: client.Username,
+	}
+	payload := map[string]any{"GameID": id}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "GoToGame", Payload: json.RawMessage(rawPayload)}
+	client.Send(e)
+	return nil
+}
+
+func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var acceptChallengePayload AcceptChallengePayload
+	if err := json.Unmarshal(event.Payload, &acceptChallengePayload); err != nil {
+		return err
+	}
+	challenge, exists := c.GameManager.PendingChallenges[acceptChallengePayload.GameID]
+	if !exists {
+		return errors.New("challenge not found")
+	}
+	if client.UserID == challenge.Creator {
+		return errors.New("same player tryna play both sides")
+	}
+	rating1, err1 := c.Queries.GetUserRating(context.Background(), challenge.Creator)
+	rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
+	if err1 != nil || err2 != nil {
+		return errors.New("server error while fetching ratings")
+	}
+	createdGame, err := c.createGame(acceptChallengePayload.GameID, challenge.Creator, client.UserID, challenge.TimeControl, rating1, rating2)
+	if err != nil {
+		return err
+	}
+	payload := map[string]any{"GameID": createdGame.ID}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "RefreshGame", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.BroadcastToRoom(e, acceptChallengePayload.GameID)
+	delete(c.GameManager.PendingChallenges, acceptChallengePayload.GameID)
 	return nil
 }
 

@@ -18,8 +18,10 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(gameID)
 	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
 	if err != nil {
-		log.Println(err)
-
+		if challenge, exists := c.GameManager.PendingChallenges[gameID]; exists {
+			utils.RespondWithJSON(w, http.StatusOK, challenge)
+			return
+		}
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 		return
 	}

@@ -19,7 +19,7 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) createGame(p1, p2 int32, timeControl string, r1 float64, r2 float64) (*game.Game, error) {
+func (c *Controller) createGame(id string, p1, p2 int32, timeControl string, r1 float64, r2 float64) (*game.Game, error) {
 	parts := strings.Split(timeControl, "+")
 	if len(parts) != 2 {
 		return nil, errors.New("invalid time control format")
@@ -31,27 +31,9 @@ func (c *Controller) createGame(p1, p2 int32, timeControl string, r1 float64, r2
 		return nil, errors.New("invalid time control format")
 	}
 
-	var id string
-	var err error
-
-	for {
-		id, err = game.GenerateGameID(12)
-		if err != nil {
-			log.Println("error generating game id:", err)
-			return nil, err
-		}
-		_, err := c.Queries.GetGameByID(context.Background(), id)
-
-		if err == nil {
-			log.Println("game found with id", err)
-			continue
-		}
-		break
-	}
-
 	createdGame := game.NewGame(time.Duration(baseTime)*time.Minute, time.Duration(increment)*time.Second, p1, p2)
 
-	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:        id,
 		BaseTime:  int32(baseTime * 60),
 		Increment: int32(increment),
@@ -196,4 +178,24 @@ func (c *Controller) endGame(gameID string, etlw, etlb *int32, result string, re
 		ChangeB:          &cb,
 	})
 	return int(up1.Rating - p1info.Rating), int(up2.Rating - p2info.Rating), err
+}
+
+func (c *Controller) generateUniqueGameID() (string, error) {
+	var id string
+	var err error
+
+	for {
+		id, err = game.GenerateGameID(12)
+		if err != nil {
+			log.Println("error generating game id:", err)
+			return "", err
+		}
+		_, err1 := c.Queries.GetGameByID(context.Background(), id)
+
+		if err1 == nil {
+			log.Println("game found with id", err)
+			continue
+		}
+		return id, nil
+	}
 }

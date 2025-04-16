@@ -40,6 +40,10 @@ class WebSocketStore {
 			goto(`/game/${payload.GameID}`);
 		}
 
+		if (type === 'RefreshGame') {
+			if (window.location.pathname === `/game/${payload.GameID}`) window.location.reload();
+		}
+
 		if (this.listeners.has(type)) {
 			this.listeners.get(type)?.forEach((callback) => callback(payload));
 		}

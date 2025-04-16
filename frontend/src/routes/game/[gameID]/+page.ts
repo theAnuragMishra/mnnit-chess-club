@@ -1,5 +1,5 @@
 import { getBaseURL } from '$lib/utils';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 export async function load({ params, parent }) {
 	const { user } = await parent();
@@ -8,7 +8,7 @@ export async function load({ params, parent }) {
 		credentials: 'include'
 	});
 	if (!response.ok) {
-		throw new Error('Failed to fetch game data');
+		error(404, { message: 'Game not found' });
 	}
 	return { gameData: await response.json() };
 }

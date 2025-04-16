@@ -11,6 +11,10 @@ type InitGamePayload struct {
 	TimeControl string `json:"timeControl"`
 }
 
+type AcceptChallengePayload struct {
+	GameID string `json:"GameId"`
+}
+
 type UserNamePayload struct {
 	Username string `json:"username"`
 }

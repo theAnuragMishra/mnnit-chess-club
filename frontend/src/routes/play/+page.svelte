@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getBaseURL } from '$lib/utils';
 	import { websocketStore } from '$lib/websocket.js';
 
 	const { data } = $props();
@@ -25,6 +24,8 @@
 		'30+0',
 		'30+20'
 	];
+	let baseTime = $state(1);
+	let increment = $state(0);
 </script>
 
 <div class="box">
@@ -34,9 +35,49 @@
 			class="btn cursor-pointer bg-gray-800 text-3xl">{timeControl}</button
 		>
 	{/each}
+	<div class="col-span-3 flex justify-around gap-2">
+		<div>
+			Minutes per side: <input
+				class="rounded-md bg-gray-800 px-2 py-1"
+				type="number"
+				bind:value={baseTime}
+				min="0.5"
+				max="180"
+			/>
+		</div>
+		<div>
+			Increment: <input
+				class="rounded-md bg-gray-800 px-2 py-1"
+				type="number"
+				bind:value={increment}
+				min="0"
+				max="180"
+			/>
+		</div>
+	</div>
+	<div class="col-span-3">
+		<button
+			onclick={() =>
+				websocketStore.sendMessage({
+					type: 'create_challenge',
+					payload: { timeControl: `${baseTime}+${increment}` }
+				})}
+			class="cursor-pointer rounded-md bg-gray-800 px-3 py-2 text-xl">Create Challenge Link</button
+		>
+	</div>
 </div>
 
 <style>
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	input[type='number'] {
+		appearance: none;
+		-moz-appearance: textfield;
+	}
 	.box {
 		display: grid;
 		height: 300px;
