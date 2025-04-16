@@ -24,6 +24,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 
 	if user.Username != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Username can only be set once")
+		return
 	}
 
 	var usernamePayload UserNamePayload

@@ -21,6 +21,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
+		return
 	}
 	moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
 	if err != nil {
