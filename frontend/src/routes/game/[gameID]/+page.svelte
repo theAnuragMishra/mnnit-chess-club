@@ -189,10 +189,9 @@
 		<div class="board flex flex-col justify-center">
 			<Chessboard
 				{setGround}
-				username={data.user.username}
+				orientation={whiteUp ? 'black' : 'white'}
 				{gameID}
 				chess={chessForView}
-				white={whiteUsername}
 				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
 				viewOnly={!isPlayer ||
 					(result != 'ongoing' && result != '') ||
@@ -254,7 +253,7 @@
 		</div>
 
 		<div class="nameb flex h-fit justify-between md:w-[300px]">
-			<span>{data.user.username}&nbsp;&nbsp;</span>
+			<span>{whiteUp ? blackUsername : whiteUsername}&nbsp;&nbsp;</span>
 			<span
 				>{whiteUp ? ratingBlack : ratingWhite}&nbsp;&nbsp;<span
 					class={`${!whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}

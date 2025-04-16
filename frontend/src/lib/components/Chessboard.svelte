@@ -9,7 +9,7 @@
 
 	let boardContainer: HTMLDivElement;
 
-	let { username, gameID, chess, white, lastMove, viewOnly, setGround } = $props();
+	let { orientation, gameID, chess, lastMove, viewOnly, setGround } = $props();
 
 	$effect(() => {
 		// console.log('effect ran');
@@ -17,7 +17,7 @@
 		if (!boardContainer) return;
 		const cg = Chessground(boardContainer, {
 			fen: chess.fen(),
-			orientation: white == username ? 'white' : 'black',
+			orientation,
 			draggable: { enabled: true },
 			turnColor: chess.turn() == 'w' ? 'white' : 'black',
 			viewOnly: viewOnly,
@@ -25,7 +25,7 @@
 			check: chess.isCheck(),
 			movable: {
 				free: false,
-				color: white == username ? 'white' : 'black',
+				color: orientation,
 				dests: getValidMoves(chess),
 				showDests: true,
 				events: {
