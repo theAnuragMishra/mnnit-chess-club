@@ -3,12 +3,11 @@
 	import { onDestroy, onMount } from 'svelte';
 	interface MessageInterface {
 		sender: string;
-		receiver: string;
 		text: string;
 		gameID: string;
 	}
 	let messages: MessageInterface[] = $state([]);
-	const { username, userID, gameID, whiteID, blackID, whiteUsername, blackUsername } = $props();
+	const { gameID } = $props();
 	let text = $state('');
 
 	const scrollToBottom = (node: HTMLDivElement, watch: () => MessageInterface[]) => {
@@ -25,12 +24,7 @@
 			websocketStore.sendMessage({
 				type: 'chat',
 				payload: {
-					sender: userID,
-					receiver: userID === whiteID ? blackID : whiteID,
-					senderUsername: username,
-					receiverUsername: username === whiteUsername ? blackUsername : whiteUsername,
-					text,
-					gameID
+					text
 				}
 			});
 			text = '';

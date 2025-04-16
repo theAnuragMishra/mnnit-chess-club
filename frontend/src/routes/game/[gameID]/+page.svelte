@@ -168,17 +168,7 @@
 			{increment}
 			{reason}
 		/>
-		<!-- {#if result === '' || result === 'ongoing'} -->
-		<Chat
-			username={data.user.username}
-			userID={data.user.userID}
-			{blackID}
-			{whiteID}
-			{gameID}
-			{whiteUsername}
-			{blackUsername}
-		/>
-		<!-- {/if} -->
+		<Chat {gameID} />
 	</div>
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">

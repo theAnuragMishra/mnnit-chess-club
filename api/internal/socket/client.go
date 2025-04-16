@@ -107,6 +107,20 @@ func (m *Manager) BroadcastToRoom(event Event, room string) {
 	}
 }
 
+func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, player2 *Client) {
+	m.RLock()
+	defer m.RUnlock()
+	for client := range m.Rooms[room] {
+		if client != player2 && client != player1 {
+			select {
+			case client.egress <- event:
+			default:
+				log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
+			}
+		}
+	}
+}
+
 // Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients map

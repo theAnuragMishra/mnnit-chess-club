@@ -27,12 +27,7 @@ type GameResponse struct {
 }
 
 type ChatPayload struct {
-	Sender           int32  `json:"sender"`
-	Receiver         int32  `json:"receiver"`
-	SenderUsername   string `json:"senderUsername"`
-	ReceiverUsername string `json:"receiverUsername"`
-	Text             string `json:"text"`
-	GameID           string `json:"gameID"`
+	Text string `json:"text"`
 }
 
 type DRPayload struct {

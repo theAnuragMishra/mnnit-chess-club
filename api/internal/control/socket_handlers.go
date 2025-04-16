@@ -221,30 +221,7 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("invalid payload")
 	}
 
-	if chat.Sender == chat.Receiver {
-		return errors.New("same Sender and Receiver")
-	}
-
-	if chat.Sender != client.UserID {
-		return errors.New("client not the sender")
-	}
-
-	foundGame, exists := c.GameManager.Games[chat.GameID]
-	if !exists {
-		return errors.New("game not found")
-	}
-	// fmt.Println(foundGame.Result)
-	if foundGame.Result != "ongoing" {
-		return errors.New("game has ended")
-	}
-
-	if (chat.Sender != foundGame.WhiteID && chat.Sender != foundGame.BlackID) || (chat.Receiver != foundGame.WhiteID && chat.Receiver != foundGame.BlackID) {
-		return errors.New("game id doesn't correspond")
-	}
-
-	otherClient := c.SocketManager.FindClientByUserID(chat.Receiver)
-
-	payload, err := json.Marshal(map[string]any{"sender": chat.SenderUsername, "receiver": chat.ReceiverUsername, "gameID": chat.GameID, "text": chat.Text})
+	payload, err := json.Marshal(map[string]any{"sender": client.Username, "gameID": client.Room, "text": chat.Text})
 	if err != nil {
 		return errors.New("error marshalling chat payload")
 	}
@@ -254,9 +231,24 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 
-	client.Send(e)
-	otherClient.Send(e)
+	foundGame, exists := c.GameManager.Games[client.Room]
+	if !exists || foundGame.Result != "ongoing" {
+		//handle game ended message
+		c.SocketManager.BroadcastToRoom(e, client.Room)
+		return nil
+	}
 
+	whiteClient := c.SocketManager.FindClientByUserID(foundGame.WhiteID)
+	blackClient := c.SocketManager.FindClientByUserID(foundGame.BlackID)
+
+	if client.UserID != foundGame.WhiteID && client.UserID != foundGame.BlackID {
+		// handle message by non player
+		c.SocketManager.BroadcastToNonPlayers(e, client.Room, whiteClient, blackClient)
+		return nil
+	}
+
+	whiteClient.Send(e)
+	blackClient.Send(e)
 	return nil
 }
 
