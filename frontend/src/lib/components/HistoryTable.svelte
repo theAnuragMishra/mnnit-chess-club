@@ -1,8 +1,8 @@
 <script lang="ts">
 	const { setActiveIndex, activeIndex, moveHistory, highlightLastArrow } = $props();
-	const moves: (HTMLButtonElement | null)[] = $state([]);
+	const moveButtons: (HTMLButtonElement | null)[] = $state([]);
 	$effect(() => {
-		const activeButton = moves[activeIndex];
+		const activeButton = moveButtons[activeIndex];
 		activeButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	});
 </script>
@@ -18,7 +18,7 @@
 				<span>{index / 2 + 1}.</span>
 			{/if}
 			<button
-				bind:this={moves[index]}
+				bind:this={moveButtons[index]}
 				onclick={() => {
 					setActiveIndex(index);
 				}}

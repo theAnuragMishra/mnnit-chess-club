@@ -90,7 +90,7 @@ export function getTimeControl(baseTime: number, increment: number) {
 				: 'Classical';
 }
 
-export function scrollIntoContainerView(container: HTMLDivElement, targetEl: HTMLDivElement) {
+export function scrollIntoContainerView(container: HTMLDivElement, targetEl: HTMLElement) {
 	const containerRect = container.getBoundingClientRect();
 	const targetRect = targetEl.getBoundingClientRect();
 
