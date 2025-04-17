@@ -89,3 +89,22 @@ export function getTimeControl(baseTime: number, increment: number) {
 				? 'Rapid'
 				: 'Classical';
 }
+
+export function scrollIntoContainerView(container: HTMLDivElement, targetEl: HTMLDivElement) {
+	const containerRect = container.getBoundingClientRect();
+	const targetRect = targetEl.getBoundingClientRect();
+
+	// Calculate the scroll difference
+	const offsetTop = targetRect.top - containerRect.top + container.scrollTop;
+	const offsetBottom = targetRect.bottom - containerRect.bottom + container.scrollTop;
+
+	// If the element is above the container view
+	if (targetRect.top < containerRect.top) {
+		container.scrollTo({ top: offsetTop, behavior: 'smooth' });
+	}
+	// If the element is below the container view
+	else if (targetRect.bottom > containerRect.bottom) {
+		container.scrollTo({ top: offsetBottom, behavior: 'smooth' });
+	}
+	// If it's already in view — do nothing
+}
