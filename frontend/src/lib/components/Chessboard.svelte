@@ -72,6 +72,9 @@
 <div bind:this={boardContainer} class="bcontainer"></div>
 
 <style>
+	.bcontainer :global(cg-board) {
+		border-radius: 6px !important;
+	}
 	.bcontainer {
 		height: 80vw;
 		width: 80vw;
