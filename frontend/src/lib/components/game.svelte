@@ -154,7 +154,7 @@
 </script>
 
 <div class="flex flex-col-reverse items-center justify-center gap-5 xl:flex-row">
-	<div class="flex w-4/5 flex-col gap-5 md:flex-row xl:w-1/4 xl:flex-col">
+	<div class="flex w-[95%] flex-col gap-5 md:flex-row xl:w-[300px] xl:flex-col">
 		<GameInfo
 			{whiteUsername}
 			{blackUsername}
