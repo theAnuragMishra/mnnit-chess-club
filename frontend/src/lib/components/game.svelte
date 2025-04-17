@@ -201,7 +201,9 @@
 		</div>
 
 		<div class="namet flex h-fit justify-between md:w-[300px]">
-			<span>{whiteUp ? whiteUsername : blackUsername}&nbsp;&nbsp;</span><span
+			<a href={`/member/${whiteUp ? whiteUsername : blackUsername}`}
+				>{whiteUp ? whiteUsername : blackUsername}&nbsp;&nbsp;</a
+			><span
 				>{whiteUp ? ratingWhite : ratingBlack}&nbsp;&nbsp;<span
 					class={`${whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
 					>{result != '' && result != 'ongoing'
@@ -239,7 +241,9 @@
 		</div>
 
 		<div class="nameb flex h-fit justify-between md:w-[300px]">
-			<span>{whiteUp ? blackUsername : whiteUsername}&nbsp;&nbsp;</span>
+			<a href={`/member/${whiteUp ? blackUsername : whiteUsername}`}
+				>{whiteUp ? blackUsername : whiteUsername}&nbsp;&nbsp;</a
+			>
 			<span
 				>{whiteUp ? ratingBlack : ratingWhite}&nbsp;&nbsp;<span
 					class={`${!whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
