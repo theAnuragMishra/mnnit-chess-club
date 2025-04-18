@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"log"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 
 	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
@@ -68,10 +69,10 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		log.Println("no pending game, creating...")
 		c.GameManager.PendingUsers[initGamePayload.TimeControl] = client.UserID
 	} else {
-		log.Println("match found...")
+		log.Println("game found...")
 		delete(c.GameManager.PendingUsers, initGamePayload.TimeControl)
 		if pendingUser == client.UserID {
-			return errors.New("same player tryna play both sides")
+			return nil
 		}
 		rating1, err1 := c.Queries.GetUserRating(context.Background(), pendingUser)
 		rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
@@ -298,7 +299,7 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 
 	foundGame, exists := c.GameManager.Games[client.Room]
 	if !exists || foundGame.Result != "ongoing" {
-		//handle game ended message
+		// handle game ended message
 		c.SocketManager.BroadcastToRoom(e, client.Room)
 		return nil
 	}

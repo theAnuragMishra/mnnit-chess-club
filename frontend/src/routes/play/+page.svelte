@@ -6,7 +6,8 @@
 
 	if (!data.user) goto('/');
 
-	async function handleInitGame(timeControl: string) {
+	async function handleInitGame(timeControl: string, index: number) {
+		activeState[index] = !activeState[index];
 		websocketStore.sendMessage({ type: 'init_game', payload: { timeControl } });
 	}
 
@@ -26,13 +27,17 @@
 	];
 	let baseTime = $state(1);
 	let increment = $state(0);
+	let activeState = $state(Array(12).fill(false));
 </script>
 
 <div class="box">
-	{#each timeControls as timeControl}
+	{#each timeControls as timeControl, index}
 		<button
-			onclick={() => handleInitGame(timeControl)}
-			class="btn cursor-pointer bg-gray-800 text-3xl">{timeControl}</button
+			onclick={() => handleInitGame(timeControl, index)}
+			class="btn relative cursor-pointer bg-gray-800 text-3xl"
+			><span>{timeControl}</span>{#if activeState[index]}<span class="loading-bar">
+					<span class="moving-indicator"></span>
+				</span>{/if}</button
 		>
 	{/each}
 	<div class="col-span-3 flex justify-around gap-2">
@@ -92,6 +97,38 @@
 	.btn {
 		width: 100px;
 		height: 70px;
+	}
+
+	.loading-bar {
+		position: absolute;
+		top: 80px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: inline-block;
+		width: 60%;
+		height: 4px;
+		background-color: #e0e0e0;
+		overflow: hidden;
+		border-radius: 2px;
+	}
+
+	.moving-indicator {
+		display: inline-block;
+		width: 30%;
+		height: 100%;
+		background-color: #3b82f6;
+		position: absolute;
+		animation: move 1.2s ease-in-out infinite alternate;
+		border-radius: 2px;
+	}
+
+	@keyframes move {
+		0% {
+			left: 0%;
+		}
+		100% {
+			left: 70%;
+		}
 	}
 
 	@media (width>=450px) {
