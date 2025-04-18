@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE games (
-    id VARCHAR(20) PRIMARY KEY,
+    id VARCHAR(20) PRIMARY KEY CHECK(TRIM(id) <> ''),
     base_time INT NOT NULL,
     increment INT NOT NULL,
     white_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
