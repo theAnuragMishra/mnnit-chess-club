@@ -28,7 +28,7 @@
 			return;
 		}
 
-		goto('/');
+		window.location.href = '/';
 	};
 </script>
 
