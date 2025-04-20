@@ -25,9 +25,11 @@
 		'30+0',
 		'30+20'
 	];
-	let baseTime = $state(1);
+	let baseTime = $state(3);
 	let increment = $state(0);
 	let activeState = $state(Array(12).fill(false));
+	let btError = $derived(baseTime === undefined || baseTime === null);
+	let iError = $derived(increment === undefined || increment === null);
 </script>
 
 <div class="box">
@@ -43,7 +45,7 @@
 	<div class="col-span-3 flex justify-around gap-2">
 		<div>
 			Minutes per side: <input
-				class="rounded-md bg-gray-800 px-2 py-1"
+				class={`rounded-md bg-gray-800 px-2 py-1 ${btError ? 'border-2 border-red-500' : ''}`}
 				type="number"
 				bind:value={baseTime}
 				min="0.5"
@@ -52,7 +54,7 @@
 		</div>
 		<div>
 			Increment: <input
-				class="rounded-md bg-gray-800 px-2 py-1"
+				class={`rounded-md bg-gray-800 px-2 py-1 ${iError ? 'border-2 border-red-500' : ''}`}
 				type="number"
 				bind:value={increment}
 				min="0"
@@ -62,11 +64,21 @@
 	</div>
 	<div class="col-span-3">
 		<button
-			onclick={() =>
+			onclick={() => {
+				if (
+					baseTime === undefined ||
+					baseTime === null ||
+					increment === null ||
+					increment === undefined
+				) {
+					return;
+				}
+
 				websocketStore.sendMessage({
 					type: 'create_challenge',
 					payload: { timeControl: `${baseTime}+${increment}` }
-				})}
+				});
+			}}
 			class="cursor-pointer rounded-md bg-gray-800 px-3 py-2 text-xl">Create Challenge Link</button
 		>
 	</div>
