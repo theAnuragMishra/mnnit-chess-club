@@ -58,6 +58,10 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
+	if session.Username == nil {
+		return
+	}
+
 	// upgrading http to websocket connection
 
 	conn, err := webSocketUpgrader.Upgrade(w, r, nil)
