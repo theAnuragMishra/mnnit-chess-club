@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { formatResultAndReason, getBaseURL, getTimeControl } from '$lib/utils.js';
+	import {
+		formatPostgresTimestamp,
+		formatResultAndReason,
+		getBaseURL,
+		getTimeControl
+	} from '$lib/utils.js';
 	let { data } = $props();
 	// console.log('mounted');
 	let pageNumber = $state(1);
@@ -125,8 +130,11 @@
 						Playing right now
 					{/if}
 				</div>
-				<div class="text-lg">
-					{Math.ceil(item.GameLength / 2)} move{`${Math.ceil(item.GameLength / 2) > 1 ? 's' : ''}`}
+				<div class="flex items-center justify-between text-lg">
+					<span
+						>{Math.ceil(item.GameLength / 2)} move{`${Math.ceil(item.GameLength / 2) > 1 ? 's' : ''}`}</span
+					>
+					<span class="text-sm">{formatPostgresTimestamp(new Date(item.CreatedAt))}</span>
 				</div>
 			</div>
 		{/each}
