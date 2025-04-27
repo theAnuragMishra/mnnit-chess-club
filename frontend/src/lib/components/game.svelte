@@ -13,6 +13,13 @@
 	import { getValidMoves } from '$lib/utils.js';
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	let { data } = $props();
+
+	//audios
+	let moveAudio: HTMLAudioElement;
+	let captureAudio: HTMLAudioElement;
+	let notify: HTMLAudioElement;
+	let lowTime: HTMLAudioElement;
+
 	// console.log(data);
 	let ground: Api | null = $state(null);
 	const baseTime = data.gameData.game.BaseTime;
@@ -91,6 +98,8 @@
 			movable: { dests: getValidMoves(chessLatest) }
 		});
 		// console.log('finished movehandler');
+		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
+		else moveAudio?.play();
 		ground?.playPremove();
 		// console.log(x);
 	};
@@ -100,6 +109,7 @@
 	let wtime = $derived(timeWhite);
 	let animationFrame: number | null;
 	let startTime: DOMHighResTimeStamp | null;
+	let lowTimePlayed = $state(false);
 
 	$effect(() => {
 		if (result === 'ongoing' || result === '') {
@@ -117,6 +127,13 @@
 				}
 				if (trn == 'w') wtime = newTime;
 				else btime = newTime;
+
+				if ((whiteUp && trn == 'b') || (!whiteUp && trn == 'w')) {
+					if (!lowTimePlayed && newTime <= 10000) {
+						lowTimePlayed = true;
+						lowTime?.play();
+					}
+				}
 
 				animationFrame = requestAnimationFrame(tick);
 			};
@@ -144,6 +161,10 @@
 		websocketStore.onMessage('game_abort', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
 		websocketStore.onMessage('resignation', handleResignation);
+		moveAudio = new Audio('/Move.mp3');
+		captureAudio = new Audio('/Capture.mp3');
+		notify = new Audio('/GenericNotify.mp3');
+		lowTime = new Audio('/LowTime.mp3');
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);
