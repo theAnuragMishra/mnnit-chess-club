@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  # PostgreSQL service
+  db:
+    image: postgres
+    container_name: mcc-postgres
+    environment:
+      POSTGRES_USER: anurag
+      POSTGRES_PASSWORD: mccdb
+      POSTGRES_DB: mcc
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  # API service
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: mcc-api
+    environment:
+      DATABASE_URL: postgres://anurag:mccdb@db:5432/mcc?sslmode=disable
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: always
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mcc-frontend
+    volumes:
+      - frontend-build:/app/build
+    depends_on:
+      - api
+
+  # Caddy
+  caddy:
+    image: caddy
+    container_name: mcc-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - frontend-build:/srv/frontend
+    depends_on:
+      - api
+    restart: always
+
+volumes:
+  postgres-data:
+  frontend-build:

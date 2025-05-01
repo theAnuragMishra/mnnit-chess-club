@@ -1,0 +1,8 @@
+localhost{
+    root * /srv/frontend
+    file_server
+
+    handle_path /api/* {
+        reverse_proxy api:8080
+    }
+}
