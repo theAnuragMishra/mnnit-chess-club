@@ -17,7 +17,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	router := chi.NewRouter()
 	router.Use(utils.RecoveryMiddleware)
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{"https://localhost:*", "http://localhost:*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
