@@ -6,9 +6,9 @@ services:
     image: postgres
     container_name: mcc-postgres
     environment:
-      POSTGRES_USER: anurag
-      POSTGRES_PASSWORD: mccdb
-      POSTGRES_DB: mcc
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: always
@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     container_name: mcc-api
     environment:
-      DATABASE_URL: postgres://anurag:mccdb@db:5432/mcc?sslmode=disable
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=${SSL_MODE}
     ports:
       - "8080:8080"
     depends_on:
