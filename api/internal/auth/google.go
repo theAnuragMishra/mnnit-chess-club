@@ -5,12 +5,13 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {
-	url := Config().AuthCodeURL(os.Getenv("OAUTH_STATE"))
+	state := generateToken(16)
+	stateMap[state] = struct{}{}
+	url := Config().AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -23,6 +24,12 @@ type GoogleIDToken struct {
 
 func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("Google Callback")
+	state := r.URL.Query().Get("state")
+	_, ok := stateMap[state]
+	if !ok {
+		http.Error(w, "Invalid state", http.StatusBadRequest)
+		return
+	}
 	code := r.URL.Query().Get("code")
 	token, err := Config().Exchange(context.Background(), code)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -43,7 +44,7 @@ func setupAPI() {
 		log.Fatal("can't connect to database")
 	}
 
-	// making sure connection closes when the server stops
+	// making sure the connection closes when the server stops
 	defer pool.Close()
 
 	queries := database.New(pool)
@@ -58,7 +59,7 @@ func setupAPI() {
 		Addr:    ":" + portString,
 	}
 
-	// ws setup
+	auth.StartStateMapCleaner(10 * time.Minute)
 
 	log.Printf("Server starting on port: %v", portString)
 
