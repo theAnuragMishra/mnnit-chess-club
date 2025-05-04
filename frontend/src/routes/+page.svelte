@@ -2,7 +2,7 @@
 	let { data } = $props();
 </script>
 
-<div class="flex h-full flex-col items-center justify-center">
+<div class="flex h-full w-full flex-col items-center justify-center">
 	{#if !data.user}
 		<p>Login to play</p>
 	{:else}
