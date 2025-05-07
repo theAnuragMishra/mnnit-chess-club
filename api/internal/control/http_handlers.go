@@ -55,6 +55,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 		timeBlack = int32(serverGame.TimeBlack.Milliseconds())
 		timeWhite = int32(serverGame.TimeWhite.Milliseconds())
+		//fmt.Println(serverGame.TimeBlack, serverGame.TimeWhite, serverGame.BaseTime)
 	}
 
 	// fmt.Println(serverGame.Result)

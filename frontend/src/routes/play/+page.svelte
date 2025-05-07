@@ -28,8 +28,16 @@
 	let baseTime = $state(3);
 	let increment = $state(0);
 	let activeState = $state(Array(12).fill(false));
-	let btError = $derived(baseTime === undefined || baseTime === null);
-	let iError = $derived(increment === undefined || increment === null);
+	let btError = $derived(
+		baseTime === undefined || baseTime === null || baseTime <= 0 || baseTime > 180
+	);
+	let iError = $derived(
+		increment === undefined ||
+			increment === null ||
+			increment < 0 ||
+			increment > 180 ||
+			!Number.isInteger(increment)
+	);
 </script>
 
 <div class="box">
@@ -65,15 +73,10 @@
 	<div class="col-span-3">
 		<button
 			onclick={() => {
-				if (
-					baseTime === undefined ||
-					baseTime === null ||
-					increment === null ||
-					increment === undefined
-				) {
+				if (btError || iError) {
 					return;
 				}
-
+				//console.log(baseTime, increment);
 				websocketStore.sendMessage({
 					type: 'create_challenge',
 					payload: { timeControl: `${baseTime}+${increment}` }

@@ -13,7 +13,7 @@
 	import { getValidMoves } from '$lib/utils.js';
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	let { data } = $props();
-
+	//console.log(data);
 	//audios
 	let moveAudio: HTMLAudioElement;
 	let captureAudio: HTMLAudioElement;

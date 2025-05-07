@@ -24,14 +24,17 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl string, r1 
 	if len(parts) != 2 {
 		return nil, errors.New("invalid time control format")
 	}
-	baseTime, err1 := strconv.Atoi(parts[0])
+	baseTime, err1 := strconv.ParseFloat(parts[0], 64)
 	increment, err2 := strconv.Atoi(parts[1])
-
 	if err1 != nil || err2 != nil {
 		return nil, errors.New("invalid time control format")
 	}
 
-	createdGame := game.NewGame(time.Duration(baseTime)*time.Minute, time.Duration(increment)*time.Second, p1, p2)
+	if baseTime <= 0 || baseTime > 180 || increment < 0 || increment > 180 {
+		return nil, errors.New("invalid time control format")
+	}
+
+	createdGame := game.NewGame(time.Duration(baseTime*60)*time.Second, time.Duration(increment)*time.Second, p1, p2)
 
 	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:        id,
