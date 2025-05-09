@@ -37,7 +37,17 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 
 	createdGame.ID = id
 	c.GameManager.Games[id] = createdGame
-	timer := time.AfterFunc(time.Second*20, func() { c.abortGame(createdGame) })
+
+	var t time.Duration
+	if timeControl.BaseTime >= 20 {
+		t = time.Second * 20
+	} else if timeControl.BaseTime >= 10 {
+		t = time.Second * 10
+	} else {
+		t = time.Duration(timeControl.BaseTime) * time.Second
+	}
+
+	timer := time.AfterFunc(t, func() { c.abortGame(createdGame) })
 	createdGame.AbortTimer = timer
 	return createdGame, nil
 }

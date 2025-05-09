@@ -208,7 +208,13 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if foundGame.AbortTimer != nil {
 		if foundGame.GameLength == 1 {
-			foundGame.AbortTimer.Reset(time.Second * 20)
+			if foundGame.BaseTime >= time.Second*20 {
+				foundGame.AbortTimer.Reset(time.Second * 20)
+			} else if foundGame.BaseTime >= time.Second*10 {
+				foundGame.AbortTimer.Reset(time.Second * 10)
+			} else {
+				foundGame.AbortTimer.Reset(foundGame.BaseTime)
+			}
 		} else {
 			foundGame.AbortTimer.Stop()
 			foundGame.AbortTimer = nil
