@@ -18,8 +18,8 @@
 	//audios
 	let moveAudio: HTMLAudioElement;
 	let captureAudio: HTMLAudioElement;
-	let notify: HTMLAudioElement;
-	let lowTime: HTMLAudioElement;
+	let notifyAudio: HTMLAudioElement;
+	let lowTimeAudio: HTMLAudioElement;
 
 	let ground: Api | null = $state(null);
 	const baseTime = data.gameData.game.BaseTime;
@@ -105,6 +105,19 @@
 
 	//timer setup
 	const abortLength = baseTime >= 20 ? 20 : baseTime >= 10 ? 10 : baseTime;
+	const lowAbortTime = baseTime >= 20 ? 10 : baseTime >= 10 ? 5 : 2;
+	const lowTime =
+		(baseTime >= 1800
+			? 120
+			: baseTime >= 600
+				? 60
+				: baseTime >= 300
+					? 30
+					: baseTime >= 30
+						? 10
+						: baseTime >= 10
+							? 3
+							: 1) * 1000;
 	let btime = $derived(timeBlack);
 	let wtime = $derived(timeWhite);
 	let animationFrame: number | null;
@@ -129,9 +142,9 @@
 				else btime = newTime;
 
 				if ((whiteUp && trn == 'b') || (!whiteUp && trn == 'w')) {
-					if (!lowTimePlayed && newTime <= 10000) {
+					if (!lowTimePlayed && newTime <= lowTime) {
 						lowTimePlayed = true;
-						lowTime?.play();
+						lowTimeAudio?.play();
 					}
 				}
 
@@ -163,8 +176,8 @@
 		websocketStore.onMessage('resignation', handleResignation);
 		moveAudio = new Audio('/Move.mp3');
 		captureAudio = new Audio('/Capture.mp3');
-		notify = new Audio('/GenericNotify.mp3');
-		lowTime = new Audio('/LowTime.mp3');
+		notifyAudio = new Audio('/GenericNotify.mp3');
+		lowTimeAudio = new Audio('/LowTime.mp3');
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);
@@ -191,6 +204,7 @@
 		<div class="abortt">
 			{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
 				<AbortTimer
+					{lowAbortTime}
 					time={abortLength - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
 					tb="t"
 				/>
@@ -211,6 +225,7 @@
 		<div class="abortb">
 			{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
 				<AbortTimer
+					{lowAbortTime}
 					time={abortLength - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
 					tb="b"
 				/>
@@ -218,6 +233,7 @@
 		</div>
 		<div class="clockt h-fit">
 			<Clock
+				{lowTime}
 				time={whiteUp ? wtime : btime}
 				active={result !== 'ongoing' && result !== ''
 					? false
@@ -284,6 +300,7 @@
 		</div>
 		<div class="clockb h-fit">
 			<Clock
+				{lowTime}
 				time={whiteUp ? btime : wtime}
 				active={result !== 'ongoing' && result !== ''
 					? false
