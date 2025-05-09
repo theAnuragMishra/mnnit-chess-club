@@ -216,14 +216,13 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	if foundGame.GameLength == 2 {
-		var t time.Duration
 		if foundGame.Board.Position().Turn() == chess.White {
-			t = foundGame.TimeWhite
+			timer := time.AfterFunc(foundGame.TimeWhite, func() { c.handleGameTimeout(foundGame) })
+			foundGame.ClockTimer = timer
 		} else {
-			t = foundGame.TimeBlack
+			timer := time.AfterFunc(foundGame.TimeBlack, func() { c.handleGameTimeout(foundGame) })
+			foundGame.ClockTimer = timer
 		}
-		timer := time.AfterFunc(t, func() { c.handleGameTimeout(foundGame) })
-		foundGame.ClockTimer = timer
 	} else if foundGame.GameLength > 2 {
 		if foundGame.Board.Position().Turn() == chess.White {
 			foundGame.ClockTimer.Reset(foundGame.TimeWhite)
