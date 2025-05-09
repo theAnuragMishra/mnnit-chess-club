@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
@@ -19,27 +17,14 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) createGame(id string, p1, p2 int32, timeControl string, r1 float64, r2 float64) (*game.Game, error) {
-	parts := strings.Split(timeControl, "+")
-	if len(parts) != 2 {
-		return nil, errors.New("invalid time control format")
-	}
-	baseTime, err1 := strconv.ParseFloat(parts[0], 64)
-	increment, err2 := strconv.Atoi(parts[1])
-	if err1 != nil || err2 != nil {
-		return nil, errors.New("invalid time control format")
-	}
+func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeControl, r1 float64, r2 float64) (*game.Game, error) {
 
-	if baseTime <= 0 || baseTime > 180 || increment < 0 || increment > 180 {
-		return nil, errors.New("invalid time control format")
-	}
-
-	createdGame := game.NewGame(time.Duration(baseTime*60)*time.Second, time.Duration(increment)*time.Second, p1, p2)
+	createdGame := game.NewGame(time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p1, p2)
 
 	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:        id,
-		BaseTime:  int32(baseTime * 60),
-		Increment: int32(increment),
+		BaseTime:  timeControl.BaseTime,
+		Increment: timeControl.Increment,
 		WhiteID:   &p1,
 		BlackID:   &p2,
 		Fen:       createdGame.Board.FEN(),

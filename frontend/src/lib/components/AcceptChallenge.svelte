@@ -7,7 +7,9 @@
 </script>
 
 <div class="flex flex-col items-center justify-center gap-3 text-2xl">
-	<p class="text-3xl">{data.gameData.TimeControl}</p>
+	<p class="text-3xl">
+		{data.gameData.TimeControl.baseTime / 60}+{data.gameData.TimeControl.increment}
+	</p>
 	{#if data.user.username == data.gameData.CreatorUsername}
 		<p>The first person to accept the challenge via the link will play you.</p>
 		<a class="text-blue-600 underline" href={gameLink}>{gameLink}</a><button

@@ -60,17 +60,21 @@ func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
-	var initGamePayload InitGamePayload
-	if err := json.Unmarshal(event.Payload, &initGamePayload); err != nil {
+	var timeControl game.TimeControl
+	if err := json.Unmarshal(event.Payload, &timeControl); err != nil {
 		return err
 	}
-	pendingUser, exists := c.GameManager.PendingUsers[initGamePayload.TimeControl]
+	//log.Println(timeControl)
+	if timeControl.BaseTime <= 0 || timeControl.BaseTime > 10800 || timeControl.Increment < 0 || timeControl.Increment > 180 {
+		return errors.New("invalid time control")
+	}
+	pendingUser, exists := c.GameManager.PendingUsers[timeControl]
 	if !exists {
 		log.Println("no pending game, creating...")
-		c.GameManager.PendingUsers[initGamePayload.TimeControl] = client.UserID
+		c.GameManager.PendingUsers[timeControl] = client.UserID
 	} else {
 		log.Println("game found...")
-		delete(c.GameManager.PendingUsers, initGamePayload.TimeControl)
+		delete(c.GameManager.PendingUsers, timeControl)
 		if pendingUser == client.UserID {
 			return nil
 		}
@@ -83,7 +87,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			return err
 		}
-		createdGame, err := c.createGame(id, pendingUser, client.UserID, initGamePayload.TimeControl, rating1, rating2)
+		createdGame, err := c.createGame(id, pendingUser, client.UserID, timeControl, rating1, rating2)
 		if err != nil {
 			return err
 		}
@@ -107,16 +111,20 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) error {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
-	var challengePayload InitGamePayload
-	if err := json.Unmarshal(event.Payload, &challengePayload); err != nil {
+	var timeControl game.TimeControl
+	if err := json.Unmarshal(event.Payload, &timeControl); err != nil {
 		return err
+	}
+	//log.Println(timeControl)
+	if timeControl.BaseTime <= 0 || timeControl.BaseTime > 10800 || timeControl.Increment < 0 || timeControl.Increment > 180 {
+		return errors.New("invalid time control")
 	}
 	id, err := c.generateUniqueGameID()
 	if err != nil {
 		return err
 	}
 	c.GameManager.PendingChallenges[id] = game.Challenge{
-		TimeControl:     challengePayload.TimeControl,
+		TimeControl:     timeControl,
 		Creator:         client.UserID,
 		CreatorUsername: client.Username,
 	}

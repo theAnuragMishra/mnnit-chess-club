@@ -6,38 +6,42 @@
 
 	if (!data.user) goto('/');
 
-	async function handleInitGame(timeControl: string, index: number) {
+	async function handleInitGame(
+		timeControl: { baseTime: number; increment: number },
+		index: number
+	) {
 		activeState[index] = !activeState[index];
-		websocketStore.sendMessage({ type: 'init_game', payload: { timeControl } });
+		websocketStore.sendMessage({ type: 'init_game', payload: { ...timeControl } });
 	}
 
 	const timeControls = [
-		'1+0',
-		'1+1',
-		'2+1',
-		'3+0',
-		'3+2',
-		'5+0',
-		'5+3',
-		'10+0',
-		'10+5',
-		'15+10',
-		'30+0',
-		'30+20'
+		{ baseTime: 60, increment: 0 },
+		{ baseTime: 60, increment: 1 },
+		{ baseTime: 120, increment: 1 },
+		{ baseTime: 180, increment: 0 },
+		{ baseTime: 180, increment: 2 },
+		{ baseTime: 300, increment: 0 },
+		{ baseTime: 300, increment: 3 },
+		{ baseTime: 600, increment: 0 },
+		{ baseTime: 600, increment: 5 },
+		{ baseTime: 900, increment: 10 },
+		{ baseTime: 1800, increment: 0 },
+		{ baseTime: 1800, increment: 20 }
 	];
-	let baseTime = $state(3);
-	let increment = $state(0);
+
+	const baseTimes = [
+		0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25,
+		30, 35, 40, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180
+	];
+
+	const increments = [
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45,
+		60, 90, 120, 150, 180
+	];
+	//console.log(baseTimes.length, increments.length);
 	let activeState = $state(Array(12).fill(false));
-	let btError = $derived(
-		baseTime === undefined || baseTime === null || baseTime <= 0 || baseTime > 180
-	);
-	let iError = $derived(
-		increment === undefined ||
-			increment === null ||
-			increment < 0 ||
-			increment > 180 ||
-			!Number.isInteger(increment)
-	);
+	let baseIndex = $state(6);
+	let incrementIndex = $state(0);
 </script>
 
 <div class="box">
@@ -45,41 +49,30 @@
 		<button
 			onclick={() => handleInitGame(timeControl, index)}
 			class="btn relative cursor-pointer bg-gray-800 text-3xl"
-			><span>{timeControl}</span>{#if activeState[index]}<span class="loading-bar">
+			><span>{timeControl.baseTime / 60}+{timeControl.increment}</span>{#if activeState[index]}<span
+					class="loading-bar"
+				>
 					<span class="moving-indicator"></span>
 				</span>{/if}</button
 		>
 	{/each}
-	<div class="col-span-3 flex justify-around gap-2">
-		<div>
-			Minutes per side: <input
-				class={`rounded-md bg-gray-800 px-2 py-1 ${btError ? 'border-2 border-red-500' : ''}`}
-				type="number"
-				bind:value={baseTime}
-				min="0.5"
-				max="180"
-			/>
+	<div class="col-span-3 flex flex-col items-center justify-center gap-2">
+		<div class="flex flex-col items-center justify-center">
+			<span>Minutes per side: {baseTimes[baseIndex]}</span>
+			<input type="range" bind:value={baseIndex} min="0" max="37" />
 		</div>
-		<div>
-			Increment: <input
-				class={`rounded-md bg-gray-800 px-2 py-1 ${iError ? 'border-2 border-red-500' : ''}`}
-				type="number"
-				bind:value={increment}
-				min="0"
-				max="180"
-			/>
+		<div class="flex flex-col items-center justify-center">
+			<span>Increment: {increments[incrementIndex]}</span>
+			<input type="range" bind:value={incrementIndex} min="0" max="30" />
 		</div>
 	</div>
 	<div class="col-span-3">
 		<button
 			onclick={() => {
-				if (btError || iError) {
-					return;
-				}
 				//console.log(baseTime, increment);
 				websocketStore.sendMessage({
 					type: 'create_challenge',
-					payload: { timeControl: `${baseTime}+${increment}` }
+					payload: { baseTime: baseTimes[baseIndex] * 60, increment: increments[incrementIndex] }
 				});
 			}}
 			class="cursor-pointer rounded-md bg-gray-800 px-3 py-2 text-xl">Create Challenge Link</button
@@ -88,16 +81,6 @@
 </div>
 
 <style>
-	input::-webkit-outer-spin-button,
-	input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-
-	input[type='number'] {
-		appearance: none;
-		-moz-appearance: textfield;
-	}
 	.box {
 		display: grid;
 		height: 300px;
@@ -166,5 +149,67 @@
 			width: 150px;
 			height: 100px;
 		}
+	}
+
+	input[type='range'] {
+		appearance: none;
+		-webkit-appearance: none;
+		width: 300px;
+		height: 8px;
+		border-radius: 5px;
+		background: #ddd;
+		outline: none;
+		transition: background 0.3s;
+		margin: 10px 0;
+	}
+
+	input[type='range']:hover {
+		background: #ccc;
+	}
+
+	/* Thumb styling */
+	input[type='range']::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		height: 20px;
+		width: 20px;
+		background: #367995;
+		border-radius: 50%;
+		cursor: pointer;
+		border: none;
+		transition: background 0.3s;
+		margin-top: -6px; /* Align thumb vertically */
+	}
+
+	input[type='range']::-moz-range-thumb {
+		height: 20px;
+		width: 20px;
+		background: #367995;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	/* Track styling for Firefox */
+	input[type='range']::-moz-range-track {
+		height: 8px;
+		background: #ddd;
+		border-radius: 5px;
+	}
+
+	/* IE and Edge */
+	input[type='range']::-ms-thumb {
+		height: 20px;
+		width: 20px;
+		background: #367995;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	input[type='range']::-ms-track {
+		height: 8px;
+		background: transparent;
+		border-color: transparent;
+		color: transparent;
 	}
 </style>
