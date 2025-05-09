@@ -14,13 +14,13 @@
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	let { data } = $props();
 	//console.log(data);
+
 	//audios
 	let moveAudio: HTMLAudioElement;
 	let captureAudio: HTMLAudioElement;
 	let notify: HTMLAudioElement;
 	let lowTime: HTMLAudioElement;
 
-	// console.log(data);
 	let ground: Api | null = $state(null);
 	const baseTime = data.gameData.game.BaseTime;
 	const increment = data.gameData.game.Increment;
@@ -44,7 +44,6 @@
 	let chessLatest = $derived(
 		moveHistory ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
 	);
-
 	let chessForView = $derived(
 		moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
@@ -105,6 +104,7 @@
 	};
 
 	//timer setup
+	const abortLength = baseTime >= 20 ? 20 : baseTime >= 10 ? 10 : baseTime;
 	let btime = $derived(timeBlack);
 	let wtime = $derived(timeWhite);
 	let animationFrame: number | null;
@@ -190,7 +190,10 @@
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">
 			{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
-				<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))} tb="t" />
+				<AbortTimer
+					time={abortLength - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
+					tb="t"
+				/>
 			{/if}
 		</div>
 		<div class="board flex flex-col justify-center">
@@ -207,7 +210,10 @@
 		</div>
 		<div class="abortb">
 			{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
-				<AbortTimer time={20 - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))} tb="b" />
+				<AbortTimer
+					time={abortLength - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
+					tb="b"
+				/>
 			{/if}
 		</div>
 		<div class="clockt h-fit">
