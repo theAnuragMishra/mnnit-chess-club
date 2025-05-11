@@ -25,26 +25,26 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 		return
 	}
-	moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
-	if err != nil {
-		log.Println(err)
-	}
-
-	var timeBlack int32
-	var timeWhite int32
-
 	serverGame, exists := c.GameManager.Games[gameID]
-
 	if !exists {
-
+		//database game response
+		moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
+		if err != nil {
+			log.Println(err)
+			utils.RespondWithError(w, http.StatusBadRequest, "error getting game moves")
+			return
+		}
+		var timeBlack, timeWhite int32
 		if foundGame.EndTimeLeftWhite != nil {
 			timeWhite = *foundGame.EndTimeLeftWhite
 		}
 		if foundGame.EndTimeLeftBlack != nil {
 			timeBlack = *foundGame.EndTimeLeftBlack
 		}
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
 
 	} else {
+		//server game response
 		timePassed := time.Since(serverGame.LastMoveTime)
 		if serverGame.Board.Position().Turn() == chess.White {
 			serverGame.TimeWhite = max(serverGame.TimeWhite-timePassed, 0)
@@ -52,22 +52,10 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 			serverGame.TimeBlack = max(serverGame.TimeBlack-timePassed, 0)
 		}
 		serverGame.LastMoveTime = time.Now()
-
-		timeBlack = int32(serverGame.TimeBlack.Milliseconds())
-		timeWhite = int32(serverGame.TimeWhite.Milliseconds())
-		//fmt.Println(serverGame.TimeBlack, serverGame.TimeWhite, serverGame.BaseTime)
+		timeWhite := int32(serverGame.TimeWhite.Milliseconds())
+		timeBlack := int32(serverGame.TimeBlack.Milliseconds())
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
 	}
-
-	// fmt.Println(serverGame.Result)
-
-	response := GameResponse{
-		Game:      foundGame,
-		Moves:     moves,
-		TimeBlack: timeBlack,
-		TimeWhite: timeWhite,
-	}
-
-	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {

@@ -8,20 +8,12 @@ import (
 	"time"
 )
 
-type CsrfToken struct {
-	SessionID string
-	Token     string
-	CreatedAt time.Time
-	ExpiresAt time.Time
-}
-
 type Game struct {
 	ID               string
 	BaseTime         int32
 	Increment        int32
 	WhiteID          *int32
 	BlackID          *int32
-	Fen              string
 	GameLength       int16
 	Result           string
 	CreatedAt        time.Time
@@ -38,12 +30,11 @@ type Move struct {
 	ID           int32
 	GameID       string
 	MoveNumber   int32
-	PlayerID     *int32
 	MoveNotation string
 	Orig         string
 	Dest         string
 	MoveFen      string
-	CreatedAt    time.Time
+	TimeLeft     *int32
 }
 
 type Session struct {

@@ -17,13 +17,21 @@ type Game struct {
 	WhiteID       int32
 	BlackID       int32
 	Board         *chess.Game
-	GameLength    int16
 	LastMoveTime  time.Time
 	TimeWhite     time.Duration
 	TimeBlack     time.Duration
 	DrawOfferedBy int32
 	AbortTimer    *time.Timer
 	ClockTimer    *time.Timer
+	Moves         []Move
+}
+
+type Move struct {
+	MoveNotation string
+	Orig         string
+	Dest         string
+	MoveFen      string
+	TimeLeft     *int32
 }
 
 func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
@@ -43,7 +51,7 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 }
 
 func DatabaseGameToGame(game *database.Game) *Game {
-	fen, _ := chess.FEN(game.Fen)
+
 	return &Game{
 		ID:           game.ID,
 		Result:       game.Result,
@@ -53,8 +61,7 @@ func DatabaseGameToGame(game *database.Game) *Game {
 		TimeWhite:    time.Duration(game.BaseTime) * time.Second,
 		WhiteID:      *game.WhiteID,
 		BlackID:      *game.BlackID,
-		Board:        chess.NewGame(fen),
-		GameLength:   game.GameLength,
+		Board:        chess.NewGame(),
 		LastMoveTime: time.Now(),
 	}
 }

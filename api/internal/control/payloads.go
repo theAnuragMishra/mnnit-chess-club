@@ -7,7 +7,7 @@ type movePayload struct {
 	GameID  string `json:"GameId"`
 }
 
-type AcceptChallengePayload struct {
+type GameIDPayload struct {
 	GameID string `json:"GameId"`
 }
 
@@ -17,13 +17,6 @@ type UserNamePayload struct {
 
 type RoomPayload struct {
 	RoomID string `json:"room"`
-}
-
-type GameResponse struct {
-	Game      any   `json:"game"`
-	Moves     any   `json:"moves"`
-	TimeBlack int32 `json:"timeBlack"`
-	TimeWhite int32 `json:"timeWhite"`
 }
 
 type ChatPayload struct {

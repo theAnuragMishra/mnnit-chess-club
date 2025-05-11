@@ -27,7 +27,6 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 		Increment: timeControl.Increment,
 		WhiteID:   &p1,
 		BlackID:   &p2,
-		Fen:       createdGame.Board.FEN(),
 		RatingW:   int32(r1),
 		RatingB:   int32(r2),
 	})
@@ -59,7 +58,7 @@ func (c *Controller) abortGame(g *game.Game) {
 	reason := "Game Aborted"
 	etl := int32(g.BaseTime.Milliseconds())
 
-	cw, cb, err := c.endGame(g.ID, &etl, &etl, "aborted", &reason, g.WhiteID, g.BlackID)
+	cw, cb, err := c.endGame(g.ID, "aborted", &reason, g.WhiteID, g.BlackID, 0, &etl, &etl)
 	if err != nil {
 		log.Println("error ending game with result", err)
 		return
@@ -95,7 +94,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		reason = "Black Timeout"
 	}
 
-	cw, cb, err := c.endGame(g.ID, &etlw, &etlb, result, &reason, g.WhiteID, g.BlackID)
+	cw, cb, err := c.endGame(g.ID, result, &reason, g.WhiteID, g.BlackID, int16(len(g.Moves)), &etlw, &etlb)
 	if err != nil {
 		log.Println("error ending game on timeout", err)
 	}
@@ -108,18 +107,18 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
-
+	c.BatchInsertMoves(g)
 	delete(c.GameManager.Games, g.ID)
 }
 
-func (c *Controller) endGame(gameID string, etlw, etlb *int32, result string, reason *string, id1, id2 int32) (int, int, error) {
+func (c *Controller) endGame(gameID string, result string, reason *string, id1, id2 int32, gameLength int16, etlw, etlb *int32) (int, int, error) {
 	if result == "aborted" {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,
-			EndTimeLeftWhite: etlw,
-			EndTimeLeftBlack: etlb,
 			ResultReason:     reason,
 			ID:               gameID,
+			EndTimeLeftBlack: etlb,
+			EndTimeLeftWhite: etlw,
 		})
 		return 0, 0, err
 	}
@@ -168,12 +167,13 @@ func (c *Controller) endGame(gameID string, etlw, etlb *int32, result string, re
 
 	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           result,
-		EndTimeLeftWhite: etlw,
-		EndTimeLeftBlack: etlb,
 		ResultReason:     reason,
 		ID:               gameID,
+		GameLength:       gameLength,
 		ChangeW:          &cw,
 		ChangeB:          &cb,
+		EndTimeLeftWhite: etlw,
+		EndTimeLeftBlack: etlb,
 	})
 	return int(up1.Rating - p1info.Rating), int(up2.Rating - p2info.Rating), err
 }
@@ -195,5 +195,22 @@ func (c *Controller) generateUniqueGameID() (string, error) {
 			continue
 		}
 		return id, nil
+	}
+}
+
+func (c *Controller) BatchInsertMoves(g *game.Game) {
+	for i, m := range g.Moves {
+		err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
+			GameID:       g.ID,
+			MoveNumber:   int32(i + 1),
+			MoveNotation: m.MoveNotation,
+			Orig:         m.Orig,
+			Dest:         m.Dest,
+			MoveFen:      m.MoveFen,
+			TimeLeft:     m.TimeLeft,
+		})
+		if err != nil {
+			log.Println("error inserting move", err)
+		}
 	}
 }

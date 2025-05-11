@@ -10,22 +10,6 @@ import (
 	"time"
 )
 
-const createCSRFToken = `-- name: CreateCSRFToken :exec
-INSERT INTO csrf_tokens(session_id, token, expires_at)
-VALUES ($1, $2, $3)
-`
-
-type CreateCSRFTokenParams struct {
-	SessionID string
-	Token     string
-	ExpiresAt time.Time
-}
-
-func (q *Queries) CreateCSRFToken(ctx context.Context, arg CreateCSRFTokenParams) error {
-	_, err := q.db.Exec(ctx, createCSRFToken, arg.SessionID, arg.Token, arg.ExpiresAt)
-	return err
-}
-
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions(id, user_id, expires_at)
 VALUES ($1, $2, $3)
@@ -51,22 +35,6 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 	return err
 }
 
-const getCSRFTokenBySession = `-- name: GetCSRFTokenBySession :one
-SELECT session_id, token, created_at, expires_at from csrf_tokens WHERE session_id = $1
-`
-
-func (q *Queries) GetCSRFTokenBySession(ctx context.Context, sessionID string) (CsrfToken, error) {
-	row := q.db.QueryRow(ctx, getCSRFTokenBySession, sessionID)
-	var i CsrfToken
-	err := row.Scan(
-		&i.SessionID,
-		&i.Token,
-		&i.CreatedAt,
-		&i.ExpiresAt,
-	)
-	return i, err
-}
-
 const getSession = `-- name: GetSession :one
 SELECT sessions.id, sessions.user_id, sessions.created_at, sessions.expires_at,users.username FROM sessions JOIN users ON sessions.user_id = users.id WHERE sessions.id = $1
 `
@@ -90,20 +58,6 @@ func (q *Queries) GetSession(ctx context.Context, id string) (GetSessionRow, err
 		&i.Username,
 	)
 	return i, err
-}
-
-const updateCSRFToken = `-- name: UpdateCSRFToken :exec
-UPDATE csrf_tokens SET token = $1 WHERE session_id = $2
-`
-
-type UpdateCSRFTokenParams struct {
-	Token     string
-	SessionID string
-}
-
-func (q *Queries) UpdateCSRFToken(ctx context.Context, arg UpdateCSRFTokenParams) error {
-	_, err := q.db.Exec(ctx, updateCSRFToken, arg.Token, arg.SessionID)
-	return err
 }
 
 const updateSessionExpiry = `-- name: UpdateSessionExpiry :exec

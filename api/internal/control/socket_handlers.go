@@ -10,8 +10,6 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 
 	"github.com/notnil/chess"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
@@ -141,7 +139,7 @@ func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) e
 func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) error {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
-	var acceptChallengePayload AcceptChallengePayload
+	var acceptChallengePayload GameIDPayload
 	if err := json.Unmarshal(event.Payload, &acceptChallengePayload); err != nil {
 		return err
 	}
@@ -204,10 +202,25 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("error making move")
 	}
 
-	foundGame.GameLength += 1
+	var timeLeft int32
+	if foundGame.Board.Position().Turn() == chess.White {
+		timeLeft = int32(foundGame.TimeBlack.Milliseconds())
+	} else {
+		timeLeft = int32(foundGame.TimeWhite.Milliseconds())
+	}
+
+	moveToSend := game.Move{
+		MoveNotation: move.MoveStr,
+		Orig:         move.Orig,
+		Dest:         move.Dest,
+		MoveFen:      foundGame.Board.FEN(),
+		TimeLeft:     &timeLeft,
+	}
+
+	foundGame.Moves = append(foundGame.Moves, moveToSend)
 
 	if foundGame.AbortTimer != nil {
-		if foundGame.GameLength == 1 {
+		if len(foundGame.Moves) == 1 {
 			if foundGame.BaseTime >= time.Second*20 {
 				foundGame.AbortTimer.Reset(time.Second * 20)
 			} else if foundGame.BaseTime >= time.Second*10 {
@@ -221,7 +234,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 	}
 
-	if foundGame.GameLength == 2 {
+	if len(foundGame.Moves) == 2 {
 		if foundGame.Board.Position().Turn() == chess.White {
 			timer := time.AfterFunc(foundGame.TimeWhite, func() { c.handleGameTimeout(foundGame) })
 			foundGame.ClockTimer = timer
@@ -229,7 +242,7 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 			timer := time.AfterFunc(foundGame.TimeBlack, func() { c.handleGameTimeout(foundGame) })
 			foundGame.ClockTimer = timer
 		}
-	} else if foundGame.GameLength > 2 {
+	} else if len(foundGame.Moves) > 2 {
 		if foundGame.Board.Position().Turn() == chess.White {
 			foundGame.ClockTimer.Reset(foundGame.TimeWhite)
 		} else {
@@ -237,50 +250,21 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 	}
 
-	var x int32
-	if foundGame.Board.Position().Turn() == 'w' {
-		x = foundGame.BlackID
-	} else {
-		x = foundGame.WhiteID
-	}
-	insertedMove, err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
-		GameID:       gameID,
-		MoveNumber:   int32(foundGame.GameLength),
-		PlayerID:     &x,
-		MoveNotation: move.MoveStr,
-		Orig:         move.Orig,
-		Dest:         move.Dest,
-		MoveFen:      foundGame.Board.FEN(),
-	})
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = c.Queries.UpdateGameLengthAndFEN(context.Background(), database.UpdateGameLengthAndFENParams{
-		Fen:        foundGame.Board.FEN(),
-		GameLength: foundGame.GameLength,
-		ID:         foundGame.ID,
-	})
-	if err != nil {
-		log.Println("error updating game fen", err)
-	}
-
 	// log.Println(foundGame.Board.Position().Turn())
 	var cw, cb int
+	var err error
 	if result != "" {
 		// log.Println("game ho gya over")
-
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
-
-		cw, cb, err = c.endGame(foundGame.ID, &etlw, &etlb, result, &message, foundGame.WhiteID, foundGame.BlackID)
+		cw, cb, err = c.endGame(foundGame.ID, result, &message, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
 		foundGame.ClockTimer.Stop()
-		delete(c.GameManager.Games, gameID)
+
 	}
-	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": insertedMove, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds(), "changeW": cw, "changeB": cb})
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": moveToSend, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds(), "changeW": cw, "changeB": cb})
 	if err != nil {
 		log.Println("error marshalling new game payload")
 		return nil
@@ -290,6 +274,11 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, gameID)
+
+	if result != "" {
+		c.BatchInsertMoves(foundGame)
+		delete(c.GameManager.Games, gameID)
+	}
 
 	return nil
 }
@@ -349,7 +338,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	if foundGame.GameLength < 2 {
+	if len(foundGame.Moves) < 2 {
 		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
 
@@ -392,11 +381,9 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		} else {
 			foundGame.TimeBlack -= timeTaken
 		}
-
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
-
-		cw, cb, err := c.endGame(foundGame.ID, &etlw, &etlb, "1/2-1/2", &reason, foundGame.WhiteID, foundGame.BlackID)
+		cw, cb, err := c.endGame(foundGame.ID, "1/2-1/2", &reason, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
@@ -411,6 +398,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		c.SocketManager.BroadcastToRoom(e, gameID)
 		foundGame.ClockTimer.Stop()
+		c.BatchInsertMoves(foundGame)
 		delete(c.GameManager.Games, gameID)
 	}
 
@@ -435,7 +423,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	if foundGame.GameLength < 2 {
+	if len(foundGame.Moves) < 2 {
 		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
 
@@ -465,11 +453,9 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	} else {
 		foundGame.TimeBlack -= timeTaken
 	}
-
 	etlb := int32(foundGame.TimeBlack.Milliseconds())
 	etlw := int32(foundGame.TimeWhite.Milliseconds())
-
-	cw, cb, err := c.endGame(foundGame.ID, &etlw, &etlb, result, &reason, foundGame.WhiteID, foundGame.BlackID)
+	cw, cb, err := c.endGame(foundGame.ID, result, &reason, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
 	if err != nil {
 		log.Println("error ending game with result", err)
 	}
@@ -485,6 +471,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	c.SocketManager.BroadcastToRoom(e, gameID)
 
 	foundGame.ClockTimer.Stop()
+	c.BatchInsertMoves(foundGame)
 	delete(c.GameManager.Games, gameID)
 	return nil
 }

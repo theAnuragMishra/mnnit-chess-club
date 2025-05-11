@@ -5,7 +5,6 @@ CREATE TABLE games (
     increment INT NOT NULL,
     white_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     black_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    fen TEXT NOT NULL,
     game_length SMALLINT NOT NULL DEFAULT 0,
     result VARCHAR(10) CHECK(result IN ('1-0', '0-1', '1/2-1/2', 'ongoing', 'aborted')) NOT NULL DEFAULT 'ongoing',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -22,14 +21,27 @@ CREATE TABLE moves (
     id SERIAL PRIMARY KEY ,
     game_id VARCHAR(20) REFERENCES games(id) ON DELETE CASCADE NOT NULL,
     move_number INT NOT NULL,
-    player_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     move_notation VARCHAR(10) NOT NULL,
     orig VARCHAR(4) NOT NULL,
     dest VARCHAR(4) NOT NULL,
     move_fen TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    time_left INT
 );
+CREATE INDEX games_w_id_index ON games(white_id);
+CREATE INDEX games_b_id_index ON games(black_id);
+CREATE INDEX games_wb_id_index ON games(white_id, black_id);
+CREATE INDEX games_result_index ON games(result);
+CREATE INDEX games_created_at_index ON games(created_at);
+CREATE INDEX moves_game_id_index ON moves(game_id);
+CREATE INDEX moves_move_number_index ON moves(move_number);
 
 -- +goose Down
+DROP INDEX IF EXISTS moves_move_number_index;
+DROP INDEX IF EXISTS moves_game_id_index;
+DROP INDEX IF EXISTS games_created_at_index;
+DROP INDEX IF EXISTS games_result_index;
+DROP INDEX IF EXISTS games_wb_id_index;
+DROP INDEX IF EXISTS games_b_id_index;
+DROP INDEX IF EXISTS games_w_id_index;
 DROP TABLE moves;
 DROP TABLE games;
