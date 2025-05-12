@@ -38,6 +38,15 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
 	return err
 }
 
+const deleteOngoingGames = `-- name: DeleteOngoingGames :exec
+DELETE FROM games WHERE result = 'ongoing'
+`
+
+func (q *Queries) DeleteOngoingGames(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteOngoingGames)
+	return err
+}
+
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
 SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7

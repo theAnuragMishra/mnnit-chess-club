@@ -3,11 +3,10 @@ package control
 import (
 	"context"
 	"errors"
-	"log"
-
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
+	"log"
 )
 
 type Controller struct {
@@ -22,12 +21,8 @@ func NewController(queries *database.Queries) *Controller {
 	c.GameManager = game.NewManager()
 	c.Queries = queries
 
-	games, err := queries.GetOngoingGames(context.Background())
-	if err != nil {
-		log.Println("error getting ongoing games", err)
-	}
-	for _, ongoingGame := range games {
-		c.GameManager.Games[ongoingGame.ID] = game.DatabaseGameToGame(&ongoingGame)
+	if err := queries.DeleteOngoingGames(context.Background()); err != nil {
+		log.Println(err)
 	}
 
 	return &c

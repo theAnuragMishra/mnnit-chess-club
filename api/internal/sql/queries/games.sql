@@ -47,3 +47,6 @@ COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = '0-1') OR (games.b
 FROM games
 JOIN users ON users.id = games.white_id or users.id = games.black_id
 WHERE users.username = $1;
+
+-- name: DeleteOngoingGames :exec
+DELETE FROM games WHERE result = 'ongoing';

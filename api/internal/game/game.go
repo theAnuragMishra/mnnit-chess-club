@@ -4,8 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-
 	"github.com/notnil/chess"
 )
 
@@ -46,22 +44,6 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 		WhiteID:      player1,
 		BlackID:      player2,
 		Board:        board,
-		LastMoveTime: time.Now(),
-	}
-}
-
-func DatabaseGameToGame(game *database.Game) *Game {
-
-	return &Game{
-		ID:           game.ID,
-		Result:       game.Result,
-		BaseTime:     time.Duration(game.BaseTime) * time.Second,
-		Increment:    time.Duration(game.Increment) * time.Second,
-		TimeBlack:    time.Duration(game.BaseTime) * time.Second,
-		TimeWhite:    time.Duration(game.BaseTime) * time.Second,
-		WhiteID:      *game.WhiteID,
-		BlackID:      *game.BlackID,
-		Board:        chess.NewGame(),
 		LastMoveTime: time.Now(),
 	}
 }
