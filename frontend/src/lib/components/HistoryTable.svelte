@@ -33,7 +33,7 @@
 			aria-label="go to first move"
 			class="first flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 			onclick={() => {
-				setActiveIndex(0);
+				setActiveIndex(-1);
 			}}
 		>
 			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"

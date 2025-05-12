@@ -45,14 +45,14 @@
 		moveHistory ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
 	);
 	let chessForView = $derived(
-		moveHistory ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
+		moveHistory && activeIndex !== -1 ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
 	const isPlayer =
 		data.user.username === data.gameData.game.WhiteUsername ||
 		data.user.username === data.gameData.game.BlackUsername;
 	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
 	const setActiveIndex = (index: number) => {
-		if (index > moveHistory.length - 1 || index < 0) return;
+		if (index > moveHistory.length - 1 || index < -1) return;
 		activeIndex = index;
 	};
 	const gameID = page.params.gameID;
@@ -216,7 +216,9 @@
 				orientation={whiteUp ? 'black' : 'white'}
 				{gameID}
 				chess={chessForView}
-				lastMove={moveHistory ? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest] : []}
+				lastMove={moveHistory && activeIndex !== -1
+					? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
+					: []}
 				viewOnly={!isPlayer ||
 					(result != 'ongoing' && result != '') ||
 					(moveHistory && activeIndex !== moveHistory.length - 1)}
