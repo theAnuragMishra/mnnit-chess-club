@@ -118,8 +118,28 @@
 						: baseTime >= 10
 							? 3
 							: 1) * 1000;
-	let btime = $derived(timeBlack);
-	let wtime = $derived(timeWhite);
+	let btime = $derived(
+		result != '' && result != 'ongoing'
+			? activeIndex == -1 || activeIndex == 0
+				? baseTime * 1000
+				: activeIndex == moveHistory.length - 1
+					? timeBlack
+					: activeIndex % 2 == 0
+						? moveHistory[activeIndex - 1].TimeLeft
+						: moveHistory[activeIndex].TimeLeft
+			: timeBlack
+	);
+	let wtime = $derived(
+		result != '' && result != 'ongoing'
+			? activeIndex == -1
+				? baseTime * 1000
+				: activeIndex == moveHistory.length - 1
+					? timeWhite
+					: activeIndex % 2 == 0
+						? moveHistory[activeIndex].TimeLeft
+						: moveHistory[activeIndex - 1].TimeLeft
+			: timeWhite
+	);
 	let animationFrame: number | null;
 	let startTime: DOMHighResTimeStamp | null;
 	let lowTimePlayed = $state(false);
