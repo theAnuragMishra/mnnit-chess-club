@@ -199,18 +199,20 @@ func (c *Controller) generateUniqueGameID() (string, error) {
 }
 
 func (c *Controller) BatchInsertMoves(g *game.Game) {
-	for i, m := range g.Moves {
-		err := c.Queries.InsertMove(context.Background(), database.InsertMoveParams{
+	moves := make([]database.InsertMovesParams, len(g.Moves))
+	for i, move := range g.Moves {
+		moves[i] = database.InsertMovesParams{
 			GameID:       g.ID,
 			MoveNumber:   int32(i + 1),
-			MoveNotation: m.MoveNotation,
-			Orig:         m.Orig,
-			Dest:         m.Dest,
-			MoveFen:      m.MoveFen,
-			TimeLeft:     m.TimeLeft,
-		})
-		if err != nil {
-			log.Println("error inserting move", err)
+			MoveNotation: move.MoveNotation,
+			Orig:         move.Orig,
+			Dest:         move.Dest,
+			MoveFen:      move.MoveFen,
+			TimeLeft:     move.TimeLeft,
 		}
+	}
+	_, err := c.Queries.InsertMoves(context.Background(), moves)
+	if err != nil {
+		log.Println("error inserting moves", err)
 	}
 }

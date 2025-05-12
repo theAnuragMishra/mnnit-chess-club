@@ -2,7 +2,7 @@
 INSERT INTO games (id, base_time, increment, white_id, black_id, rating_w, rating_b)
 VALUES ($1, $2, $3, $4, $5, $6, $7);
 
--- name: InsertMove :exec
+-- name: InsertMoves :copyfrom
 INSERT INTO moves (game_id, move_number, move_notation,orig, dest, move_fen, time_left)
 VALUES ($1,$2, $3, $4, $5, $6, $7);
 

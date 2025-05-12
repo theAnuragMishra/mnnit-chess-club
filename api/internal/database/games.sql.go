@@ -319,12 +319,7 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 	return items, nil
 }
 
-const insertMove = `-- name: InsertMove :exec
-INSERT INTO moves (game_id, move_number, move_notation,orig, dest, move_fen, time_left)
-VALUES ($1,$2, $3, $4, $5, $6, $7)
-`
-
-type InsertMoveParams struct {
+type InsertMovesParams struct {
 	GameID       string
 	MoveNumber   int32
 	MoveNotation string
@@ -332,17 +327,4 @@ type InsertMoveParams struct {
 	Dest         string
 	MoveFen      string
 	TimeLeft     *int32
-}
-
-func (q *Queries) InsertMove(ctx context.Context, arg InsertMoveParams) error {
-	_, err := q.db.Exec(ctx, insertMove,
-		arg.GameID,
-		arg.MoveNumber,
-		arg.MoveNotation,
-		arg.Orig,
-		arg.Dest,
-		arg.MoveFen,
-		arg.TimeLeft,
-	)
-	return err
 }
