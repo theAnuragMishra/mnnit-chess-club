@@ -4,7 +4,7 @@ import "crypto/rand"
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func GenerateGameID(length int) (string, error) {
+func GenerateUniqueID(length int) (string, error) {
 	code := make([]byte, length)
 	charsetLen := byte(len(charset))
 	randomBytes := make([]byte, length)

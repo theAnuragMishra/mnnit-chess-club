@@ -4,55 +4,61 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"log"
+	"net/http"
 	"time"
 
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
-
+	"github.com/go-chi/chi/v5"
 	"github.com/notnil/chess"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
-func RoomChange(c *Controller, event socket.Event, client *socket.Client) error {
-	c.SocketManager.Lock()
-	defer c.SocketManager.Unlock()
-	var payload RoomPayload
-	if err := json.Unmarshal(event.Payload, &payload); err != nil {
-		return err
-	}
-	if client.Room == payload.RoomID {
-		return nil
-	}
-	delete(c.SocketManager.Rooms[client.Room], client)
-	client.Room = payload.RoomID
-	if c.SocketManager.Rooms[payload.RoomID] == nil {
-		c.SocketManager.Rooms[payload.RoomID] = make(map[*socket.Client]bool)
-	}
-	c.SocketManager.Rooms[payload.RoomID][client] = true
-	// printing clients for debugging purposes
-	// for _, x := range c.SocketManager.Rooms {
-	// 	for y := range x {
-	// 		fmt.Println(y)
-	// 	}
-	// }
-	return nil
-}
+func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
+	gameID := chi.URLParam(r, "gameID")
 
-func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
-	c.SocketManager.Lock()
-	defer c.SocketManager.Unlock()
-	var payload RoomPayload
-	if err := json.Unmarshal(event.Payload, &payload); err != nil {
-		return err
+	// fmt.Println(gameID)
+	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
+	if err != nil {
+		if challenge, exists := c.GameManager.PendingChallenges[gameID]; exists {
+			utils.RespondWithJSON(w, http.StatusOK, challenge)
+			return
+		}
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
+		return
 	}
-	delete(c.SocketManager.Rooms[client.Room], client)
-	client.Room = ""
-	// for _, x := range c.SocketManager.Rooms {
-	// 	for y := range x {
-	// 		fmt.Println(y)
-	// 	}
-	// }
-	return nil
+	serverGame, exists := c.GameManager.Games[gameID]
+	if !exists {
+		//database game response
+		moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
+		if err != nil {
+			log.Println(err)
+			utils.RespondWithError(w, http.StatusBadRequest, "error getting game moves")
+			return
+		}
+		var timeBlack, timeWhite int32
+		if foundGame.EndTimeLeftWhite != nil {
+			timeWhite = *foundGame.EndTimeLeftWhite
+		}
+		if foundGame.EndTimeLeftBlack != nil {
+			timeBlack = *foundGame.EndTimeLeftBlack
+		}
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
+
+	} else {
+		//server game response
+		timePassed := time.Since(serverGame.LastMoveTime)
+		if serverGame.Board.Position().Turn() == chess.White {
+			serverGame.TimeWhite = max(serverGame.TimeWhite-timePassed, 0)
+		} else {
+			serverGame.TimeBlack = max(serverGame.TimeBlack-timePassed, 0)
+		}
+		serverGame.LastMoveTime = time.Now()
+		timeWhite := int32(serverGame.TimeWhite.Milliseconds())
+		timeBlack := int32(serverGame.TimeBlack.Milliseconds())
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
+	}
 }
 
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {

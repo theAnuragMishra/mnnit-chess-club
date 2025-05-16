@@ -183,9 +183,9 @@ func (c *Controller) generateUniqueGameID() (string, error) {
 	var err error
 
 	for {
-		id, err = game.GenerateGameID(12)
+		id, err = game.GenerateUniqueID(12)
 		if err != nil {
-			log.Println("error generating game id:", err)
+			log.Println("error generating id:", err)
 			return "", err
 		}
 		_, err1 := c.Queries.GetGameByID(context.Background(), id)
