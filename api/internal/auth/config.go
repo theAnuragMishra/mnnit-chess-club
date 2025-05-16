@@ -7,6 +7,14 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+type Role int
+
+const (
+	User Role = iota
+	Moderator
+	Admin
+)
+
 func Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
