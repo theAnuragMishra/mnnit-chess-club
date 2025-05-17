@@ -49,6 +49,7 @@ type User struct {
 	Email      string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+	Role       int16
 	Username   *string
 	AvatarUrl  *string
 	GoogleID   string
