@@ -28,7 +28,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 		UserID:     userID,
 		connection: conn,
 		manager:    manager,
-		egress:     make(chan Event),
+		egress:     make(chan Event, 20),
 		Username:   username,
 	}
 }
@@ -99,11 +99,7 @@ func (m *Manager) BroadcastToRoom(event Event, room string) {
 	m.RLock()
 	defer m.RUnlock()
 	for client := range m.Rooms[room] {
-		select {
-		case client.egress <- event:
-		default:
-			log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
-		}
+		client.egress <- event
 	}
 }
 
@@ -112,11 +108,7 @@ func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, playe
 	defer m.RUnlock()
 	for client := range m.Rooms[room] {
 		if client != player2 && client != player1 {
-			select {
-			case client.egress <- event:
-			default:
-				log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
-			}
+			client.egress <- event
 		}
 	}
 }
@@ -127,12 +119,6 @@ func (m *Manager) Broadcast(event Event) {
 	defer m.RUnlock()
 
 	for _, client := range m.clients {
-		select {
-		case client.egress <- event:
-			// Successfully enqueued the event
-		default:
-			// Client's channel is full; log and handle as needed
-			log.Printf("Dropping event for client %s: channel full\n", client.connection.RemoteAddr())
-		}
+		client.egress <- event
 	}
 }
