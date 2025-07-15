@@ -95,12 +95,12 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			return err
 		}
-		payload := map[string]any{"GameID": createdGame.ID}
+		payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
 		rawPayload, err := json.Marshal(payload)
 		if err != nil {
 			return err
 		}
-		e := socket.Event{Type: "GoToGame", Payload: json.RawMessage(rawPayload)}
+		e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 		otherClient := c.SocketManager.FindClientByUserID(pendingUser)
 
 		client.Send(e)
@@ -132,12 +132,12 @@ func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) e
 		Creator:         client.UserID,
 		CreatorUsername: client.Username,
 	}
-	payload := map[string]any{"GameID": id}
+	payload := map[string]any{"ID": id, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	e := socket.Event{Type: "GoToGame", Payload: json.RawMessage(rawPayload)}
+	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 	client.Send(e)
 	return nil
 }
@@ -165,12 +165,12 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err != nil {
 		return err
 	}
-	payload := map[string]any{"GameID": createdGame.ID}
+	payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	e := socket.Event{Type: "RefreshGame", Payload: json.RawMessage(rawPayload)}
+	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 	c.SocketManager.BroadcastToRoom(e, acceptChallengePayload.GameID)
 	delete(c.GameManager.PendingChallenges, acceptChallengePayload.GameID)
 	return nil
@@ -263,11 +263,13 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		// log.Println("game ho gya over")
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
-		cw, cb, err = c.endGame(foundGame.ID, result, &message, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
+		cw, cb, err = c.endGame(foundGame, result, &message, int16(len(foundGame.Moves)), &etlw, &etlb)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
 		foundGame.ClockTimer.Stop()
+
+		c.sendScoreUpdateEvent(foundGame)
 
 	}
 	payload, err := json.Marshal(map[string]any{"gameID": gameID, "move": moveToSend, "Result": result, "message": message, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds(), "changeW": cw, "changeB": cb})
@@ -394,7 +396,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
-		cw, cb, err := c.endGame(foundGame.ID, "1/2-1/2", &reason, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
+		cw, cb, err := c.endGame(foundGame, "1/2-1/2", &reason, int16(len(foundGame.Moves)), &etlw, &etlb)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
@@ -409,6 +411,8 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		c.SocketManager.BroadcastToRoom(e, gameID)
 		foundGame.ClockTimer.Stop()
+		c.sendScoreUpdateEvent(foundGame)
+
 		c.BatchInsertMoves(foundGame)
 		delete(c.GameManager.Games, gameID)
 	}
@@ -466,7 +470,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	etlb := int32(foundGame.TimeBlack.Milliseconds())
 	etlw := int32(foundGame.TimeWhite.Milliseconds())
-	cw, cb, err := c.endGame(foundGame.ID, result, &reason, foundGame.WhiteID, foundGame.BlackID, int16(len(foundGame.Moves)), &etlw, &etlb)
+	cw, cb, err := c.endGame(foundGame, result, &reason, int16(len(foundGame.Moves)), &etlw, &etlb)
 	if err != nil {
 		log.Println("error ending game with result", err)
 	}
@@ -482,6 +486,9 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	c.SocketManager.BroadcastToRoom(e, gameID)
 
 	foundGame.ClockTimer.Stop()
+
+	c.sendScoreUpdateEvent(foundGame)
+
 	c.BatchInsertMoves(foundGame)
 	delete(c.GameManager.Games, gameID)
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 	"log"
 	"time"
 
@@ -17,9 +18,43 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeControl, r1 float64, r2 float64) (*game.Game, error) {
+func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
+	_, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	if !affectsTournament {
+		return
+	}
+	payloadd, err := json.Marshal(map[string]any{
+		"p1ID":    g.WhiteID,
+		"p2ID":    g.BlackID,
+		"p1Score": c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID].Score,
+		"p2Score": c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID].Score,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	ee := socket.Event{
+		Type:    "update_score",
+		Payload: json.RawMessage(payloadd),
+	}
 
-	createdGame := game.NewGame(time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p1, p2)
+	whiteClient := c.SocketManager.FindClientByUserID(g.WhiteID)
+	blackClient := c.SocketManager.FindClientByUserID(g.BlackID)
+
+	c.SocketManager.BroadcastToNonPlayers(ee, g.TournamentID, whiteClient, blackClient)
+
+	//payloaddd, err := json.Marshal(map[string]any{"ID": g.TournamentID, "Type": "tournament"})
+	//eee := socket.Event{Type: "Refresh", Payload: json.RawMessage(payloaddd)}
+	//if whiteClient != nil {
+	//	whiteClient.Send(eee)
+	//}
+	//if blackClient != nil {
+	//	blackClient.Send(eee)
+	//}
+}
+
+func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeControl, r1 float64, r2 float64, tournamentID string) (*game.Game, error) {
+
+	createdGame := game.NewGame(time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p1, p2, tournamentID)
 
 	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:        id,
@@ -55,10 +90,22 @@ func (c *Controller) abortGame(g *game.Game) {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
 
+	_, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
 	reason := "Game Aborted"
+
+	if affectsTournament {
+		if g.Board.Position().Turn() == chess.White {
+			reason = "White Didn't Play"
+			c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID].IsActive = false
+		} else {
+			reason = "Black Didn't Play"
+			c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID].IsActive = false
+		}
+	}
+
 	etl := int32(g.BaseTime.Milliseconds())
 
-	cw, cb, err := c.endGame(g.ID, "aborted", &reason, g.WhiteID, g.BlackID, 0, &etl, &etl)
+	cw, cb, err := c.endGame(g, "aborted", &reason, 0, &etl, &etl)
 	if err != nil {
 		log.Println("error ending game with result", err)
 		return
@@ -72,6 +119,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
+	c.sendScoreUpdateEvent(g)
 	delete(c.GameManager.Games, g.ID)
 }
 
@@ -94,7 +142,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		reason = "Black Timeout"
 	}
 
-	cw, cb, err := c.endGame(g.ID, result, &reason, g.WhiteID, g.BlackID, int16(len(g.Moves)), &etlw, &etlb)
+	cw, cb, err := c.endGame(g, result, &reason, int16(len(g.Moves)), &etlw, &etlb)
 	if err != nil {
 		log.Println("error ending game on timeout", err)
 	}
@@ -107,31 +155,41 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
+	c.sendScoreUpdateEvent(g)
 	c.BatchInsertMoves(g)
 	delete(c.GameManager.Games, g.ID)
 }
 
-func (c *Controller) endGame(gameID string, result string, reason *string, id1, id2 int32, gameLength int16, etlw, etlb *int32) (int, int, error) {
-	if result == "aborted" {
+func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLength int16, etlw, etlb *int32) (int, int, error) {
+	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	if result == "aborted" && !affectsTournament {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,
 			ResultReason:     reason,
-			ID:               gameID,
+			ID:               g.ID,
 			EndTimeLeftBlack: etlb,
 			EndTimeLeftWhite: etlw,
 		})
 		return 0, 0, err
 	}
 	var r float64
-	if result == "1-0" {
+
+	if result == "aborted" {
+		if g.Board.Position().Turn() == chess.White {
+			r = 0.0
+		} else {
+			r = 1.0
+		}
+	} else if result == "1-0" {
 		r = 1.0
 	} else if result == "0-1" {
 		r = 0.0
 	} else {
 		r = 0.5
 	}
-	p1info, err1 := c.Queries.GetRatingInfo(context.Background(), id1)
-	p2info, err2 := c.Queries.GetRatingInfo(context.Background(), id2)
+
+	p1info, err1 := c.Queries.GetRatingInfo(context.Background(), g.WhiteID)
+	p2info, err2 := c.Queries.GetRatingInfo(context.Background(), g.BlackID)
 	if err1 != nil || err2 != nil {
 		return 0, 0, errors.New("error getting rating info")
 	}
@@ -150,16 +208,67 @@ func (c *Controller) endGame(gameID string, result string, reason *string, id1, 
 		Rating:     up1.Rating,
 		Rd:         up1.RD,
 		Volatility: up1.Volatility,
-		ID:         id1,
+		ID:         g.WhiteID,
 	})
 	err2 = c.Queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 		Rating:     up2.Rating,
 		Rd:         up2.RD,
 		Volatility: up2.Volatility,
-		ID:         id2,
+		ID:         g.BlackID,
 	})
 	if err1 != nil || err2 != nil {
 		log.Println("error updating rating", err1, err2)
+	}
+
+	//update scores in tournament
+	if affectsTournament {
+		p1 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID]
+		p2 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID]
+		p1.Lock()
+		p2.Lock()
+		p1.Opponents[g.BlackID] = struct{}{}
+		p2.Opponents[g.WhiteID] = struct{}{}
+		p1.LastPlayedColor = chess.White
+		p2.LastPlayedColor = chess.Black
+		p1.Rating = up1.Rating
+		p2.Rating = up2.Rating
+
+		if result == "1-0" || (result == "aborted" && g.Board.Position().Turn() == chess.Black) {
+			p2.Streak = 0
+			if p1.Streak >= 2 {
+				p1.Score += 4
+			} else {
+				p1.Score += 2
+			}
+			p1.Streak += 1
+		} else if result == "0-1" || (result == "aborted" && g.Board.Position().Turn() == chess.White) {
+			p1.Streak = 0
+			if p2.Streak >= 2 {
+				p2.Score += 4
+			} else {
+				p2.Score += 2
+			}
+			p2.Streak += 1
+		} else {
+			if p1.Streak >= 2 {
+				p1.Score += 2
+			} else {
+				p1.Score += 1
+			}
+			if p2.Streak >= 2 {
+				p2.Score += 2
+			} else {
+				p2.Score += 1
+			}
+			p1.Streak = 0
+			p2.Streak = 0
+		}
+		p1.Unlock()
+		p2.Unlock()
+		t.Lock()
+		t.WaitingPlayers = append(t.WaitingPlayers, p1)
+		t.WaitingPlayers = append(t.WaitingPlayers, p2)
+		t.Unlock()
 	}
 
 	cw := int32(up1.Rating - p1info.Rating)
@@ -168,7 +277,7 @@ func (c *Controller) endGame(gameID string, result string, reason *string, id1, 
 	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           result,
 		ResultReason:     reason,
-		ID:               gameID,
+		ID:               g.ID,
 		GameLength:       gameLength,
 		ChangeW:          &cw,
 		ChangeB:          &cb,

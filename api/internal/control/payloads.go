@@ -1,5 +1,7 @@
 package control
 
+import "time"
+
 type movePayload struct {
 	MoveStr string `json:"MoveStr"`
 	Orig    string `json:"orig"`
@@ -26,4 +28,16 @@ type ChatPayload struct {
 type DRPayload struct {
 	PlayerID int32  `json:"playerID"`
 	GameID   string `json:"gameID"`
+}
+
+type TournamentPayload struct {
+	Name      string    `json:"name"`
+	BaseTime  int32     `json:"baseTime"`
+	Increment int32     `json:"increment"`
+	Duration  int32     `json:"duration"`
+	StartTime time.Time `json:"startTime"`
+}
+
+type TournamentIDPayload struct {
+	TournamentID string `json:"tournamentID"`
 }
