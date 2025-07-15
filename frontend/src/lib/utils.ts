@@ -108,3 +108,19 @@ export function scrollIntoContainerView(container: HTMLDivElement, targetEl: HTM
 	}
 	// If it's already in view — do nothing
 }
+
+export function dateTimeToDate(date: string | unknown, time: string | unknown) {
+	if (!date || !time) return null;
+	const combined = new Date(`${date}T${time}`);
+	return combined;
+}
+
+export function getTimeLeft(startTimeStr: string, seconds: number) {
+	const startTime = new Date(startTimeStr);
+	const currentTime = new Date();
+	// console.log(startTime, currentTime);
+	if (isNaN(startTime.getTime())) {
+		return 'Invalid start time';
+	}
+	return seconds * 1000 - Math.max(0, currentTime.getTime() - startTime.getTime());
+}
