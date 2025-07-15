@@ -13,7 +13,7 @@
 	};
 </script>
 
-<div class="flex w-full justify-between px-4 py-1 text-xl">
+<div class="mb-[5px] flex w-full justify-between px-4 py-1 text-xl">
 	<div class="flex w-[200px] items-center justify-start text-xl md:text-2xl">
 		<a href="/"> MNNIT Chess Club </a>
 	</div>

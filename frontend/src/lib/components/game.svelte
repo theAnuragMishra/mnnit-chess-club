@@ -352,10 +352,12 @@
 	.namet {
 		grid-area: namet;
 		justify-self: start;
+		align-self: end;
 	}
 	.nameb {
 		grid-area: nameb;
 		justify-self: start;
+		align-self: start;
 	}
 	.board {
 		grid-area: board;
