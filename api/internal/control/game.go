@@ -320,9 +320,12 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 		c.SocketManager.BroadcastToNonPlayers(e, client.Room, whiteClient, blackClient)
 		return nil
 	}
-
-	whiteClient.Send(e)
-	blackClient.Send(e)
+	if whiteClient != nil {
+		whiteClient.Send(e)
+	}
+	if blackClient != nil {
+		blackClient.Send(e)
+	}
 	return nil
 }
 
@@ -377,7 +380,9 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 
 		otherClient := c.SocketManager.FindClientByUserID(other)
 
-		otherClient.Send(e)
+		if otherClient != nil {
+			otherClient.Send(e)
+		}
 	} else if foundGame.DrawOfferedBy != draw.PlayerID {
 		reason := "Draw by mutual agreement"
 		timeTaken := time.Since(foundGame.LastMoveTime)
