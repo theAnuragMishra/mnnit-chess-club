@@ -6,7 +6,7 @@
 	import GameInfo from '$lib/components/GameInfo.svelte';
 	import Chessboard from '$lib/components/Chessboard.svelte';
 	import Clock from '$lib/components/Clock.svelte';
-	import { websocketStore } from '$lib/websocket.js';
+	import { websocketStore } from '$lib/websocket';
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import type { Api } from 'chessground/api';

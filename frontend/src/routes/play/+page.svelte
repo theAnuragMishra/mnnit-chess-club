@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { websocketStore } from '$lib/websocket.js';
+	import { websocketStore } from '$lib/websocket';
 
 	const { data } = $props();
 

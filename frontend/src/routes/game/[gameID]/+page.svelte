@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import AcceptChallenge from '$lib/components/AcceptChallenge.svelte';
 	import Game from '$lib/components/game.svelte';
-	import { websocketStore } from '$lib/websocket.js';
+	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
 	let { data } = $props();
 	const gameID = page.params.gameID;
