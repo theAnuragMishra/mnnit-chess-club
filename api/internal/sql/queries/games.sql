@@ -50,3 +50,39 @@ WHERE users.username = $1;
 
 -- name: DeleteOngoingGames :exec
 DELETE FROM games WHERE result = 'ongoing';
+
+-- name: CreateTournament :exec
+INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7);
+
+-- name: GetTournamentByID :one
+SELECT id FROM tournaments WHERE id = $1;
+
+-- name: GetTournamentInfo :one
+SELECT t.*, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1;
+
+-- name: GetTournamentPlayers :many
+SELECT tp.score, u.id, u.username, u.rating FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1;
+
+-- name: InsertTournamentPlayer :exec
+INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2);
+
+-- name: UpdateTournamentStartTime :exec
+UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1;
+
+-- name: GetUpcomingTournaments :many
+SELECT * FROM tournaments WHERE start_time > NOW();
+
+-- name: GetTournamentPlayer :one
+SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
+
+-- name: DeleteTournamentPlayer :exec
+DELETE FROM tournament_players WHERE id = $1;
+
+-- name: GetTournamentStartTime :one
+SELECT start_time, duration FROM tournaments WHERE id = $1;
+
+-- name: BatchUpdateScores :exec
+UPDATE tournament_players as t
+SET t.score = u.score
+FROM UNNEST(@ids::INT[]), UNNEST(@scores::INT[]) AS u(id, score)
+WHERE t.player_id = u.id;

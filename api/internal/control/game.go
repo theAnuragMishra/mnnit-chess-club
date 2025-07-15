@@ -91,7 +91,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			return err
 		}
-		createdGame, err := c.createGame(id, pendingUser, client.UserID, timeControl, rating1, rating2)
+		createdGame, err := c.createGame(id, pendingUser, client.UserID, timeControl, rating1, rating2, "")
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err1 != nil || err2 != nil {
 		return errors.New("server error while fetching ratings")
 	}
-	createdGame, err := c.createGame(acceptChallengePayload.GameID, challenge.Creator, client.UserID, challenge.TimeControl, rating1, rating2)
+	createdGame, err := c.createGame(acceptChallengePayload.GameID, challenge.Creator, client.UserID, challenge.TimeControl, rating1, rating2, "")
 	if err != nil {
 		return err
 	}

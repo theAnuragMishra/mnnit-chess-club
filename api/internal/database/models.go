@@ -12,6 +12,7 @@ type Game struct {
 	ID               string
 	BaseTime         int32
 	Increment        int32
+	TournamentID     *string
 	WhiteID          *int32
 	BlackID          *int32
 	GameLength       int16
@@ -42,6 +43,23 @@ type Session struct {
 	UserID    int32
 	CreatedAt time.Time
 	ExpiresAt time.Time
+}
+
+type Tournament struct {
+	ID        string
+	Name      string
+	StartTime time.Time
+	Duration  int32
+	BaseTime  int32
+	Increment int32
+	CreatedBy *int32
+}
+
+type TournamentPlayer struct {
+	ID           int32
+	PlayerID     int32
+	TournamentID string
+	Score        *int32
 }
 
 type User struct {

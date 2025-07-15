@@ -189,9 +189,31 @@ func (c *Controller) generateUniqueGameID() (string, error) {
 			return "", err
 		}
 		_, err1 := c.Queries.GetGameByID(context.Background(), id)
+		_, err2 := c.Queries.GetTournamentByID(context.Background(), id)
 
-		if err1 == nil {
-			log.Println("game found with id", err)
+		if err1 == nil || err2 == nil {
+			log.Println("game or tournament found with id", err)
+			continue
+		}
+		return id, nil
+	}
+}
+
+func (c *Controller) generateUniqueTournamentID() (string, error) {
+	var id string
+	var err error
+
+	for {
+		id, err = game.GenerateUniqueID(12)
+		if err != nil {
+			log.Println("error generating id:", err)
+			return "", err
+		}
+		_, err1 := c.Queries.GetTournamentByID(context.Background(), id)
+		_, err2 := c.Queries.GetGameByID(context.Background(), id)
+
+		if err1 == nil || err2 == nil {
+			log.Println("game or tournament found with id", err)
 			continue
 		}
 		return id, nil

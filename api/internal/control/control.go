@@ -6,19 +6,22 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 	"log"
 )
 
 type Controller struct {
-	SocketManager *socket.Manager
-	GameManager   *game.Manager
-	Queries       *database.Queries
+	SocketManager     *socket.Manager
+	GameManager       *game.Manager
+	Queries           *database.Queries
+	TournamentManager *tournament.Manager
 }
 
 func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
 	c.SocketManager = socket.NewManager(c.HandleEvent)
 	c.GameManager = game.NewManager()
+	c.TournamentManager = tournament.NewManager()
 	c.Queries = queries
 
 	if err := queries.DeleteOngoingGames(context.Background()); err != nil {

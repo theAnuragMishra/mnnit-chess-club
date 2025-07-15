@@ -10,6 +10,23 @@ import (
 	"time"
 )
 
+const batchUpdateScores = `-- name: BatchUpdateScores :exec
+UPDATE tournament_players as t
+SET t.score = u.score
+FROM UNNEST($1::INT[]), UNNEST($2::INT[]) AS u(id, score)
+WHERE t.player_id = u.id
+`
+
+type BatchUpdateScoresParams struct {
+	Ids    []int32
+	Scores []int32
+}
+
+func (q *Queries) BatchUpdateScores(ctx context.Context, arg BatchUpdateScoresParams) error {
+	_, err := q.db.Exec(ctx, batchUpdateScores, arg.Ids, arg.Scores)
+	return err
+}
+
 const createGame = `-- name: CreateGame :exec
 INSERT INTO games (id, base_time, increment, white_id, black_id, rating_w, rating_b)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -38,12 +55,48 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
 	return err
 }
 
+const createTournament = `-- name: CreateTournament :exec
+INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type CreateTournamentParams struct {
+	ID        string
+	Name      string
+	StartTime time.Time
+	Duration  int32
+	BaseTime  int32
+	Increment int32
+	CreatedBy *int32
+}
+
+func (q *Queries) CreateTournament(ctx context.Context, arg CreateTournamentParams) error {
+	_, err := q.db.Exec(ctx, createTournament,
+		arg.ID,
+		arg.Name,
+		arg.StartTime,
+		arg.Duration,
+		arg.BaseTime,
+		arg.Increment,
+		arg.CreatedBy,
+	)
+	return err
+}
+
 const deleteOngoingGames = `-- name: DeleteOngoingGames :exec
 DELETE FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) DeleteOngoingGames(ctx context.Context) error {
 	_, err := q.db.Exec(ctx, deleteOngoingGames)
+	return err
+}
+
+const deleteTournamentPlayer = `-- name: DeleteTournamentPlayer :exec
+DELETE FROM tournament_players WHERE id = $1
+`
+
+func (q *Queries) DeleteTournamentPlayer(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteTournamentPlayer, id)
 	return err
 }
 
@@ -89,7 +142,7 @@ func (q *Queries) GetGameByID(ctx context.Context, id string) (string, error) {
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT games.id, games.base_time, games.increment, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b, u1.username as white_username, u2.username as black_username FROM games
+SELECT games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b, u1.username as white_username, u2.username as black_username FROM games
 JOIN users u1 ON games.white_id = u1.id
 JOIN users u2 ON games.black_id = u2.id
 WHERE games.id = $1
@@ -99,6 +152,7 @@ type GetGameInfoRow struct {
 	ID               string
 	BaseTime         int32
 	Increment        int32
+	TournamentID     *string
 	WhiteID          *int32
 	BlackID          *int32
 	GameLength       int16
@@ -122,6 +176,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, e
 		&i.ID,
 		&i.BaseTime,
 		&i.Increment,
+		&i.TournamentID,
 		&i.WhiteID,
 		&i.BlackID,
 		&i.GameLength,
@@ -214,7 +269,7 @@ func (q *Queries) GetGameNumbers(ctx context.Context, username *string) (GetGame
 }
 
 const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, base_time, increment, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b FROM games WHERE result = 'ongoing'
+SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b FROM games WHERE result = 'ongoing'
 `
 
 func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
@@ -230,6 +285,7 @@ func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
 			&i.ID,
 			&i.BaseTime,
 			&i.Increment,
+			&i.TournamentID,
 			&i.WhiteID,
 			&i.BlackID,
 			&i.GameLength,
@@ -319,6 +375,147 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 	return items, nil
 }
 
+const getTournamentByID = `-- name: GetTournamentByID :one
+SELECT id FROM tournaments WHERE id = $1
+`
+
+func (q *Queries) GetTournamentByID(ctx context.Context, id string) (string, error) {
+	row := q.db.QueryRow(ctx, getTournamentByID, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getTournamentInfo = `-- name: GetTournamentInfo :one
+SELECT t.id, t.name, t.start_time, t.duration, t.base_time, t.increment, t.created_by, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1
+`
+
+type GetTournamentInfoRow struct {
+	ID        string
+	Name      string
+	StartTime time.Time
+	Duration  int32
+	BaseTime  int32
+	Increment int32
+	CreatedBy *int32
+	Username  *string
+}
+
+func (q *Queries) GetTournamentInfo(ctx context.Context, id string) (GetTournamentInfoRow, error) {
+	row := q.db.QueryRow(ctx, getTournamentInfo, id)
+	var i GetTournamentInfoRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.StartTime,
+		&i.Duration,
+		&i.BaseTime,
+		&i.Increment,
+		&i.CreatedBy,
+		&i.Username,
+	)
+	return i, err
+}
+
+const getTournamentPlayer = `-- name: GetTournamentPlayer :one
+SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2
+`
+
+type GetTournamentPlayerParams struct {
+	PlayerID     int32
+	TournamentID string
+}
+
+func (q *Queries) GetTournamentPlayer(ctx context.Context, arg GetTournamentPlayerParams) (int32, error) {
+	row := q.db.QueryRow(ctx, getTournamentPlayer, arg.PlayerID, arg.TournamentID)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getTournamentPlayers = `-- name: GetTournamentPlayers :many
+SELECT tp.score, u.id, u.username, u.rating FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1
+`
+
+type GetTournamentPlayersRow struct {
+	Score    *int32
+	ID       int32
+	Username *string
+	Rating   float64
+}
+
+func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string) ([]GetTournamentPlayersRow, error) {
+	rows, err := q.db.Query(ctx, getTournamentPlayers, tournamentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTournamentPlayersRow
+	for rows.Next() {
+		var i GetTournamentPlayersRow
+		if err := rows.Scan(
+			&i.Score,
+			&i.ID,
+			&i.Username,
+			&i.Rating,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTournamentStartTime = `-- name: GetTournamentStartTime :one
+SELECT start_time, duration FROM tournaments WHERE id = $1
+`
+
+type GetTournamentStartTimeRow struct {
+	StartTime time.Time
+	Duration  int32
+}
+
+func (q *Queries) GetTournamentStartTime(ctx context.Context, id string) (GetTournamentStartTimeRow, error) {
+	row := q.db.QueryRow(ctx, getTournamentStartTime, id)
+	var i GetTournamentStartTimeRow
+	err := row.Scan(&i.StartTime, &i.Duration)
+	return i, err
+}
+
+const getUpcomingTournaments = `-- name: GetUpcomingTournaments :many
+SELECT id, name, start_time, duration, base_time, increment, created_by FROM tournaments WHERE start_time > NOW()
+`
+
+func (q *Queries) GetUpcomingTournaments(ctx context.Context) ([]Tournament, error) {
+	rows, err := q.db.Query(ctx, getUpcomingTournaments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tournament
+	for rows.Next() {
+		var i Tournament
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.Duration,
+			&i.BaseTime,
+			&i.Increment,
+			&i.CreatedBy,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 type InsertMovesParams struct {
 	GameID       string
 	MoveNumber   int32
@@ -327,4 +524,27 @@ type InsertMovesParams struct {
 	Dest         string
 	MoveFen      string
 	TimeLeft     *int32
+}
+
+const insertTournamentPlayer = `-- name: InsertTournamentPlayer :exec
+INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2)
+`
+
+type InsertTournamentPlayerParams struct {
+	PlayerID     int32
+	TournamentID string
+}
+
+func (q *Queries) InsertTournamentPlayer(ctx context.Context, arg InsertTournamentPlayerParams) error {
+	_, err := q.db.Exec(ctx, insertTournamentPlayer, arg.PlayerID, arg.TournamentID)
+	return err
+}
+
+const updateTournamentStartTime = `-- name: UpdateTournamentStartTime :exec
+UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1
+`
+
+func (q *Queries) UpdateTournamentStartTime(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, updateTournamentStartTime, id)
+	return err
 }

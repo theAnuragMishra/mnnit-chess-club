@@ -22,6 +22,7 @@ type Game struct {
 	AbortTimer    *time.Timer
 	ClockTimer    *time.Timer
 	Moves         []Move
+	TournamentID  string
 }
 
 type Move struct {
@@ -32,7 +33,7 @@ type Move struct {
 	TimeLeft     *int32
 }
 
-func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32) *Game {
+func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, player2 int32, tournamentID string) *Game {
 	board := chess.NewGame()
 
 	return &Game{
@@ -45,6 +46,7 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 		BlackID:      player2,
 		Board:        board,
 		LastMoveTime: time.Now(),
+		TournamentID: tournamentID,
 	}
 }
 
