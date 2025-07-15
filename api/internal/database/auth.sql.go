@@ -36,7 +36,7 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 }
 
 const getSession = `-- name: GetSession :one
-SELECT sessions.id, sessions.user_id, sessions.created_at, sessions.expires_at,users.username FROM sessions JOIN users ON sessions.user_id = users.id WHERE sessions.id = $1
+SELECT sessions.id, sessions.user_id, sessions.created_at, sessions.expires_at,users.username, users.role FROM sessions JOIN users ON sessions.user_id = users.id WHERE sessions.id = $1
 `
 
 type GetSessionRow struct {
@@ -45,6 +45,7 @@ type GetSessionRow struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	Username  *string
+	Role      int16
 }
 
 func (q *Queries) GetSession(ctx context.Context, id string) (GetSessionRow, error) {
@@ -56,6 +57,7 @@ func (q *Queries) GetSession(ctx context.Context, id string) (GetSessionRow, err
 		&i.CreatedAt,
 		&i.ExpiresAt,
 		&i.Username,
+		&i.Role,
 	)
 	return i, err
 }

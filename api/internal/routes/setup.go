@@ -25,6 +25,14 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 		MaxAge:           300,
 	}))
 
+	// admin routes
+	adminRouter := chi.NewRouter()
+	adminRouter.Use(authHandler.AuthMiddleware)
+	adminRouter.Use(authHandler.AdminCheckMiddleware)
+	router.Mount("/admin", adminRouter)
+	adminRouter.Post("/create-tournament", controller.CreateTournament)
+	adminRouter.Post("/start-tournament", controller.StartTournament)
+
 	// authenticated routes
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
@@ -49,9 +57,14 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	gameRouter := chi.NewRouter()
 	gameRouter.Use(authHandler.AuthMiddleware)
 	gameRouter.Get("/{gameID}", controller.WriteGameInfo)
-
-	// mounting subrouters
 	router.Mount("/game", gameRouter)
+
+	// tournament subroute
+	tournamentRouter := chi.NewRouter()
+	tournamentRouter.Use(authHandler.AuthMiddleware)
+	router.Mount("/tournament", tournamentRouter)
+	tournamentRouter.Get("/{tournamentID}", controller.WriteTournamentInfo)
+	tournamentRouter.Get("/upcoming", controller.WriteUpcomingTournaments)
 
 	return router
 }

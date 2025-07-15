@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"net/http"
 	"time"
 
@@ -53,5 +54,16 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		// fmt.Println("passed middleware check")
 
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (h *Handler) AdminCheckMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, ok := r.Context().Value(MiddlewareSentSession).(database.GetSessionRow)
+		if !ok || session.Role != 2 {
+			utils.RespondWithError(w, http.StatusUnauthorized, "Only admin can do this action")
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
