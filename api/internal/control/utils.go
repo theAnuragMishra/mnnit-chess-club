@@ -238,3 +238,131 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 		log.Println("error inserting moves", err)
 	}
 }
+
+func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
+	if len(t.WaitingPlayers) < 2 {
+		return
+	}
+	paired := make(map[int32]bool)
+	t.Lock()
+	defer t.Unlock()
+	availableToPair := make([]*tournament.Player, len(t.WaitingPlayers))
+	copy(availableToPair, t.WaitingPlayers)
+
+	for i := 0; i < len(availableToPair); i++ {
+		playerA := availableToPair[i]
+		clientA := c.SocketManager.FindClientByUserID(playerA.Id)
+		if clientA == nil || paired[playerA.Id] || !playerA.IsActive || clientA.Room != t.Id {
+			continue
+		}
+
+		bestMatch := -1
+		minScoreDiff := 1000000
+		for j := i + 1; j < len(availableToPair); j++ {
+			playerB := availableToPair[j]
+			clientB := c.SocketManager.FindClientByUserID(playerB.Id)
+			if clientB == nil || paired[playerB.Id] || !playerB.IsActive || clientB.Room != t.Id {
+				continue
+			}
+			currentDiff := 0
+			if isInitial {
+				currentDiff = utils.Abs(int(playerA.Rating) - int(playerB.Rating))
+			} else {
+				currentDiff = utils.Abs(int(playerA.Score) - int(playerB.Score))
+			}
+			if currentDiff < minScoreDiff {
+				minScoreDiff = currentDiff
+				bestMatch = j
+			}
+		}
+		if bestMatch != -1 {
+			playerB := availableToPair[bestMatch]
+
+			id, err := c.generateUniqueGameID()
+			if err != nil {
+				log.Println("error generating game id", err)
+				continue
+			}
+			r1 := playerA.Rating
+			r2 := playerB.Rating
+
+			createdGame, err := c.createGame(id, playerA.Id, playerB.Id, t.TimeControl, r1, r2, t.Id)
+
+			if err != nil {
+				log.Println("error creating game", err)
+				continue
+			}
+			payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+			rawPayload, err := json.Marshal(payload)
+			if err != nil {
+				log.Println(err)
+			}
+			e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
+
+			whiteClient := c.SocketManager.FindClientByUserID(playerA.Id)
+			blackClient := c.SocketManager.FindClientByUserID(playerB.Id)
+
+			if whiteClient != nil {
+				whiteClient.Send(e)
+			}
+			if blackClient != nil {
+				blackClient.Send(e)
+			}
+
+			paired[playerA.Id] = true
+			paired[playerB.Id] = true
+		}
+	}
+	var newWaitingPlayers []*tournament.Player
+	for _, player := range t.WaitingPlayers {
+		if !paired[player.Id] {
+			newWaitingPlayers = append(newWaitingPlayers, player)
+		}
+	}
+	t.WaitingPlayers = newWaitingPlayers
+}
+
+func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	go func() {
+		for {
+			select {
+			case <-t.Done:
+				return
+			case <-ticker.C:
+				c.RunPairingCycle(t, false)
+			}
+		}
+	}()
+}
+
+func (c *Controller) EndTournament(t *tournament.Tournament) {
+	close(t.Done)
+
+	ids := make([]int32, len(t.Players))
+	scores := make([]int32, len(t.Players))
+
+	for i, player := range t.Players {
+		ids[i] = player.Id
+		scores[i] = player.Score
+	}
+
+	err := c.Queries.BatchUpdateScores(context.Background(), database.BatchUpdateScoresParams{
+		Ids:    ids,
+		Scores: scores,
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	payload := map[string]any{"ID": t.Id, "Type": "tournament"}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		log.Println(err)
+	}
+	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.BroadcastToRoom(e, t.Id)
+	delete(c.TournamentManager.Tournaments, t.Id)
+}
