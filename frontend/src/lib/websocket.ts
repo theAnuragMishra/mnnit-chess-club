@@ -36,15 +36,11 @@ class WebSocketStore {
 		const data = JSON.parse(event.data);
 		const { type, payload } = data;
 
-		if (type === 'GoToGame') {
-			goto(`/game/${payload.GameID}`);
-		}
-
-		if (type === 'RefreshGame') {
-			if (window.location.pathname === `/game/${payload.GameID}`) window.location.reload();
-		}
-
-		if (this.listeners.has(type)) {
+		if (type === 'GoTo') {
+			goto(`/${payload.Type}/${payload.ID}`);
+		} else if (type === 'Refresh') {
+			if (window.location.pathname === `/${payload.Type}/${payload.ID}`) window.location.reload();
+		} else if (this.listeners.has(type)) {
 			this.listeners.get(type)?.forEach((callback) => callback(payload));
 		}
 	}
