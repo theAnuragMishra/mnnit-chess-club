@@ -177,75 +177,89 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, "")
 }
 
-func JoinLeaveTournament(c *Controller, event socket.Event, client *socket.Client) error {
-	rawPayload, err := json.Marshal(map[string]any{})
+func (c *Controller) WriteUpcomingTournaments(w http.ResponseWriter, r *http.Request) {
+	tournaments, err := c.Queries.GetUpcomingTournaments(r.Context())
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting upcoming tournaments")
+		return
+	}
+	utils.RespondWithJSON(w, http.StatusOK, tournaments)
+}
+
+func HandleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
+	payload, err := json.Marshal(map[string]any{})
 	if err != nil {
 		return err
 	}
-	e := socket.Event{Type: "jl_response", Payload: json.RawMessage(rawPayload)}
-	var payload TournamentIDPayload
-	if err := json.Unmarshal(event.Payload, &payload); err != nil {
+	e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
+	var tidP TournamentIDPayload
+	if err = json.Unmarshal(event.Payload, &tidP); err != nil {
 		client.Send(e)
 		return err
 	}
-	if payload.TournamentID == "" {
+	if tidP.TournamentID == "" {
 		client.Send(e)
-		return errors.New("invalid tournament id")
+		return errors.New("tournament ID can't be empty")
 	}
-	t, ok := c.TournamentManager.Tournaments[payload.TournamentID]
+	t, ok := c.TournamentManager.Tournaments[tidP.TournamentID]
 	if !ok {
-		startTimeAndDuration, err := c.Queries.GetTournamentStartTime(context.Background(), payload.TournamentID)
+		err = HandleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
+		return err
+	} else {
+		err = HandleJoinLeaveDuringTournament(c, e, client, t)
+		return err
+	}
+}
+
+func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
+	startTimeAndDuration, err := c.Queries.GetTournamentStartTime(context.Background(), tournamentID)
+	if err != nil {
+		client.Send(e)
+		return err
+	}
+	if time.Now().After(startTimeAndDuration.StartTime.Add(time.Duration(startTimeAndDuration.Duration) * time.Second)) {
+		client.Send(e)
+		return errors.New("tournament ended")
+	}
+	_, err = c.Queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
+		PlayerID:     client.UserID,
+		TournamentID: tournamentID,
+	})
+	if err != nil {
+		err = c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
+			PlayerID:     client.UserID,
+			TournamentID: tournamentID,
+		})
 		if err != nil {
 			client.Send(e)
 			return err
 		}
-		if time.Now().After(startTimeAndDuration.StartTime.Add(time.Duration(startTimeAndDuration.Duration) * time.Second)) {
-			client.Send(e)
-			return errors.New("tournament ended")
-		}
-
-		tpId, err := c.Queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
-			PlayerID:     client.UserID,
-			TournamentID: payload.TournamentID,
-		})
-
+		rating, err := c.Queries.GetUserRating(context.Background(), client.UserID)
 		if err != nil {
-
-			err := c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
-				PlayerID:     client.UserID,
-				TournamentID: payload.TournamentID,
-			})
-			if err != nil {
-				client.Send(e)
-				return err
-			}
-			rating, err := c.Queries.GetUserRating(context.Background(), client.UserID)
-			if err != nil {
-				client.Send(e)
-				return err
-			}
-			rawPayloadd, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": 0,
-				"Username": client.Username, "Rating": rating,
-			}})
-
-			ee := socket.Event{Type: "jl_response", Payload: json.RawMessage(rawPayloadd)}
-			c.SocketManager.BroadcastToRoom(ee, payload.TournamentID)
-			return nil
-		} else {
-			err := c.Queries.DeleteTournamentPlayer(context.Background(), tpId)
-			if err != nil {
-				client.Send(e)
-				return err
-			}
-			rawPayloadd, err := json.Marshal(map[string]any{"id": client.UserID})
-			if err != nil {
-				return err
-			}
-			ee := socket.Event{Type: "jl_response", Payload: json.RawMessage(rawPayloadd)}
-			c.SocketManager.BroadcastToRoom(ee, payload.TournamentID)
-			return nil
+			client.Send(e)
+			return err
 		}
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": 0, "Username": client.Username, "Rating": rating}})
+		if err != nil {
+			client.Send(e)
+			return err
+		}
+		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
+		c.SocketManager.BroadcastToRoom(e, tournamentID)
+	} else {
+		err := c.Queries.DeleteTournamentPlayer(context.Background(), client.UserID)
+		if err != nil {
+			client.Send(e)
+			return err
+		}
+		payload, err := json.Marshal(map[string]any{"id": client.UserID})
+		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
+		c.SocketManager.BroadcastToRoom(e, tournamentID)
 	}
+	return nil
+}
+
+func HandleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
 	p, exists := t.Players[client.UserID]
 	if exists {
 		p.Lock()
@@ -255,7 +269,7 @@ func JoinLeaveTournament(c *Controller, event socket.Event, client *socket.Clien
 	} else {
 		err := c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
 			PlayerID:     client.UserID,
-			TournamentID: payload.TournamentID,
+			TournamentID: t.Id,
 		})
 		if err != nil {
 			client.Send(e)
@@ -270,24 +284,13 @@ func JoinLeaveTournament(c *Controller, event socket.Event, client *socket.Clien
 		t.Lock()
 		t.Players[client.UserID] = player
 		t.Unlock()
-		rawPayloadd, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": player.Score,
-			"IsActive": player.IsActive,
-			"Username": client.Username,
-			"Rating":   player.Rating}})
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": player.Score, "Username": client.Username, "Rating": rating, "IsActive": p.IsActive}})
 		if err != nil {
+			client.Send(e)
 			return err
 		}
-		ee := socket.Event{Type: "jl_response", Payload: json.RawMessage(rawPayloadd)}
-		c.SocketManager.BroadcastToRoom(ee, payload.TournamentID)
+		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
+		c.SocketManager.BroadcastToRoom(e, t.Id)
 	}
 	return nil
-}
-
-func (c *Controller) WriteUpcomingTournaments(w http.ResponseWriter, r *http.Request) {
-	tournaments, err := c.Queries.GetUpcomingTournaments(r.Context())
-	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting upcoming tournaments")
-		return
-	}
-	utils.RespondWithJSON(w, http.StatusOK, tournaments)
 }

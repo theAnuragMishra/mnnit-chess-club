@@ -24,7 +24,7 @@
 
 	const handleJoinLeave = async () => {
 		loading = true;
-		websocketStore.sendMessage({ type: 'join_leave_tournament', payload: { tournamentID } });
+		websocketStore.sendMessage({ type: 'join_leave', payload: { tournamentID } });
 	};
 
 	const handleJLResponse = (payload: any) => {
