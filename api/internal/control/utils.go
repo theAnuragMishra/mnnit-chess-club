@@ -449,21 +449,20 @@ func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.D
 func (c *Controller) EndTournament(t *tournament.Tournament) {
 	close(t.Done)
 
-	ids := make([]int32, len(t.Players))
-	scores := make([]int32, len(t.Players))
+	input := make([]scoreInput, 0, len(t.Players))
 
-	for i, player := range t.Players {
-		ids[i] = player.Id
-		scores[i] = player.Score
+	for _, v := range t.Players {
+		input = append(input, scoreInput{v.Id, v.Score})
 	}
 
-	err := c.Queries.BatchUpdateScores(context.Background(), database.BatchUpdateScoresParams{
-		Ids:    ids,
-		Scores: scores,
-	})
-
+	inputBytes, err := json.Marshal(input)
 	if err != nil {
 		log.Println(err)
+	} else {
+		err = c.Queries.BatchUpdateScores(context.Background(), inputBytes)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	payload := map[string]any{"ID": t.Id, "Type": "tournament"}

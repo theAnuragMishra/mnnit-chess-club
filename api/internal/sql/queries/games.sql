@@ -82,7 +82,16 @@ DELETE FROM tournament_players WHERE id = $1;
 SELECT start_time, duration FROM tournaments WHERE id = $1;
 
 -- name: BatchUpdateScores :exec
-UPDATE tournament_players as t
-SET t.score = u.score
-FROM UNNEST(@ids::INT[]), UNNEST(@scores::INT[]) AS u(id, score)
-WHERE t.player_id = u.id;
+WITH players_and_scores (
+    id,
+    score
+    ) AS (
+    SELECT
+        (data->>'id')::int,
+        (data->>'score')::int
+    FROM jsonb_array_elements(@players_scores_pairs::jsonb) AS data
+        )
+UPDATE tournament_players t
+SET score = players_and_scores.score
+FROM players_and_scores
+WHERE t.player_id = players_and_scores.id;
