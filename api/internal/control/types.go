@@ -41,3 +41,8 @@ type TournamentPayload struct {
 type TournamentIDPayload struct {
 	TournamentID string `json:"tournamentID"`
 }
+
+type scoreInput struct {
+	ID    int32 `json:"id"`
+	Score int32 `json:"score"`
+}
