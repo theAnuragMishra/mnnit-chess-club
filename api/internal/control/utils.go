@@ -53,14 +53,20 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 
 	createdGame := game.NewGame(time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p1, p2, tournamentID)
 
+	var tidParam *string
+	if tournamentID != "" {
+		tidParam = &tournamentID
+	}
+
 	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-		ID:        id,
-		BaseTime:  timeControl.BaseTime,
-		Increment: timeControl.Increment,
-		WhiteID:   &p1,
-		BlackID:   &p2,
-		RatingW:   int32(r1),
-		RatingB:   int32(r2),
+		ID:           id,
+		BaseTime:     timeControl.BaseTime,
+		Increment:    timeControl.Increment,
+		WhiteID:      &p1,
+		BlackID:      &p2,
+		RatingW:      int32(r1),
+		RatingB:      int32(r2),
+		TournamentID: tidParam,
 	})
 	if err != nil {
 		return nil, err

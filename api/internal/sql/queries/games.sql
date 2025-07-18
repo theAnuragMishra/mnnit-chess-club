@@ -1,6 +1,6 @@
 -- name: CreateGame :exec
-INSERT INTO games (id, base_time, increment, white_id, black_id, rating_w, rating_b)
-VALUES ($1, $2, $3, $4, $5, $6, $7);
+INSERT INTO games (id, base_time, increment, tournament_id, white_id, black_id, rating_w, rating_b)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: InsertMoves :copyfrom
 INSERT INTO moves (game_id, move_number, move_notation,orig, dest, move_fen, time_left)

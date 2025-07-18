@@ -32,18 +32,19 @@ func (q *Queries) BatchUpdateScores(ctx context.Context, playersScoresPairs []by
 }
 
 const createGame = `-- name: CreateGame :exec
-INSERT INTO games (id, base_time, increment, white_id, black_id, rating_w, rating_b)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO games (id, base_time, increment, tournament_id, white_id, black_id, rating_w, rating_b)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type CreateGameParams struct {
-	ID        string
-	BaseTime  int32
-	Increment int32
-	WhiteID   *int32
-	BlackID   *int32
-	RatingW   int32
-	RatingB   int32
+	ID           string
+	BaseTime     int32
+	Increment    int32
+	TournamentID *string
+	WhiteID      *int32
+	BlackID      *int32
+	RatingW      int32
+	RatingB      int32
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
@@ -51,6 +52,7 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
 		arg.ID,
 		arg.BaseTime,
 		arg.Increment,
+		arg.TournamentID,
 		arg.WhiteID,
 		arg.BlackID,
 		arg.RatingW,
