@@ -38,6 +38,9 @@ func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	delete(c.SocketManager.Rooms[client.Room], client)
+	if len(c.SocketManager.Rooms[client.Room]) == 0 {
+		delete(c.SocketManager.Rooms, client.Room)
+	}
 	client.Room = ""
 	// for _, x := range c.SocketManager.Rooms {
 	// 	for y := range x {

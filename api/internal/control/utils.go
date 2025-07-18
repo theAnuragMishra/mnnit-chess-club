@@ -37,10 +37,7 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 		Payload: json.RawMessage(payloadd),
 	}
 
-	whiteClient := c.SocketManager.FindClientByUserID(g.WhiteID)
-	blackClient := c.SocketManager.FindClientByUserID(g.BlackID)
-
-	c.SocketManager.BroadcastToNonPlayers(ee, g.TournamentID, whiteClient, blackClient)
+	c.SocketManager.BroadcastToNonPlayers(ee, g.TournamentID, g.WhiteID, g.BlackID)
 
 	//payloaddd, err := json.Marshal(map[string]any{"ID": g.TournamentID, "Type": "tournament"})
 	//eee := socket.Event{Type: "Refresh", Payload: json.RawMessage(payloaddd)}
@@ -349,28 +346,35 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 }
 
 func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
+	log.Println("starting pairing cycle")
 	if len(t.WaitingPlayers) < 2 {
+		log.Println("not enough players")
+		log.Println(t.WaitingPlayers)
 		return
 	}
 	paired := make(map[int32]bool)
 	t.Lock()
 	defer t.Unlock()
-	availableToPair := make([]*tournament.Player, len(t.WaitingPlayers))
-	copy(availableToPair, t.WaitingPlayers)
+	availableToPair := make([]*tournament.Player, 0, len(t.WaitingPlayers))
+	//copy(availableToPair, t.WaitingPlayers)
+	for _, player := range t.WaitingPlayers {
+		if c.SocketManager.IsUserInARoom(t.Id, player.Id) {
+			availableToPair = append(availableToPair, player)
+		}
+	}
 
 	for i := 0; i < len(availableToPair); i++ {
+		log.Println("inside i loop")
 		playerA := availableToPair[i]
-		clientA := c.SocketManager.FindClientByUserID(playerA.Id)
-		if clientA == nil || paired[playerA.Id] || !playerA.IsActive || clientA.Room != t.Id {
+		if paired[playerA.Id] || !playerA.IsActive {
 			continue
 		}
-
 		bestMatch := -1
 		minScoreDiff := 1000000
 		for j := i + 1; j < len(availableToPair); j++ {
+			log.Println("inside j loop")
 			playerB := availableToPair[j]
-			clientB := c.SocketManager.FindClientByUserID(playerB.Id)
-			if clientB == nil || paired[playerB.Id] || !playerB.IsActive || clientB.Room != t.Id {
+			if paired[playerB.Id] || !playerB.IsActive {
 				continue
 			}
 			currentDiff := 0
@@ -383,6 +387,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 				minScoreDiff = currentDiff
 				bestMatch = j
 			}
+			log.Println("out of j")
 		}
 		if bestMatch != -1 {
 			playerB := availableToPair[bestMatch]
@@ -408,19 +413,13 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			}
 			e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 
-			whiteClient := c.SocketManager.FindClientByUserID(playerA.Id)
-			blackClient := c.SocketManager.FindClientByUserID(playerB.Id)
-
-			if whiteClient != nil {
-				whiteClient.Send(e)
-			}
-			if blackClient != nil {
-				blackClient.Send(e)
-			}
+			c.SocketManager.SendToUserClientsInARoom(e, t.Id, playerA.Id)
+			c.SocketManager.SendToUserClientsInARoom(e, t.Id, playerB.Id)
 
 			paired[playerA.Id] = true
 			paired[playerB.Id] = true
 		}
+		log.Println("out of i")
 	}
 	var newWaitingPlayers []*tournament.Player
 	for _, player := range t.WaitingPlayers {
@@ -429,12 +428,13 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 		}
 	}
 	t.WaitingPlayers = newWaitingPlayers
+	log.Println("out of pairing cycle")
 }
 
 func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.Duration) {
 	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
 	go func() {
+		defer ticker.Stop()
 		for {
 			select {
 			case <-t.Done:

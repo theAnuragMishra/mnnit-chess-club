@@ -101,13 +101,8 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 			return err
 		}
 		e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-		otherClient := c.SocketManager.FindClientByUserID(pendingUser)
-
 		client.Send(e)
-
-		if otherClient != nil {
-			otherClient.Send(e)
-		}
+		c.SocketManager.SendToUserClientsInARoom(e, "", pendingUser)
 	}
 	return nil
 }
@@ -314,20 +309,13 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 		return nil
 	}
 
-	whiteClient := c.SocketManager.FindClientByUserID(foundGame.WhiteID)
-	blackClient := c.SocketManager.FindClientByUserID(foundGame.BlackID)
-
 	if client.UserID != foundGame.WhiteID && client.UserID != foundGame.BlackID {
 		// handle message by non player
-		c.SocketManager.BroadcastToNonPlayers(e, client.Room, whiteClient, blackClient)
+		c.SocketManager.BroadcastToNonPlayers(e, client.Room, foundGame.WhiteID, foundGame.BlackID)
 		return nil
 	}
-	if whiteClient != nil {
-		whiteClient.Send(e)
-	}
-	if blackClient != nil {
-		blackClient.Send(e)
-	}
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, foundGame.WhiteID)
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, foundGame.BlackID)
 	return nil
 }
 
@@ -379,12 +367,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		} else {
 			other = foundGame.BlackID
 		}
-
-		otherClient := c.SocketManager.FindClientByUserID(other)
-
-		if otherClient != nil {
-			otherClient.Send(e)
-		}
+		c.SocketManager.SendToUserClientsInARoom(e, client.Room, other)
 	} else if foundGame.DrawOfferedBy != draw.PlayerID {
 		reason := "Draw by mutual agreement"
 		timeTaken := time.Since(foundGame.LastMoveTime)

@@ -8,7 +8,7 @@ import (
 )
 
 // ClientList is a map used to help manage a map of clients
-type ClientList map[int32]*Client
+type ClientList map[int32]map[*Client]struct{}
 
 // Client is a websocket client, basically a frontend visitor
 type Client struct {
@@ -28,7 +28,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 		UserID:     userID,
 		connection: conn,
 		manager:    manager,
-		egress:     make(chan Event, 20),
+		egress:     make(chan Event),
 		Username:   username,
 	}
 }
@@ -36,7 +36,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 func (c *Client) readMessages() {
 	defer func() {
 		log.Println("client disconnected ", c.UserID)
-		c.manager.RemoveClient(c.UserID)
+		c.manager.RemoveClient(c)
 	}()
 	for {
 		_, payload, err := c.connection.ReadMessage()
@@ -67,7 +67,7 @@ func (c *Client) readMessages() {
 func (c *Client) writeMessages() {
 	defer func() {
 		log.Println("Closing write connection for client:", c.UserID)
-		c.manager.RemoveClient(c.UserID)
+		c.manager.RemoveClient(c)
 	}()
 	for {
 		select {
@@ -84,7 +84,7 @@ func (c *Client) writeMessages() {
 				return
 			}
 			if err := c.connection.WriteMessage(websocket.TextMessage, data); err != nil {
-				log.Println(err)
+				log.Println("error writing to client: ", err)
 			}
 		}
 	}
@@ -103,11 +103,11 @@ func (m *Manager) BroadcastToRoom(event Event, room string) {
 	}
 }
 
-func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, player2 *Client) {
+func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, player2 int32) {
 	m.RLock()
 	defer m.RUnlock()
 	for client := range m.Rooms[room] {
-		if client != player2 && client != player1 {
+		if client.UserID != player2 && client.UserID != player1 {
 			client.egress <- event
 		}
 	}
@@ -115,10 +115,37 @@ func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, playe
 
 // Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
-	m.RLock() // Read lock to safely access the clients map
+	m.RLock() // Read lock to safely access the clients' map
 	defer m.RUnlock()
 
-	for _, client := range m.clients {
-		client.egress <- event
+	for _, clients := range m.clients {
+		for client := range clients {
+			client.egress <- event
+		}
 	}
+}
+
+func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
+	clients, ok := m.clients[id]
+	if ok {
+		for client := range clients {
+			if client.Room == room {
+				client.egress <- event
+			}
+		}
+	}
+}
+
+func (m *Manager) IsUserInARoom(room string, id int32) bool {
+	m.RLock()
+	defer m.RUnlock()
+	clients, ok := m.clients[id]
+	if ok {
+		for client := range clients {
+			if client.Room == room {
+				return true
+			}
+		}
+	}
+	return false
 }

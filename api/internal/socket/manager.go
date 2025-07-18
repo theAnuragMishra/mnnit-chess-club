@@ -72,7 +72,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	// Create New Client
 	client := NewClient(conn, m, session.UserID, *session.Username)
 	// Add the newly created client to the manager
-	m.addClient(session.UserID, client)
+	m.addClient(client)
 
 	// for _, client := range m.clients {
 	// 	fmt.Println(client.UserID)
@@ -84,31 +84,62 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 // addClient will add clients to our clientList
-func (m *Manager) addClient(id int32, client *Client) {
+func (m *Manager) addClient(client *Client) {
 	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
 	log.Println("adding client")
 	// Add Client
-	m.clients[id] = client
+	if m.clients[client.UserID] == nil {
+		m.clients[client.UserID] = make(map[*Client]struct{})
+	}
+	m.clients[client.UserID][client] = struct{}{}
 }
 
 // RemoveClient will remove the client and clean up
-func (m *Manager) RemoveClient(id int32) {
+func (m *Manager) RemoveClient(client *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	// Check if Client exists, then delete it
-	if client, ok := m.clients[id]; ok {
-		// close connection
-		err := client.connection.Close()
-		if err != nil {
-			return
+	// Check if the client exists, then delete it
+	if clients, ok := m.clients[client.UserID]; ok {
+		if _, ok := clients[client]; ok {
+			// close connection
+			err := client.connection.Close()
+			if err != nil {
+				return
+			}
+			// remove
+			delete(m.Rooms[client.Room], client)
+			delete(m.clients[client.UserID], client)
+			if len(m.Rooms[client.Room]) == 0 {
+				delete(m.Rooms, client.Room)
+			}
+			if len(m.clients[client.UserID]) == 0 {
+				delete(m.clients, client.UserID)
+			}
 		}
-		// remove
-		delete(m.Rooms[client.Room], client)
-		delete(m.clients, id)
 	}
+}
+
+// RemoveUser will remove all the connections of a user
+func (m *Manager) RemoveUser(id int32) {
+	m.Lock()
+	defer m.Unlock()
+
+	if clients, ok := m.clients[id]; ok {
+		for client := range clients {
+			err := client.connection.Close()
+			if err != nil {
+				return
+			}
+			delete(m.Rooms[client.Room], client)
+			if len(m.Rooms[client.Room]) == 0 {
+				delete(m.Rooms, client.Room)
+			}
+		}
+	}
+	delete(m.clients, id)
 }
 
 func checkOrigin(r *http.Request) bool {
