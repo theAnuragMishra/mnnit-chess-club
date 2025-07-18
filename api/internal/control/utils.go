@@ -352,7 +352,7 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 }
 
 func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
-	log.Println("starting pairing cycle")
+	//log.Println("starting pairing cycle")
 	if len(t.WaitingPlayers) < 2 {
 		log.Println("not enough players")
 		log.Println(t.WaitingPlayers)
@@ -370,7 +370,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 	}
 
 	for i := 0; i < len(availableToPair); i++ {
-		log.Println("inside i loop")
+		//log.Println("inside i loop")
 		playerA := availableToPair[i]
 		if paired[playerA.Id] || !playerA.IsActive {
 			continue
@@ -378,7 +378,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 		bestMatch := -1
 		minScoreDiff := 1000000
 		for j := i + 1; j < len(availableToPair); j++ {
-			log.Println("inside j loop")
+			//log.Println("inside j loop")
 			playerB := availableToPair[j]
 			if paired[playerB.Id] || !playerB.IsActive {
 				continue
@@ -393,7 +393,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 				minScoreDiff = currentDiff
 				bestMatch = j
 			}
-			log.Println("out of j")
+			//log.Println("out of j")
 		}
 		if bestMatch != -1 {
 			playerB := availableToPair[bestMatch]
@@ -425,7 +425,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			paired[playerA.Id] = true
 			paired[playerB.Id] = true
 		}
-		log.Println("out of i")
+		//log.Println("out of i")
 	}
 	var newWaitingPlayers []*tournament.Player
 	for _, player := range t.WaitingPlayers {
@@ -434,7 +434,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 		}
 	}
 	t.WaitingPlayers = newWaitingPlayers
-	log.Println("out of pairing cycle")
+	//log.Println("out of pairing cycle")
 }
 
 func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.Duration) {
