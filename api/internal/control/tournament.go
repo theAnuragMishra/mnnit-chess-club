@@ -147,33 +147,34 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.TournamentManager.Lock()
-	createdTournament := tournament.NewTournament(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, len(players))
-	c.TournamentManager.Tournaments[tournamentInfo.ID] = createdTournament
-	c.TournamentManager.Unlock()
+	go func() {
+		c.TournamentManager.Lock()
+		createdTournament := tournament.NewTournament(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, len(players))
+		c.TournamentManager.Tournaments[tournamentInfo.ID] = createdTournament
+		c.TournamentManager.Unlock()
 
-	createdTournament.Lock()
-	for i, player := range players {
-		p := tournament.NewPlayer(player.ID, player.Rating)
-		createdTournament.Players[player.ID] = p
-		createdTournament.WaitingPlayers[i] = p
-	}
-	createdTournament.Unlock()
-	//send refresh event to all the players on the tournament page
-	payload := map[string]any{"ID": tournamentInfo.ID, "Type": "tournament"}
-	rawPayload, err := json.Marshal(payload)
-	if err != nil {
-		log.Println(err)
-	}
-	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.BroadcastToRoom(e, tournamentInfo.ID)
-	time.Sleep(time.Second * 10)
+		createdTournament.Lock()
+		for i, player := range players {
+			p := tournament.NewPlayer(player.ID, player.Rating)
+			createdTournament.Players[player.ID] = p
+			createdTournament.WaitingPlayers[i] = p
+		}
+		createdTournament.Unlock()
+		//send refresh event to all the players on the tournament page
+		payload := map[string]any{"ID": tournamentInfo.ID, "Type": "tournament"}
+		rawPayload, err := json.Marshal(payload)
+		if err != nil {
+			log.Println(err)
+		}
+		e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
+		c.SocketManager.BroadcastToRoom(e, tournamentInfo.ID)
+		time.Sleep(time.Second * 10)
 
-	time.AfterFunc(time.Duration(tournamentInfo.Duration)*time.Second, func() { c.EndTournament(createdTournament) })
+		time.AfterFunc(time.Duration(tournamentInfo.Duration)*time.Second, func() { c.EndTournament(createdTournament) })
 
-	c.RunPairingCycle(createdTournament, true)
-	c.StartPairingCycle(createdTournament, time.Second*20)
-
+		c.RunPairingCycle(createdTournament, true)
+		c.StartPairingCycle(createdTournament, time.Second*20)
+	}()
 	utils.RespondWithJSON(w, http.StatusOK, "")
 }
 

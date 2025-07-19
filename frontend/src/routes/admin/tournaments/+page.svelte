@@ -161,6 +161,7 @@
 									startLoading = false;
 									return;
 								}
+								window.location.reload();
 							}}>Start</button
 						></span
 					>
