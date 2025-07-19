@@ -120,7 +120,7 @@ export function getTimeLeft(startTimeStr: string, seconds: number) {
 	const currentTime = new Date();
 	// console.log(startTime, currentTime);
 	if (isNaN(startTime.getTime())) {
-		return 'Invalid start time';
+		return -1;
 	}
 	return seconds * 1000 - Math.max(0, currentTime.getTime() - startTime.getTime());
 }

@@ -51,6 +51,41 @@
 		updateScore(payload.p2ID, payload.p2Score);
 	};
 
+	//timers
+	let totalTime = data.tournamentData.ongoing
+		? getTimeLeft(data.tournamentData.startTime, data.tournamentData.duration)
+		: new Date(data.tournamentData.startTime).getTime() - new Date().getTime();
+	let animationFrame: number | null;
+	let startTime: DOMHighResTimeStamp | null;
+	let timeToShow = $state(totalTime);
+
+	$effect(() => {
+		startTime = performance.now();
+		const tick = (currentTime: number) => {
+			if (!startTime) return;
+			const elapsed = currentTime - startTime;
+			const newTime = totalTime - elapsed;
+
+			if (newTime <= 0) {
+				timeToShow = 0;
+				return;
+			}
+			timeToShow = newTime;
+
+			animationFrame = requestAnimationFrame(tick);
+		};
+
+		animationFrame = requestAnimationFrame(tick);
+
+		return () => {
+			if (animationFrame !== null) {
+				cancelAnimationFrame(animationFrame);
+				animationFrame = null;
+				startTime = null;
+			}
+		};
+	});
+
 	onMount(() => {
 		websocketStore.sendMessage({ type: 'room_change', payload: { room: tournamentID } });
 		websocketStore.onMessage('jl_response', handleJLResponse);
@@ -87,25 +122,22 @@
 			)}
 		</p>
 		<div>
-			{#if data.tournamentData.ongoing}
-				<Clock
-					time={getTimeLeft(data.tournamentData.startTime, data.tournamentData.duration)}
-					lowTime={0}
-					active={true}
-				/>
-			{:else}
+			{#if !data.tournamentData.ongoing}
 				<p>Starting in</p>
-				<Clock
-					time={new Date(data.tournamentData.startTime).getTime() - new Date().getTime()}
-					active={true}
-					lowTime={0}
-				/>
 			{/if}
+			<Clock time={timeToShow} active={true} lowTime={0} />min:sec
 		</div>
 		<button
 			onclick={handleJoinLeave}
 			class={`${joined ? 'bg-red-600' : 'bg-green-500'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
-			disabled={loading}>{joined ? 'Leave' : 'Join'}</button
+			disabled={loading}
+			>{data.tournamentData.ongoing
+				? joined
+					? 'Pause'
+					: 'Resume'
+				: joined
+					? 'Leave'
+					: 'Join'}</button
 		>
 	</div>
 	<div class="grid w-2/3 grid-cols-[50px_1fr_2fr] justify-start gap-[10px] text-xl">
