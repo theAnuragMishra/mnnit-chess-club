@@ -1,5 +1,3 @@
-import { goto } from '$app/navigation';
-
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
@@ -37,7 +35,7 @@ class WebSocketStore {
 		const { type, payload } = data;
 
 		if (type === 'GoTo') {
-			goto(`/${payload.Type}/${payload.ID}`);
+			window.location.href = `/${payload.Type}/${payload.ID}`;
 		} else if (type === 'Refresh') {
 			if (window.location.pathname === `/${payload.Type}/${payload.ID}`) window.location.reload();
 		} else if (this.listeners.has(type)) {
