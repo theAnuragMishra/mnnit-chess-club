@@ -161,8 +161,6 @@
 									startLoading = false;
 									return;
 								}
-
-								goto(`/tournament/${tournament.ID}`);
 							}}>Start</button
 						></span
 					>
