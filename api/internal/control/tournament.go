@@ -84,6 +84,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 				"IsActive": serverTournament.Players[player.ID].IsActive,
 				"Username": player.Username,
 				"Rating":   player.Rating,
+				"Streak":   serverTournament.Players[player.ID].Streak,
 			}
 		}
 		//log.Println(players)
