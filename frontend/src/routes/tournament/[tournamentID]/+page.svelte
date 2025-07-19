@@ -60,22 +60,24 @@
 	let timeToShow = $state(totalTime);
 
 	$effect(() => {
-		startTime = performance.now();
-		const tick = (currentTime: number) => {
-			if (!startTime) return;
-			const elapsed = currentTime - startTime;
-			const newTime = totalTime - elapsed;
+		if (totalTime > 0) {
+			startTime = performance.now();
+			const tick = (currentTime: number) => {
+				if (!startTime) return;
+				const elapsed = currentTime - startTime;
+				const newTime = totalTime - elapsed;
 
-			if (newTime <= 0) {
-				timeToShow = 0;
-				return;
-			}
-			timeToShow = newTime;
+				if (newTime <= 0) {
+					timeToShow = 0;
+					return;
+				}
+				timeToShow = newTime;
+
+				animationFrame = requestAnimationFrame(tick);
+			};
 
 			animationFrame = requestAnimationFrame(tick);
-		};
-
-		animationFrame = requestAnimationFrame(tick);
+		}
 
 		return () => {
 			if (animationFrame !== null) {
@@ -121,24 +123,28 @@
 				data.tournamentData.increment
 			)}
 		</p>
-		<div>
-			{#if !data.tournamentData.ongoing}
-				<p>Starting in</p>
-			{/if}
-			<Clock time={timeToShow} active={true} lowTime={0} />min:sec
-		</div>
-		<button
-			onclick={handleJoinLeave}
-			class={`${joined ? 'bg-red-600' : 'bg-green-500'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
-			disabled={loading}
-			>{data.tournamentData.ongoing
-				? joined
-					? 'Pause'
-					: 'Resume'
-				: joined
-					? 'Leave'
-					: 'Join'}</button
-		>
+		{#if totalTime >= 0}
+			<div>
+				{#if !data.tournamentData.ongoing}
+					<p>Starting in</p>
+				{/if}
+				<Clock time={timeToShow} active={true} lowTime={0} />min:sec
+			</div>
+			<button
+				onclick={handleJoinLeave}
+				class={`${joined ? 'bg-red-600' : 'bg-green-500'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
+				disabled={loading}
+				>{data.tournamentData.ongoing
+					? joined
+						? 'Pause'
+						: 'Resume'
+					: joined
+						? 'Leave'
+						: 'Join'}</button
+			>
+		{:else}
+			<p>Tournament Over</p>
+		{/if}
 	</div>
 	<div class="grid w-2/3 grid-cols-[50px_1fr_2fr] justify-start gap-[10px] text-xl">
 		{#each sortedPlayers as player, i}
