@@ -14,12 +14,14 @@
 	// });
 	let sortedPlayers = $derived(players.toSorted((a: any, b: any) => b.Score - a.Score));
 
-	let joined = $derived(isJoined());
+	let joined = $derived(isJoinedActive());
 
-	function isJoined() {
+	$effect(() => console.log(joined));
+
+	function isJoinedActive() {
 		const i = players.findIndex((player: any) => player.Username === data.user.username);
 		// console.log(i);
-		return i !== -1 && (!data.tournamentData.ongoing || players[i].IsActive);
+		return [i !== -1, i !== -1 && players[i].IsActive];
 	}
 
 	const handleJoinLeave = async () => {
@@ -31,8 +33,10 @@
 		loading = false;
 
 		if (payload.player) {
-			const i = players.findIndex((player: any) => player.Username === payload.player.username);
+			//console.log(payload.player);
+			const i = players.findIndex((player: any) => player.Username === payload.player.Username);
 			if (i === -1) players.push(payload.player);
+			else players[i] = payload.player;
 		} else if (payload.id) {
 			const i = players.findIndex((player: any) => player.ID === payload.id);
 			if (i !== -1) {
@@ -132,13 +136,15 @@
 			</div>
 			<button
 				onclick={handleJoinLeave}
-				class={`${joined ? 'bg-red-600' : 'bg-green-500'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
+				class={`${!joined[0] || (joined[0] && !joined[1]) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
 				disabled={loading}
 				>{data.tournamentData.ongoing
-					? joined
-						? 'Pause'
-						: 'Resume'
-					: joined
+					? joined[0]
+						? joined[1]
+							? 'Pause'
+							: 'Resume'
+						: 'Join'
+					: joined[0]
 						? 'Leave'
 						: 'Join'}</button
 			>
