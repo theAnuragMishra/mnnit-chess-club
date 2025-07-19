@@ -76,7 +76,7 @@ SELECT * FROM tournaments WHERE start_time > NOW();
 SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
 
 -- name: DeleteTournamentPlayer :exec
-DELETE FROM tournament_players WHERE id = $1;
+DELETE FROM tournament_players WHERE player_id = $1;
 
 -- name: GetTournamentStartTime :one
 SELECT start_time, duration FROM tournaments WHERE id = $1;

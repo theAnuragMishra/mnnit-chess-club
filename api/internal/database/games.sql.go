@@ -98,11 +98,11 @@ func (q *Queries) DeleteOngoingGames(ctx context.Context) error {
 }
 
 const deleteTournamentPlayer = `-- name: DeleteTournamentPlayer :exec
-DELETE FROM tournament_players WHERE id = $1
+DELETE FROM tournament_players WHERE player_id = $1
 `
 
-func (q *Queries) DeleteTournamentPlayer(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteTournamentPlayer, id)
+func (q *Queries) DeleteTournamentPlayer(ctx context.Context, playerID int32) error {
+	_, err := q.db.Exec(ctx, deleteTournamentPlayer, playerID)
 	return err
 }
 
