@@ -35,7 +35,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 
 func (c *Client) readMessages() {
 	defer func() {
-		log.Println("client disconnected ", c.UserID)
+		log.Println("client disconnected ", c)
 		c.manager.RemoveClient(c)
 	}()
 	for {

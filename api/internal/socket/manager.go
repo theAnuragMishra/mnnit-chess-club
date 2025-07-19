@@ -88,7 +88,7 @@ func (m *Manager) addClient(client *Client) {
 	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
-	log.Println("adding client")
+	log.Println("adding client", client)
 	// Add Client
 	if m.clients[client.UserID] == nil {
 		m.clients[client.UserID] = make(map[*Client]struct{})
