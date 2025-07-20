@@ -72,17 +72,20 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if timeControl.BaseTime <= 0 || timeControl.BaseTime > 10800 || timeControl.Increment < 0 || timeControl.Increment > 180 {
 		return errors.New("invalid time control")
 	}
-	pendingUser, exists := c.GameManager.PendingUsers[timeControl]
+	p, exists := c.GameManager.PendingUsers[timeControl]
 	if !exists {
-		log.Println("no pending game, creating...")
-		c.GameManager.PendingUsers[timeControl] = client.UserID
+		//log.Println("no pending game, creating...")
+		c.GameManager.PendingUsers[timeControl] = game.PendingUser{
+			ID:     client.UserID,
+			Client: client,
+		}
 	} else {
-		log.Println("game found...")
+		//log.Println("game found...")
 		delete(c.GameManager.PendingUsers, timeControl)
-		if pendingUser == client.UserID {
+		if p.ID == client.UserID {
 			return nil
 		}
-		rating1, err1 := c.Queries.GetUserRating(context.Background(), pendingUser)
+		rating1, err1 := c.Queries.GetUserRating(context.Background(), p.ID)
 		rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
 		if err1 != nil || err2 != nil {
 			return errors.New("server error while fetching ratings")
@@ -91,7 +94,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			return err
 		}
-		createdGame, err := c.createGame(id, pendingUser, client.UserID, timeControl, rating1, rating2, "")
+		createdGame, err := c.createGame(id, p.ID, client.UserID, timeControl, rating1, rating2, "")
 		if err != nil {
 			return err
 		}
@@ -102,7 +105,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 		client.Send(e)
-		c.SocketManager.SendToUserClientsInARoom(e, "", pendingUser)
+		p.Client.Send(e)
 	}
 	return nil
 }

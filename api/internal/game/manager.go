@@ -1,11 +1,14 @@
 package game
 
-import "sync"
+import (
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
+	"sync"
+)
 
 type Manager struct {
 	sync.Mutex
 	Games             map[string]*Game
-	PendingUsers      map[TimeControl]int32
+	PendingUsers      map[TimeControl]PendingUser
 	PendingChallenges map[string]Challenge
 	// Users         []string
 }
@@ -21,10 +24,15 @@ type Challenge struct {
 	CreatorUsername string
 }
 
+type PendingUser struct {
+	ID     int32
+	Client *socket.Client
+}
+
 func NewManager() *Manager {
 	return &Manager{
 		Games:             make(map[string]*Game),
-		PendingUsers:      make(map[TimeControl]int32),
+		PendingUsers:      make(map[TimeControl]PendingUser),
 		PendingChallenges: make(map[string]Challenge),
 	}
 }
