@@ -137,7 +137,7 @@
 			</div>
 			<button
 				onclick={handleJoinLeave}
-				class={`${!joined[0] || (joined[0] && !joined[1]) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
+				class={`${!joined[0] || (joined[0] && joined[1] === false) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
 				disabled={loading}
 				>{data.tournamentData.ongoing
 					? joined[0]
