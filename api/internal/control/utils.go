@@ -23,11 +23,26 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 	if !affectsTournament {
 		return
 	}
+	p1 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID]
+	p2 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID]
+
+	p1Res := updateScorePlayer{
+		ID:     p1.Id,
+		Score:  p1.Score,
+		Scores: p1.Scores,
+		Rating: p1.Rating,
+		Streak: p1.Streak,
+	}
+	p2Res := updateScorePlayer{
+		ID:     p2.Id,
+		Score:  p2.Score,
+		Scores: p2.Scores,
+		Rating: p2.Rating,
+		Streak: p2.Streak,
+	}
 	payloadd, err := json.Marshal(map[string]any{
-		"p1ID":    g.WhiteID,
-		"p2ID":    g.BlackID,
-		"p1Score": c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID].Score,
-		"p2Score": c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID].Score,
+		"p1": p1Res,
+		"p2": p2Res,
 	})
 	if err != nil {
 		log.Println(err)
@@ -37,7 +52,7 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 		Payload: json.RawMessage(payloadd),
 	}
 
-	c.SocketManager.BroadcastToNonPlayers(ee, g.TournamentID, g.WhiteID, g.BlackID)
+	c.SocketManager.BroadcastToRoom(ee, g.TournamentID)
 
 	//payloaddd, err := json.Marshal(map[string]any{"ID": g.TournamentID, "Type": "tournament"})
 	//eee := socket.Event{Type: "Refresh", Payload: json.RawMessage(payloaddd)}

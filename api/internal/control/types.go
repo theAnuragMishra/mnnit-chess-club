@@ -1,6 +1,8 @@
 package control
 
-import "time"
+import (
+	"time"
+)
 
 type movePayload struct {
 	MoveStr string `json:"MoveStr"`
@@ -52,11 +54,10 @@ type scoresInput struct {
 	Scores []int16 `json:"scores"`
 }
 
-type playerResponse struct {
-	Id       int32   `json:"id"`
-	IsActive bool    `json:"isActive"`
-	Score    int32   `json:"score"`
-	Scores   []int16 `json:"scores"`
-	Rating   float64 `json:"rating"`
-	Streak   int16   `json:"streak"`
+type updateScorePlayer struct {
+	ID     int32
+	Score  int32
+	Scores []int16
+	Rating float64
+	Streak int16
 }

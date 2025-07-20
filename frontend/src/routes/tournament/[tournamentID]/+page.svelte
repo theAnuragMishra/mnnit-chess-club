@@ -5,13 +5,23 @@
 	import { getTimeLeft, getTimeControl } from '$lib/utils';
 	import Clock from '$lib/components/Clock.svelte';
 	import Chat from '$lib/components/Chat.svelte';
+
+	interface Player {
+		ID: number;
+		IsActive: boolean;
+		Streak: number;
+		Score: number;
+		Scores: number[];
+		Rating: number;
+	}
+
 	const { data } = $props();
 	const tournamentID = page.params.tournamentID;
 
 	let loading = $state(false);
 	let players = $state(data.tournamentData.players ? data.tournamentData.players : []);
 	// $effect(() => {
-	// 	players.forEach((player) => console.log(player));
+	// 	players.forEach((player: Player) => console.log(player));
 	// });
 	let sortedPlayers = $derived(players.toSorted((a: any, b: any) => b.Score - a.Score));
 
@@ -46,14 +56,15 @@
 		}
 	};
 
-	function updateScore(id: number, score: number) {
-		const i = players.findIndex((player: any) => player.ID === id);
-		players[i].Score = score;
+	function updateScore(p: Player) {
+		const i = players.findIndex((player: any) => player.ID === p.ID);
+		if (i === -1) return;
+		Object.assign(players[i], p);
 	}
 
 	const handleScoreUpdate = (payload: any) => {
-		updateScore(payload.p1ID, payload.p1Score);
-		updateScore(payload.p2ID, payload.p2Score);
+		updateScore(payload.p1);
+		updateScore(payload.p2);
 	};
 
 	//timers
