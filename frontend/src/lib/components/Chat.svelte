@@ -5,10 +5,9 @@
 	interface MessageInterface {
 		sender: string;
 		text: string;
-		gameID: string;
 	}
 	let messages: MessageInterface[] = $state([]);
-	const { gameID } = $props();
+	const { room } = $props();
 	let text = $state('');
 
 	let chatContainer: HTMLDivElement;
@@ -33,7 +32,6 @@
 	};
 
 	const handleMessage = (payload: any) => {
-		if (payload.gameID != gameID) return;
 		if (messages) messages = [...messages, payload];
 		else messages = [payload];
 	};
@@ -49,12 +47,10 @@
 <div class="w-full rounded bg-[#1c1d1e] p-4 shadow-lg">
 	<div bind:this={chatContainer} class="mb-2 h-64 overflow-y-auto border-b p-2 text-lg">
 		{#each messages as msg}
-			{#if msg.gameID == gameID}
-				<div class="mb-1">
-					<strong>{msg.sender}:</strong>
-					{msg.text}
-				</div>
-			{/if}
+			<div class="mb-1">
+				<strong>{msg.sender}:</strong>
+				{msg.text}
+			</div>
 		{/each}
 		<div use:scrollToBottom={() => messages}></div>
 	</div>
