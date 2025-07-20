@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { getTimeLeft, getTimeControl } from '$lib/utils';
 	import Clock from '$lib/components/Clock.svelte';
+	import Chat from '$lib/components/Chat.svelte';
 	const { data } = $props();
 	const tournamentID = page.params.tournamentID;
 
@@ -104,7 +105,7 @@
 	});
 </script>
 
-<div class="flex w-full justify-between gap-10 p-10">
+<div class="flex w-full justify-between gap-2 p-5">
 	<div class="w-1/4">
 		<h1 class="text-4xl">
 			{data.tournamentData.name}
@@ -153,7 +154,7 @@
 		{/if}
 	</div>
 	<div
-		class="grid w-2/3 grid-cols-[50px_100px_50px] content-start justify-start gap-[10px] text-xl"
+		class="grid w-1/2 grid-cols-[50px_100px_50px] content-start justify-start gap-[10px] text-xl"
 	>
 		{#each sortedPlayers as player, i}
 			<span>{i + 1}.</span><span>{player.Username} <i>{Math.floor(player.Rating)}</i></span><span
@@ -178,5 +179,9 @@
 				{player.Score}</span
 			>
 		{/each}
+	</div>
+	<div class="w-1/4">
+		<h1 class="text-xl">Chat Room</h1>
+		<Chat hei="80" />
 	</div>
 </div>

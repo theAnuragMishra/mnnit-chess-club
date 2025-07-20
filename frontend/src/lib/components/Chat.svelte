@@ -7,7 +7,7 @@
 		text: string;
 	}
 	let messages: MessageInterface[] = $state([]);
-	const { room } = $props();
+	const { hei } = $props();
 	let text = $state('');
 
 	let chatContainer: HTMLDivElement;
@@ -45,7 +45,7 @@
 </script>
 
 <div class="w-full rounded bg-[#1c1d1e] p-4 shadow-lg">
-	<div bind:this={chatContainer} class="mb-2 h-64 overflow-y-auto border-b p-2 text-lg">
+	<div bind:this={chatContainer} class={`mb-2 h-64 overflow-y-auto border-b p-2 text-lg`}>
 		{#each messages as msg}
 			<div class="mb-1">
 				<strong>{msg.sender}:</strong>

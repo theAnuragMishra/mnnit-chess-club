@@ -218,7 +218,7 @@
 			{increment}
 			{reason}
 		/>
-		<Chat room={gameID} />
+		<Chat hei="64" />
 	</div>
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">
