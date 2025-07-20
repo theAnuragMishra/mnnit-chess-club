@@ -85,6 +85,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 				"Username": player.Username,
 				"Rating":   player.Rating,
 				"Streak":   serverTournament.Players[player.ID].Streak,
+				"Scores":   serverTournament.Players[player.ID].Scores,
 			}
 		}
 		//log.Println(players)

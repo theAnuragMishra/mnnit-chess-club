@@ -14,6 +14,7 @@ CREATE TABLE tournament_players (
     player_id INT NOT NULL REFERENCES users(id) ON DELETE SET NULL,
     tournament_id VARCHAR(20) NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     score INT DEFAULT 0,
+    scores SMALLINT[],
     UNIQUE (player_id, tournament_id)
 );
 

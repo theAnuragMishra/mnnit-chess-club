@@ -238,30 +238,40 @@ func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLe
 
 		if result == "1-0" || (result == "aborted" && g.Board.Position().Turn() == chess.Black) {
 			p2.Streak = 0
+			p2.Scores = append(p2.Scores, 0)
 			if p1.Streak >= 2 {
 				p1.Score += 4
+				p1.Scores = append(p1.Scores, 4)
 			} else {
 				p1.Score += 2
+				p1.Scores = append(p1.Scores, 2)
 			}
 			p1.Streak += 1
 		} else if result == "0-1" || (result == "aborted" && g.Board.Position().Turn() == chess.White) {
 			p1.Streak = 0
+			p1.Scores = append(p1.Scores, 0)
 			if p2.Streak >= 2 {
 				p2.Score += 4
+				p2.Scores = append(p2.Scores, 4)
 			} else {
 				p2.Score += 2
+				p2.Scores = append(p2.Scores, 2)
 			}
 			p2.Streak += 1
 		} else {
 			if p1.Streak >= 2 {
 				p1.Score += 2
+				p1.Scores = append(p1.Scores, 2)
 			} else {
 				p1.Score += 1
+				p1.Scores = append(p1.Scores, 1)
 			}
 			if p2.Streak >= 2 {
 				p2.Score += 2
+				p2.Scores = append(p2.Scores, 2)
 			} else {
 				p2.Score += 1
+				p2.Scores = append(p2.Scores, 1)
 			}
 			p1.Streak = 0
 			p2.Streak = 0
@@ -455,17 +465,38 @@ func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.D
 func (c *Controller) EndTournament(t *tournament.Tournament) {
 	close(t.Done)
 
-	input := make([]scoreInput, 0, len(t.Players))
+	sc := make([]scoreInput, 0, len(t.Players))
+	scs := make([]scoresInput, 0, len(t.Players))
 
 	for _, v := range t.Players {
-		input = append(input, scoreInput{v.Id, v.Score})
+		sc = append(sc, scoreInput{v.Id, v.Score})
+		scs = append(scs, scoresInput{
+			ID:     v.Id,
+			Scores: v.Scores,
+		})
 	}
 
-	inputBytes, err := json.Marshal(input)
+	inputBytes, err := json.Marshal(sc)
 	if err != nil {
 		log.Println(err)
 	} else {
-		err = c.Queries.BatchUpdateScores(context.Background(), inputBytes)
+		err = c.Queries.BatchUpdateScores(context.Background(), database.BatchUpdateScoresParams{
+			TournamentID:       t.Id,
+			PlayersScoresPairs: inputBytes,
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	inputBytes, err = json.Marshal(scs)
+	if err != nil {
+		log.Println(err)
+	} else {
+		err = c.Queries.BatchUpdateScoresArray(context.Background(), database.BatchUpdateScoresArrayParams{
+			TournamentID:       t.Id,
+			PlayersScoresPairs: inputBytes,
+		})
 		if err != nil {
 			log.Println(err)
 		}

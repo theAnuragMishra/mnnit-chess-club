@@ -18,16 +18,48 @@ WITH players_and_scores (
     SELECT
         (data->>'id')::int,
         (data->>'score')::int
-    FROM jsonb_array_elements($1::jsonb) AS data
+    FROM jsonb_array_elements($2::jsonb) AS data
         )
 UPDATE tournament_players t
 SET score = players_and_scores.score
 FROM players_and_scores
-WHERE t.player_id = players_and_scores.id
+WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id
 `
 
-func (q *Queries) BatchUpdateScores(ctx context.Context, playersScoresPairs []byte) error {
-	_, err := q.db.Exec(ctx, batchUpdateScores, playersScoresPairs)
+type BatchUpdateScoresParams struct {
+	TournamentID       string
+	PlayersScoresPairs []byte
+}
+
+func (q *Queries) BatchUpdateScores(ctx context.Context, arg BatchUpdateScoresParams) error {
+	_, err := q.db.Exec(ctx, batchUpdateScores, arg.TournamentID, arg.PlayersScoresPairs)
+	return err
+}
+
+const batchUpdateScoresArray = `-- name: BatchUpdateScoresArray :exec
+WITH players_and_scores (
+                         id,
+                         scores
+    ) AS (
+    SELECT
+        (data->>'id')::int,
+        (SELECT array_agg(value::smallint)
+         FROM jsonb_array_elements(data->'scores') AS score_elements(value))
+    FROM jsonb_array_elements($2::jsonb) AS data
+)
+UPDATE tournament_players t
+SET scores = players_and_scores.scores
+    FROM players_and_scores
+WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id
+`
+
+type BatchUpdateScoresArrayParams struct {
+	TournamentID       string
+	PlayersScoresPairs []byte
+}
+
+func (q *Queries) BatchUpdateScoresArray(ctx context.Context, arg BatchUpdateScoresArrayParams) error {
+	_, err := q.db.Exec(ctx, batchUpdateScoresArray, arg.TournamentID, arg.PlayersScoresPairs)
 	return err
 }
 
@@ -439,7 +471,7 @@ func (q *Queries) GetTournamentPlayer(ctx context.Context, arg GetTournamentPlay
 }
 
 const getTournamentPlayers = `-- name: GetTournamentPlayers :many
-SELECT tp.score, u.id, u.username, u.rating FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1
+SELECT tp.score, u.id, u.username, u.rating, tp.scores FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1
 `
 
 type GetTournamentPlayersRow struct {
@@ -447,6 +479,7 @@ type GetTournamentPlayersRow struct {
 	ID       int32
 	Username *string
 	Rating   float64
+	Scores   []int16
 }
 
 func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string) ([]GetTournamentPlayersRow, error) {
@@ -463,6 +496,7 @@ func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string)
 			&i.ID,
 			&i.Username,
 			&i.Rating,
+			&i.Scores,
 		); err != nil {
 			return nil, err
 		}

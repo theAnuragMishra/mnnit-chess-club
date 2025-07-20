@@ -26,6 +26,7 @@ type Player struct {
 	Id              int32
 	IsActive        bool
 	Score           int32
+	Scores          []int16
 	Rating          float64
 	Streak          int16
 	Opponents       map[int32]struct{}

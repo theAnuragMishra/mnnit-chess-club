@@ -46,3 +46,17 @@ type scoreInput struct {
 	ID    int32 `json:"id"`
 	Score int32 `json:"score"`
 }
+
+type scoresInput struct {
+	ID     int32   `json:"id"`
+	Scores []int16 `json:"scores"`
+}
+
+type playerResponse struct {
+	Id       int32   `json:"id"`
+	IsActive bool    `json:"isActive"`
+	Score    int32   `json:"score"`
+	Scores   []int16 `json:"scores"`
+	Rating   float64 `json:"rating"`
+	Streak   int16   `json:"streak"`
+}
