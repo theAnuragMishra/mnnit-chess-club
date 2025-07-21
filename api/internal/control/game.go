@@ -105,7 +105,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		}
 		e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 		client.Send(e)
-		p.Client.Send(e)
+		p.Client.SendIfConnected(e)
 	}
 	return nil
 }

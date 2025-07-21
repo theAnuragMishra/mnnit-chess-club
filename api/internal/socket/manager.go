@@ -107,9 +107,11 @@ func (m *Manager) RemoveClient(client *Client) {
 			// close connection
 			err := client.connection.Close()
 			if err != nil {
+				log.Println("error trying to close connection of ", client, err)
 				return
 			}
 			// remove
+			close(client.egress)
 			delete(m.Rooms[client.Room], client)
 			delete(m.clients[client.UserID], client)
 			if len(m.Rooms[client.Room]) == 0 {

@@ -2,9 +2,8 @@ package socket
 
 import (
 	"encoding/json"
-	"log"
-
 	"github.com/gorilla/websocket"
+	"log"
 )
 
 // ClientList is a map used to help manage a map of clients
@@ -84,7 +83,7 @@ func (c *Client) writeMessages() {
 				return
 			}
 			if err := c.connection.WriteMessage(websocket.TextMessage, data); err != nil {
-				log.Println("error writing to client: ", err)
+				log.Println("error writing to client: ", c, string(data), err)
 			}
 		}
 	}
@@ -93,6 +92,16 @@ func (c *Client) writeMessages() {
 // Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
 	c.egress <- event
+}
+
+func (c *Client) SendIfConnected(event Event) {
+	clients, ok := c.manager.clients[c.UserID]
+	if ok {
+		_, ok := clients[c]
+		if ok {
+			c.Send(event)
+		}
+	}
 }
 
 func (m *Manager) BroadcastToRoom(event Event, room string) {
