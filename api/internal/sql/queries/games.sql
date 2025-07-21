@@ -1,18 +1,41 @@
 -- name: CreateGame :exec
-INSERT INTO games (id, base_time, increment, tournament_id, white_id, black_id, rating_w, rating_b)
+INSERT INTO games (
+                   id,
+                   base_time,
+                   increment,
+                   tournament_id,
+                   white_id,
+                   black_id,
+                   rating_w,
+                   rating_b
+)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: InsertMoves :copyfrom
-INSERT INTO moves (game_id, move_number, move_notation,orig, dest, move_fen, time_left)
+INSERT INTO moves (
+                   game_id,
+                   move_number,
+                   move_notation,
+                   orig,
+                   dest,
+                   move_fen,
+                   time_left
+)
 VALUES ($1,$2, $3, $4, $5, $6, $7);
 
 -- name: GetGameByID :one
 SELECT id FROM games WHERE id = $1;
 
 -- name: GetGameInfo :one
-SELECT games.*, u1.username as white_username, u2.username as black_username FROM games
-JOIN users u1 ON games.white_id = u1.id
-JOIN users u2 ON games.black_id = u2.id
+SELECT
+    games.*,
+    u1.username as white_username,
+    u2.username as black_username,
+    t.name as tournament_name
+FROM games
+LEFT OUTER JOIN tournaments t ON games.tournament_id = t.id
+LEFT OUTER JOIN users u1 ON games.white_id = u1.id
+LEFT OUTER JOIN users u2 ON games.black_id = u2.id
 WHERE games.id = $1;
 
 -- name: GetOngoingGames :many

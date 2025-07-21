@@ -34,7 +34,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
 		if err != nil {
 			log.Println(err)
-			utils.RespondWithError(w, http.StatusBadRequest, "error getting game moves")
+			utils.RespondWithError(w, http.StatusInternalServerError, "error getting game moves")
 			return
 		}
 		var timeBlack, timeWhite int32

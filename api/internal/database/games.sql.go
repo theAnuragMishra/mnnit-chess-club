@@ -64,7 +64,16 @@ func (q *Queries) BatchUpdateScoresArray(ctx context.Context, arg BatchUpdateSco
 }
 
 const createGame = `-- name: CreateGame :exec
-INSERT INTO games (id, base_time, increment, tournament_id, white_id, black_id, rating_w, rating_b)
+INSERT INTO games (
+                   id,
+                   base_time,
+                   increment,
+                   tournament_id,
+                   white_id,
+                   black_id,
+                   rating_w,
+                   rating_b
+)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
@@ -180,9 +189,15 @@ func (q *Queries) GetGameByID(ctx context.Context, id string) (string, error) {
 }
 
 const getGameInfo = `-- name: GetGameInfo :one
-SELECT games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b, u1.username as white_username, u2.username as black_username FROM games
-JOIN users u1 ON games.white_id = u1.id
-JOIN users u2 ON games.black_id = u2.id
+SELECT
+    games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b,
+    u1.username as white_username,
+    u2.username as black_username,
+    t.name as tournament_name
+FROM games
+LEFT OUTER JOIN tournaments t ON games.tournament_id = t.id
+LEFT OUTER JOIN users u1 ON games.white_id = u1.id
+LEFT OUTER JOIN users u2 ON games.black_id = u2.id
 WHERE games.id = $1
 `
 
@@ -205,6 +220,7 @@ type GetGameInfoRow struct {
 	ChangeB          *int32
 	WhiteUsername    *string
 	BlackUsername    *string
+	TournamentName   *string
 }
 
 func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, error) {
@@ -229,6 +245,7 @@ func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, e
 		&i.ChangeB,
 		&i.WhiteUsername,
 		&i.BlackUsername,
+		&i.TournamentName,
 	)
 	return i, err
 }
