@@ -78,6 +78,8 @@
 		reason = payload.Reason;
 		changeBlack = payload.changeB;
 		changeWhite = payload.changeW;
+		timeWhite = payload.timeWhite;
+		timeBlack = payload.timeBlack;
 	};
 
 	const handleMoveResponse = (payload: any) => {
@@ -360,11 +362,20 @@
 					isDisabled={!moveHistory || moveHistory.length < 2}
 					{gameID}
 					userID={data.user.userID}
-					setResultReason={(res: string, rea: string, cw: number, cb: number) => {
+					setResultReason={(
+						res: string,
+						rea: string,
+						cw: number,
+						cb: number,
+						tw: number,
+						tb: number
+					) => {
 						result = res;
 						reason = rea;
 						changeBlack = cb;
 						changeWhite = cw;
+						timeWhite = tw;
+						timeBlack = tb;
 					}}
 				/>
 			{/if}

@@ -33,7 +33,14 @@
 	const handleGameDrawn = (payload: any) => {
 		if (payload.gameID != gameID) return;
 		// console.log('game drawn', payload.Result, payload.Reason);
-		setResultReason(payload.Result, payload.Reason, payload.changeW, payload.changeB);
+		setResultReason(
+			payload.Result,
+			payload.Reason,
+			payload.changeW,
+			payload.changeB,
+			payload.timeWhite,
+			payload.timeBlack
+		);
 	};
 
 	const handleDrawOffer = (payload: any) => {

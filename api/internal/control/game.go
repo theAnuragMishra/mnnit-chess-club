@@ -354,7 +354,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			log.Println("error ending game with result", err)
 		}
 
-		payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": "1/2-1/2", "Reason": reason, "changeW": cw, "changeB": cb})
+		payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": "1/2-1/2", "Reason": reason, "changeW": cw, "changeB": cb, "timeWhite": foundGame.TimeWhite.Milliseconds(), "timeBlack": foundGame.TimeBlack.Milliseconds()})
 		if err != nil {
 			return err
 		}
@@ -428,7 +428,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		log.Println("error ending game with result", err)
 	}
 
-	payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": result, "Reason": reason, "changeW": cw, "changeB": cb})
+	payload, err := json.Marshal(map[string]any{"gameID": gameID, "Result": result, "Reason": reason, "changeW": cw, "changeB": cb, "timeWhite": foundGame.TimeWhite.Milliseconds(), "timeBlack": foundGame.TimeBlack.Milliseconds()})
 	if err != nil {
 		return err
 	}
