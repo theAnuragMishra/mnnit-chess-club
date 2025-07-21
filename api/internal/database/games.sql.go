@@ -10,56 +10,36 @@ import (
 	"time"
 )
 
-const batchUpdateScores = `-- name: BatchUpdateScores :exec
-WITH players_and_scores (
+const batchUpdateTournamentPlayers = `-- name: BatchUpdateTournamentPlayers :exec
+WITH players_data (
     id,
-    score
+    score,
+    scores,
+    streak
     ) AS (
     SELECT
         (data->>'id')::int,
-        (data->>'score')::int
+        (data->>'score')::int,
+        (SELECT array_agg(value::smallint)
+         FROM jsonb_array_elements(data->'scores') AS score_elements(value)),
+        (data->>'streak')::int
     FROM jsonb_array_elements($2::jsonb) AS data
         )
 UPDATE tournament_players t
-SET score = players_and_scores.score
-FROM players_and_scores
-WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id
+SET score = players_data.score,
+    scores = players_data.scores,
+    streak = players_data.streak
+FROM players_data
+WHERE t.tournament_id = $1 AND t.player_id = players_data.id
 `
 
-type BatchUpdateScoresParams struct {
-	TournamentID       string
-	PlayersScoresPairs []byte
+type BatchUpdateTournamentPlayersParams struct {
+	TournamentID string
+	PlayersInput []byte
 }
 
-func (q *Queries) BatchUpdateScores(ctx context.Context, arg BatchUpdateScoresParams) error {
-	_, err := q.db.Exec(ctx, batchUpdateScores, arg.TournamentID, arg.PlayersScoresPairs)
-	return err
-}
-
-const batchUpdateScoresArray = `-- name: BatchUpdateScoresArray :exec
-WITH players_and_scores (
-                         id,
-                         scores
-    ) AS (
-    SELECT
-        (data->>'id')::int,
-        (SELECT array_agg(value::smallint)
-         FROM jsonb_array_elements(data->'scores') AS score_elements(value))
-    FROM jsonb_array_elements($2::jsonb) AS data
-)
-UPDATE tournament_players t
-SET scores = players_and_scores.scores
-    FROM players_and_scores
-WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id
-`
-
-type BatchUpdateScoresArrayParams struct {
-	TournamentID       string
-	PlayersScoresPairs []byte
-}
-
-func (q *Queries) BatchUpdateScoresArray(ctx context.Context, arg BatchUpdateScoresArrayParams) error {
-	_, err := q.db.Exec(ctx, batchUpdateScoresArray, arg.TournamentID, arg.PlayersScoresPairs)
+func (q *Queries) BatchUpdateTournamentPlayers(ctx context.Context, arg BatchUpdateTournamentPlayersParams) error {
+	_, err := q.db.Exec(ctx, batchUpdateTournamentPlayers, arg.TournamentID, arg.PlayersInput)
 	return err
 }
 
@@ -488,11 +468,12 @@ func (q *Queries) GetTournamentPlayer(ctx context.Context, arg GetTournamentPlay
 }
 
 const getTournamentPlayers = `-- name: GetTournamentPlayers :many
-SELECT tp.score, u.id, u.username, u.rating, tp.scores FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1
+SELECT tp.score, tp.streak, u.id, u.username, u.rating, tp.scores FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1
 `
 
 type GetTournamentPlayersRow struct {
 	Score    *int32
+	Streak   *int32
 	ID       int32
 	Username *string
 	Rating   float64
@@ -510,6 +491,7 @@ func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string)
 		var i GetTournamentPlayersRow
 		if err := rows.Scan(
 			&i.Score,
+			&i.Streak,
 			&i.ID,
 			&i.Username,
 			&i.Rating,

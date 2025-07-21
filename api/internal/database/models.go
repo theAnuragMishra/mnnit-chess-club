@@ -61,6 +61,7 @@ type TournamentPlayer struct {
 	TournamentID string
 	Score        *int32
 	Scores       []int16
+	Streak       *int32
 }
 
 type User struct {

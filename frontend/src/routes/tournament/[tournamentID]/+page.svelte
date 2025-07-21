@@ -167,8 +167,12 @@
 	<div class="mr-10 grid w-1/2 grid-cols-[50px_100px_auto_50px] content-start gap-[10px] text-xl">
 		{#each sortedPlayers as player, i}
 			<span>{i + 1}.</span><span>{player.Username} <i>{Math.floor(player.Rating)}</i></span><span
-				class="text-lg text-gray-300">{player.Scores}</span
-			><span class="inline-flex items-center justify-end gap-1 justify-self-end"
+				class="flex items-center text-[16px] text-gray-300"
+			>
+				{#each player.Scores as s}
+					{s}
+				{/each}
+			</span><span class="inline-flex items-center justify-end gap-1 justify-self-end"
 				><svg
 					class={`h-[24px] w-[24px] ${player.Streak >= 2 ? '' : 'hidden'}`}
 					xmlns="http://www.w3.org/2000/svg"

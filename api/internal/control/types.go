@@ -44,14 +44,11 @@ type TournamentIDPayload struct {
 	TournamentID string `json:"tournamentID"`
 }
 
-type scoreInput struct {
-	ID    int32 `json:"id"`
-	Score int32 `json:"score"`
-}
-
-type scoresInput struct {
+type tournamentPlayer struct {
 	ID     int32   `json:"id"`
+	Score  int32   `json:"score"`
 	Scores []int16 `json:"scores"`
+	Streak int32   `json:"streak"`
 }
 
 type updateScorePlayer struct {
@@ -59,5 +56,5 @@ type updateScorePlayer struct {
 	Score  int32
 	Scores []int16
 	Rating float64
-	Streak int16
+	Streak int32
 }

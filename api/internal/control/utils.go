@@ -480,37 +480,20 @@ func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.D
 func (c *Controller) EndTournament(t *tournament.Tournament) {
 	close(t.Done)
 
-	sc := make([]scoreInput, 0, len(t.Players))
-	scs := make([]scoresInput, 0, len(t.Players))
+	input := make([]tournamentPlayer, 0, len(t.Players))
 
 	for _, v := range t.Players {
-		sc = append(sc, scoreInput{v.Id, v.Score})
-		scs = append(scs, scoresInput{
-			ID:     v.Id,
-			Scores: v.Scores,
-		})
+		input = append(input, tournamentPlayer{v.Id, v.Score, v.Scores, v.Streak})
+
 	}
 
-	inputBytes, err := json.Marshal(sc)
+	inputBytes, err := json.Marshal(input)
 	if err != nil {
 		log.Println(err)
 	} else {
-		err = c.Queries.BatchUpdateScores(context.Background(), database.BatchUpdateScoresParams{
-			TournamentID:       t.Id,
-			PlayersScoresPairs: inputBytes,
-		})
-		if err != nil {
-			log.Println(err)
-		}
-	}
-
-	inputBytes, err = json.Marshal(scs)
-	if err != nil {
-		log.Println(err)
-	} else {
-		err = c.Queries.BatchUpdateScoresArray(context.Background(), database.BatchUpdateScoresArrayParams{
-			TournamentID:       t.Id,
-			PlayersScoresPairs: inputBytes,
+		err = c.Queries.BatchUpdateTournamentPlayers(context.Background(), database.BatchUpdateTournamentPlayersParams{
+			TournamentID: t.Id,
+			PlayersInput: inputBytes,
 		})
 		if err != nil {
 			log.Println(err)

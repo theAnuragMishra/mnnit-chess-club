@@ -28,7 +28,7 @@ type Player struct {
 	Score           int32
 	Scores          []int16
 	Rating          float64
-	Streak          int16
+	Streak          int32
 	Opponents       map[int32]struct{}
 	LastPlayedColor chess.Color
 }

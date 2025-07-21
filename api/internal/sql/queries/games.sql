@@ -84,7 +84,7 @@ SELECT id FROM tournaments WHERE id = $1;
 SELECT t.*, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1;
 
 -- name: GetTournamentPlayers :many
-SELECT tp.score, u.id, u.username, u.rating, tp.scores FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1;
+SELECT tp.score, tp.streak, u.id, u.username, u.rating, tp.scores FROM tournament_players tp JOIN users u ON tp.player_id = u.id WHERE tp.tournament_id = $1;
 
 -- name: InsertTournamentPlayer :exec
 INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2);
@@ -104,33 +104,24 @@ DELETE FROM tournament_players WHERE player_id = $1;
 -- name: GetTournamentStartTime :one
 SELECT start_time, duration FROM tournaments WHERE id = $1;
 
--- name: BatchUpdateScores :exec
-WITH players_and_scores (
+-- name: BatchUpdateTournamentPlayers :exec
+WITH players_data (
     id,
-    score
+    score,
+    scores,
+    streak
     ) AS (
     SELECT
         (data->>'id')::int,
-        (data->>'score')::int
-    FROM jsonb_array_elements(@players_scores_pairs::jsonb) AS data
+        (data->>'score')::int,
+        (SELECT array_agg(value::smallint)
+         FROM jsonb_array_elements(data->'scores') AS score_elements(value)),
+        (data->>'streak')::int
+    FROM jsonb_array_elements(@players_input::jsonb) AS data
         )
 UPDATE tournament_players t
-SET score = players_and_scores.score
-FROM players_and_scores
-WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id;
-
--- name: BatchUpdateScoresArray :exec
-WITH players_and_scores (
-                         id,
-                         scores
-    ) AS (
-    SELECT
-        (data->>'id')::int,
-        (SELECT array_agg(value::smallint)
-         FROM jsonb_array_elements(data->'scores') AS score_elements(value))
-    FROM jsonb_array_elements(@players_scores_pairs::jsonb) AS data
-)
-UPDATE tournament_players t
-SET scores = players_and_scores.scores
-    FROM players_and_scores
-WHERE t.tournament_id = $1 AND t.player_id = players_and_scores.id;
+SET score = players_data.score,
+    scores = players_data.scores,
+    streak = players_data.streak
+FROM players_data
+WHERE t.tournament_id = $1 AND t.player_id = players_data.id;
