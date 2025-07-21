@@ -268,7 +268,7 @@ func HandleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 		p.Lock()
 		p.IsActive = !p.IsActive
 		p.Unlock()
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": p.Score, "Username": client.Username, "Rating": p.Rating, "IsActive": p.IsActive}})
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": p.IsActive}})
 		if err != nil {
 			client.Send(e)
 			return err

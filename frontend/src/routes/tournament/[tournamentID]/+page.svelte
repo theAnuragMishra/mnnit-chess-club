@@ -45,9 +45,9 @@
 
 		if (payload.player) {
 			//console.log(payload.player);
-			const i = players.findIndex((player: any) => player.Username === payload.player.Username);
+			const i = players.findIndex((player: any) => player.ID === payload.player.ID);
 			if (i === -1) players.push(payload.player);
-			else players[i] = payload.player;
+			else players[i].IsActive = payload.player.IsActive;
 		} else if (payload.id) {
 			const i = players.findIndex((player: any) => player.ID === payload.id);
 			if (i !== -1) {
