@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Chess } from 'chess.js';
+	import { Chess, type Square } from 'chess.js';
 	import { page } from '$app/state';
 	import Chat from '$lib/components/Chat.svelte';
 	import DrawResign from '$lib/components/DrawResign.svelte';
@@ -10,8 +10,9 @@
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import type { Api } from 'chessground/api';
-	import { getValidMoves } from '$lib/utils.js';
+	import { getValidMoves, isPromoting } from '$lib/utils.js';
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
+	import type { Config } from 'chessground/config';
 	let { data } = $props();
 	// console.log(data);
 
@@ -191,6 +192,62 @@
 		};
 	});
 
+	//board config
+	const boardConfig: Config = $derived({
+		fen: chessForView.fen(),
+		orientation: whiteUp ? 'black' : 'white',
+		draggable: { enabled: true },
+		turnColor: chessForView.turn() == 'w' ? 'white' : 'black',
+		viewOnly:
+			!isPlayer ||
+			(result != 'ongoing' && result != '') ||
+			(moveHistory && activeIndex !== moveHistory.length - 1),
+		lastMove:
+			moveHistory && activeIndex !== -1
+				? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
+				: [],
+		check: chessForView.isCheck(),
+		movable: {
+			free: false,
+			color: whiteUp ? 'black' : 'white',
+			dests: getValidMoves(chessForView),
+			showDests: true,
+			events: {
+				after: (orig, dest) => {
+					const piece = chessForView.get(orig as Square);
+					if (isPromoting(dest, piece!)) {
+						const move = chessForView.move({
+							from: orig,
+							to: dest,
+							promotion: 'q'
+						});
+						websocketStore.sendMessage({
+							type: 'move',
+							payload: {
+								MoveStr: move.san,
+								orig: orig,
+								dest: dest,
+								GameID: gameID
+							}
+						});
+					} else {
+						const move = chessForView.move({ from: orig, to: dest });
+						websocketStore.sendMessage({
+							type: 'move',
+							payload: {
+								MoveStr: move.san,
+								orig: orig,
+								dest: dest,
+								GameID: gameID
+							}
+						});
+					}
+				}
+			}
+		},
+		highlight: { lastMove: true, check: true }
+	});
+
 	onMount(() => {
 		websocketStore.onMessage('timeup', handleTimeUp);
 		websocketStore.onMessage('game_abort', handleTimeUp);
@@ -260,18 +317,7 @@
 			{/if}
 		</div>
 		<div class="board flex flex-col justify-center">
-			<Chessboard
-				{setGround}
-				orientation={whiteUp ? 'black' : 'white'}
-				{gameID}
-				chess={chessForView}
-				lastMove={moveHistory && activeIndex !== -1
-					? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
-					: []}
-				viewOnly={!isPlayer ||
-					(result != 'ongoing' && result != '') ||
-					(moveHistory && activeIndex !== moveHistory.length - 1)}
-			/>
+			<Chessboard {setGround} {boardConfig} />
 		</div>
 		<div class="abortb">
 			{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
