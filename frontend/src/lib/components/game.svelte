@@ -323,6 +323,17 @@
 				/>
 			{/if}
 		</div>
+		<div class="back_to_tournament w-full px-3 py-2 text-center">
+			{#if isPlayer && tournamentID && result != '' && result != 'ongoing'}
+				<a
+					class="flex w-full items-center justify-center gap-[5px]"
+					href={`/tournament/${tournamentID}`}
+					><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+						><path fill="currentColor" d="M8 5.14v14l11-7z" /></svg
+					>BACK TO TOURNAMENT</a
+				>
+			{/if}
+		</div>
 		<div class="history w-full">
 			<HistoryTable
 				{moveHistory}
@@ -375,6 +386,7 @@
 			'board board'
 			'abortb abortb'
 			'nameb clockb'
+			'btt btt'
 			'draw-resign draw-resign'
 			'history history';
 	}
@@ -407,6 +419,10 @@
 		grid-area: history;
 		justify-self: center;
 	}
+	.back_to_tournament {
+		grid-area: btt;
+		justify-self: center;
+	}
 	.abortt {
 		grid-area: abortt;
 	}
@@ -424,6 +440,7 @@
 				'board clockt'
 				'board namet'
 				'board abortt'
+				'board btt'
 				'board history'
 				'board draw-resign'
 				'board abortb'
@@ -446,6 +463,9 @@
 			/* margin-bottom: auto; */
 		}
 		.history {
+			justify-self: auto;
+		}
+		.back_to_tournament {
 			justify-self: auto;
 		}
 		.board {
