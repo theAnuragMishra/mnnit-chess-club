@@ -116,6 +116,9 @@
 	});
 </script>
 
+<h1 class="text-4xl">
+	{data.tournamentData.name}
+</h1>
 <div class="flex w-full justify-between gap-2 p-5">
 	<div class="w-1/4">
 		<h1 class="text-4xl">
@@ -170,11 +173,19 @@
 				Wait {data.user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
-		<div class="grid grid-cols-[50px_100px_auto_50px] content-start gap-[10px] text-xl">
+		<div class="grid grid-cols-[140px_auto_50px] content-start gap-[10px] text-xl">
 			{#each sortedPlayers as player, i}
-				<span>{i + 1}.</span><span>{player.Username} <i>{Math.floor(player.Rating)}</i></span><span
-					class="flex items-center text-[16px] text-gray-300"
-				>
+				<span class="flex items-center gap-2">
+					<span class="flex w-[30px] items-center justify-center">
+						{#if player.IsActive === false}
+							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+								><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z" /></svg
+							>
+						{:else}
+							{i + 1}
+						{/if}</span
+					>{player.Username} <i>{Math.floor(player.Rating)}</i>
+				</span><span class="flex items-center text-[16px] text-gray-300">
 					{#each player.Scores as s}
 						{s}
 					{/each}
@@ -203,7 +214,7 @@
 	</div>
 	<div class="w-1/4">
 		<h1 class="text-xl">Chat Room</h1>
-		<Chat hei="500" />
+		<Chat hei="400" />
 	</div>
 </div>
 
