@@ -57,6 +57,7 @@ func NewPlayer(id int32, rating float64) *Player {
 		Id:        id,
 		IsActive:  true,
 		Score:     0,
+		Scores:    make([]int16, 0),
 		Rating:    rating,
 		Streak:    0,
 		Opponents: make(map[int32]struct{}),
