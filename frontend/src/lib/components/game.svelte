@@ -247,7 +247,7 @@
 			{increment}
 			{reason}
 		/>
-		<Chat hei="64" />
+		<Chat hei="256" />
 	</div>
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">
