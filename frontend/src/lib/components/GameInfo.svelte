@@ -12,7 +12,7 @@
 >
 	<div class="text-[16px] leading-tight">
 		<div class="flex items-center">
-			{baseTime / 60} + {increment} Rated {format}
+			{baseTime / 60} + {increment} &bull; Rated &bull; {format}
 		</div>
 		<div class="flex items-center">{createdAtString}</div>
 	</div>

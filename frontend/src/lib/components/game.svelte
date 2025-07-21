@@ -304,7 +304,7 @@
 			{increment}
 			{reason}
 		/>
-		<Chat hei="256" />
+		<Chat hei="256px" />
 	</div>
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">

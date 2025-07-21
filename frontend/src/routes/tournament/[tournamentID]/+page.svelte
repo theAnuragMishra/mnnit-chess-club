@@ -119,55 +119,61 @@
 <h1 class="text-4xl">
 	{data.tournamentData.name}
 </h1>
-<div class="flex w-full justify-between gap-2 p-5">
-	<div class="w-1/4">
-		<h1 class="text-4xl">
-			{data.tournamentData.name}
-		</h1>
-		<p>By <a href={`/member/${data.tournamentData.creator}`}>{data.tournamentData.creator}</a></p>
-		<p>
-			Starts {new Date(data.tournamentData.startTime).toLocaleString('en-IN', {
-				year: 'numeric',
-				month: 'short',
-				day: '2-digit',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: false
-			})}
-		</p>
-		<p>Duration: {data.tournamentData.duration / 3600} hours</p>
-		<p>
-			{data.tournamentData.baseTime / 60}+{data.tournamentData.increment} Rated {getTimeControl(
-				data.tournamentData.baseTime,
-				data.tournamentData.increment
-			)}
-		</p>
-		{#if totalTime >= 0}
-			<div>
-				{#if !data.tournamentData.ongoing}
-					<p>Starting in</p>
-				{/if}
-				<Clock time={timeToShow} active={true} lowTime={0} />min:sec
-			</div>
-			<button
-				onclick={handleJoinLeave}
-				class={`${!joined[0] || (joined[0] && joined[1] === false) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
-				disabled={loading}
-				>{data.tournamentData.ongoing
-					? joined[0]
-						? joined[1]
-							? 'Pause'
-							: 'Resume'
-						: 'Join'
-					: joined[0]
-						? 'Leave'
-						: 'Join'}</button
-			>
-		{:else}
-			<p>Tournament Over</p>
-		{/if}
+<div class="flex w-full flex-col-reverse gap-10 p-5 md:flex-row md:gap-2">
+	<div class="flex w-full flex-col gap-2 md:w-1/4">
+		<div>
+			{#if !data.tournamentData.ongoing}
+				<p>
+					{#if totalTime >= 0}
+						Starts{/if}
+					{new Date(data.tournamentData.startTime).toLocaleString('en-IN', {
+						year: 'numeric',
+						month: 'short',
+						day: '2-digit',
+						hour: '2-digit',
+						minute: '2-digit',
+						hour12: false
+					})}
+				</p>
+			{/if}
+			<p>
+				{data.tournamentData.baseTime / 60}+{data.tournamentData.increment} &bull; {getTimeControl(
+					data.tournamentData.baseTime,
+					data.tournamentData.increment
+				)} &bull; {data.tournamentData.duration / 60}m
+			</p>
+			<p>By <a href={`/member/${data.tournamentData.creator}`}>{data.tournamentData.creator}</a></p>
+			{#if totalTime >= 0}
+				<div>
+					{#if !data.tournamentData.ongoing}
+						<p>Starting in</p>
+					{/if}
+					<Clock time={timeToShow} active={true} lowTime={0} />min:sec
+				</div>
+				<button
+					onclick={handleJoinLeave}
+					class={`${!joined[0] || (joined[0] && joined[1] === false) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
+					disabled={loading}
+					>{data.tournamentData.ongoing
+						? joined[0]
+							? joined[1]
+								? 'Pause'
+								: 'Resume'
+							: 'Join'
+						: joined[0]
+							? 'Leave'
+							: 'Join'}</button
+				>
+			{:else}
+				<p>Tournament Over</p>
+			{/if}
+		</div>
+		<div>
+			<h1 class="mb-2 text-xl">Chat Room</h1>
+			<Chat hei="270px" />
+		</div>
 	</div>
-	<div class="mr-10 w-1/2">
+	<div class="mr-10 w-full md:w-1/2">
 		{#if joined[1]}
 			<h2 class="shiny relative mb-5 overflow-hidden bg-green-600 px-2 py-0.5 text-center text-xl">
 				Wait {data.user.username}, pairing players. Get ready!
@@ -211,10 +217,6 @@
 				>
 			{/each}
 		</div>
-	</div>
-	<div class="w-1/4">
-		<h1 class="text-xl">Chat Room</h1>
-		<Chat hei="400" />
 	</div>
 </div>
 

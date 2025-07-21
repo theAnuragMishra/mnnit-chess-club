@@ -46,7 +46,7 @@
 
 <div class="w-full rounded bg-[#1c1d1e] p-4 shadow-lg">
 	<div
-		style={`height: ${hei}px`}
+		style={`height: ${hei}`}
 		bind:this={chatContainer}
 		class={`mb-2 overflow-y-auto border-b p-2 text-lg`}
 	>
