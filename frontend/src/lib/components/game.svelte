@@ -70,7 +70,12 @@
 		reason = payload.Reason;
 		changeBlack = payload.changeB;
 		changeWhite = payload.changeW;
+		timeWhite = payload.timeWhite;
+		timeBlack = payload.timeBlack;
 	};
+	$effect(() => {
+		console.log(timeWhite, timeBlack);
+	});
 
 	const handleResignation = (payload: any) => {
 		if (payload.gameID != gameID) return;

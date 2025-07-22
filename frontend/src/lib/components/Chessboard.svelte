@@ -9,7 +9,7 @@
 	let { setGround, boardConfig } = $props();
 
 	$effect(() => {
-		console.log('effect ran');
+		//console.log('effect ran');
 
 		if (!boardContainer) return;
 		const cg = Chessground(boardContainer, boardConfig);

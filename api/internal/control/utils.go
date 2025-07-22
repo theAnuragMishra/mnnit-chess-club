@@ -128,7 +128,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		log.Println("error ending game with result", err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "aborted", "Reason": reason, "changeW": cw, "changeB": cb})
+	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "aborted", "Reason": reason, "changeW": cw, "changeB": cb, "timeWhite": etl, "timeBlack": etl})
 	if err != nil {
 		log.Println(err)
 	}
@@ -145,26 +145,25 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 	c.GameManager.Lock()
 	defer c.GameManager.Unlock()
 
-	var etlw, etlb int32
 	var result, reason string
-
 	if g.Board.Position().Turn() == chess.White {
-		etlw = 0
-		etlb = int32(g.TimeBlack.Milliseconds())
+		g.TimeWhite = 0
 		result = "0-1"
 		reason = "White Timeout"
 	} else {
-		etlb = 0
-		etlw = int32(g.TimeWhite.Milliseconds())
+		g.TimeBlack = 0
 		result = "1-0"
 		reason = "Black Timeout"
 	}
+
+	etlb := int32(g.TimeBlack.Milliseconds())
+	etlw := int32(g.TimeWhite.Milliseconds())
 
 	cw, cb, err := c.endGame(g, result, &reason, int16(len(g.Moves)), &etlw, &etlb)
 	if err != nil {
 		log.Println("error ending game on timeout", err)
 	}
-	payload, err := json.Marshal(map[string]any{"Result": result, "Reason": reason, "gameID": g.ID, "changeW": cw, "changeB": cb})
+	payload, err := json.Marshal(map[string]any{"Result": result, "Reason": reason, "gameID": g.ID, "changeW": cw, "changeB": cb, "timeWhite": etlw, "timeBlack": etlb})
 	if err != nil {
 		log.Println(err)
 	}
