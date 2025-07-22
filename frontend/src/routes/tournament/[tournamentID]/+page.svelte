@@ -170,7 +170,7 @@
 		</div>
 		<div>
 			<h1 class="mb-2 text-xl">Chat Room</h1>
-			<Chat hei="270px" />
+			<Chat hei="250px" />
 		</div>
 	</div>
 	<div class="mr-10 w-full md:w-1/2">
