@@ -9,7 +9,6 @@ import (
 
 type Game struct {
 	ID            string
-	Result        string
 	BaseTime      time.Duration
 	Increment     time.Duration
 	WhiteID       int32
@@ -37,7 +36,6 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 	board := chess.NewGame()
 
 	return &Game{
-		Result:       "ongoing",
 		TimeWhite:    baseTime,
 		TimeBlack:    baseTime,
 		BaseTime:     baseTime,
@@ -75,7 +73,6 @@ func (g *Game) MakeMove(move string) (string, string) {
 	}
 
 	if g.Board.Outcome() != "*" {
-		g.Result = string(g.Board.Outcome())
 		return g.Board.Method().String(), string(g.Board.Outcome())
 	}
 

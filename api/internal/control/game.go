@@ -189,10 +189,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("game not found")
 	}
 
-	if foundGame.Result != "ongoing" {
-		return errors.New("game has ended")
-	}
-
 	if foundGame.Board.Position().Turn() == chess.White && client.UserID != foundGame.WhiteID {
 		return errors.New("not your turn")
 	}
@@ -311,10 +307,6 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
 
-	if foundGame.Result != "ongoing" {
-		return errors.New("game has ended")
-	}
-
 	if foundGame.WhiteID != draw.PlayerID && foundGame.BlackID != draw.PlayerID {
 		return errors.New("not one of the players")
 	}
@@ -393,10 +385,6 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 
 	if len(foundGame.Moves) < 2 {
 		return errors.New("cannot resign a game where one or both sides haven't played")
-	}
-
-	if foundGame.Result != "ongoing" {
-		return errors.New("game has ended")
 	}
 
 	if foundGame.WhiteID != resign.PlayerID && foundGame.BlackID != resign.PlayerID {

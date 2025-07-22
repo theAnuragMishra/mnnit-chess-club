@@ -23,7 +23,7 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	foundGame, exists := c.GameManager.Games[client.Room]
-	if !exists || foundGame.Result != "ongoing" {
+	if !exists {
 		// handle game ended message
 		c.SocketManager.BroadcastToRoom(e, client.Room)
 		return nil
