@@ -27,7 +27,7 @@ CREATE TABLE games (
     white_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     black_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     game_length SMALLINT NOT NULL DEFAULT 0,
-    result VARCHAR(10) CHECK(result IN ('1-0', '0-1', '1/2-1/2', 'ongoing', 'aborted')) NOT NULL DEFAULT 'ongoing',
+    result SMALLINT CHECK(result IN (0,1,2,3,4)) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time_left_white INT,
     end_time_left_black INT,

@@ -37,11 +37,7 @@
 	let changeWhite = $state(data.gameData.game.ChangeW ?? 0);
 	let changeBlack = $state(data.gameData.game.ChangeB ?? 0);
 	let result = $state(data.gameData.game.Result);
-	let reason = $state(
-		data.gameData.game.Result != 'ongoing' && data.gameData.game.Result != ''
-			? data.gameData.game.ResultReason
-			: ''
-	);
+	let reason = $state(data.gameData.game.ResultReason);
 	let moveHistory = $state(data.gameData.moves);
 	let activeIndex = $state(data.gameData.moves ? data.gameData.moves.length - 1 : -1);
 	let chessLatest = $derived(
@@ -65,7 +61,6 @@
 	};
 
 	const handleTimeUp = (payload: any) => {
-		if (payload.gameID != gameID) return;
 		result = payload.Result;
 		reason = payload.Reason;
 		changeBlack = payload.changeB;
@@ -78,7 +73,6 @@
 	// });
 
 	const handleResignation = (payload: any) => {
-		if (payload.gameID != gameID) return;
 		result = payload.Result;
 		reason = payload.Reason;
 		changeBlack = payload.changeB;
@@ -88,16 +82,15 @@
 	};
 
 	const handleMoveResponse = (payload: any) => {
-		if (payload.gameID != gameID) return;
 		if (moveHistory) moveHistory = [...moveHistory, payload.move];
 		else moveHistory = [payload.move];
 		timeBlack = payload.timeBlack;
 		timeWhite = payload.timeWhite;
 		if (activeIndex === moveHistory.length - 2) activeIndex = moveHistory.length - 1;
 
-		if (payload.Result !== '') {
+		if (payload.Result !== 0) {
 			result = payload.Result;
-			reason = payload.message;
+			reason = payload.reason;
 			changeBlack = payload.changeB;
 			changeWhite = payload.changeW;
 		}
@@ -129,7 +122,7 @@
 							? 3
 							: 1) * 1000;
 	let btime = $derived(
-		result != '' && result != 'ongoing'
+		result !== 0
 			? activeIndex == -1 || activeIndex == 0
 				? baseTime * 1000
 				: activeIndex == moveHistory.length - 1
@@ -140,7 +133,7 @@
 			: timeBlack
 	);
 	let wtime = $derived(
-		result != '' && result != 'ongoing'
+		result !== 0
 			? activeIndex == -1
 				? baseTime * 1000
 				: activeIndex == moveHistory.length - 1
@@ -155,7 +148,7 @@
 	let lowTimePlayed = $state(false);
 
 	$effect(() => {
-		if (result === 'ongoing' || result === '') {
+		if (result === 0) {
 			let trn = chessLatest.turn();
 			startTime = performance.now();
 			const tick = (currentTime: number) => {
@@ -205,10 +198,7 @@
 		orientation: whiteUp ? 'black' : 'white',
 		draggable: { enabled: true },
 		turnColor: chessForView.turn() == 'w' ? 'white' : 'black',
-		viewOnly:
-			!isPlayer ||
-			(result != 'ongoing' && result != '') ||
-			(moveHistory && activeIndex !== moveHistory.length - 1),
+		viewOnly: !isPlayer || result !== 0 || (moveHistory && activeIndex !== moveHistory.length - 1),
 		lastMove:
 			moveHistory && activeIndex !== -1
 				? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
@@ -315,7 +305,7 @@
 	</div>
 	<div class="acontainer xl:w-3/4">
 		<div class="abortt">
-			{#if (result === 'ongoing' || result === '') && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
+			{#if result === 0 && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
 				<AbortTimer
 					{lowAbortTime}
 					time={abortLength - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
@@ -327,7 +317,7 @@
 			<Chessboard {setGround} {boardConfig} />
 		</div>
 		<div class="abortb">
-			{#if (result === 'ongoing' || result === '') && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
+			{#if result === 0 && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
 				<AbortTimer
 					{lowAbortTime}
 					time={abortLength - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
@@ -339,7 +329,7 @@
 			<Clock
 				{lowTime}
 				time={whiteUp ? wtime : btime}
-				active={result !== 'ongoing' && result !== ''
+				active={result !== 0
 					? false
 					: whiteUp
 						? chessLatest.turn() === 'w'
@@ -353,7 +343,7 @@
 			><span
 				>{whiteUp ? ratingWhite : ratingBlack}&nbsp;&nbsp;<span
 					class={`${whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
-					>{result != '' && result != 'ongoing'
+					>{result !== 0
 						? whiteUp
 							? `${changeWhite > 0 ? '+' : ''}${changeWhite}`
 							: `${changeBlack > 0 ? '+' : ''}${changeBlack}`
@@ -362,7 +352,7 @@
 			>
 		</div>
 		<div class="draw-resign h-fit w-full">
-			{#if isPlayer && (result == '' || result == 'ongoing')}
+			{#if isPlayer && result === 0}
 				<DrawResign
 					isDisabled={!moveHistory || moveHistory.length < 2}
 					{gameID}
@@ -386,7 +376,7 @@
 			{/if}
 		</div>
 		<div class="back_to_tournament w-full px-3 py-2 text-center">
-			{#if isPlayer && tournamentID && result != '' && result != 'ongoing'}
+			{#if isPlayer && tournamentID && result !== 0}
 				<a
 					class="flex w-full items-center justify-center gap-[5px]"
 					href={`/tournament/${tournamentID}`}
@@ -403,7 +393,7 @@
 				{activeIndex}
 				highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
 					(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
-					(result === 'ongoing' || result === '')}
+					result === 0}
 			/>
 		</div>
 
@@ -414,7 +404,7 @@
 			<span
 				>{whiteUp ? ratingBlack : ratingWhite}&nbsp;&nbsp;<span
 					class={`${!whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
-					>{result != '' && result != 'ongoing'
+					>{result !== 0
 						? whiteUp
 							? `${changeBlack > 0 ? '+' : ''}${changeBlack}`
 							: `${changeWhite > 0 ? '+' : ''}${changeWhite}`
@@ -426,7 +416,7 @@
 			<Clock
 				{lowTime}
 				time={whiteUp ? btime : wtime}
-				active={result !== 'ongoing' && result !== ''
+				active={result !== 0
 					? false
 					: whiteUp
 						? chessLatest.turn() === 'b'

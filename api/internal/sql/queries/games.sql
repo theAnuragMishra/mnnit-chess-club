@@ -38,8 +38,8 @@ LEFT OUTER JOIN users u1 ON games.white_id = u1.id
 LEFT OUTER JOIN users u2 ON games.black_id = u2.id
 WHERE games.id = $1;
 
--- name: GetOngoingGames :many
-SELECT * FROM games WHERE result = 'ongoing';
+-- name: GetLiveGames :many
+SELECT * FROM games WHERE result = 0;
 
 -- name: GetGameMoves :many
 SELECT move_number, move_notation, orig, dest, move_fen, time_left
@@ -64,15 +64,15 @@ LIMIT $2 OFFSET $3;
 -- name: GetGameNumbers :one
 SELECT
 COUNT(*) FILTER(WHERE games.white_id = users.id OR games.black_id = users.id) AS game_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = '1-0') OR (games.black_id = users.id AND result = '0-1')) AS win_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = '1/2-1/2') AS draw_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = '0-1') OR (games.black_id = users.id AND result = '1-0')) AS loss_count
+COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 1) OR (games.black_id = users.id AND result = 2)) AS win_count,
+COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = 3) AS draw_count,
+COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 2) OR (games.black_id = users.id AND result = 1)) AS loss_count
 FROM games
 JOIN users ON users.id = games.white_id or users.id = games.black_id
 WHERE users.username = $1;
 
--- name: DeleteOngoingGames :exec
-DELETE FROM games WHERE result = 'ongoing';
+-- name: DeleteLiveGames :exec
+DELETE FROM games WHERE result = 0;
 
 -- name: CreateTournament :exec
 INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7);

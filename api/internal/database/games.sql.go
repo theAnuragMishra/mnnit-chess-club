@@ -109,12 +109,12 @@ func (q *Queries) CreateTournament(ctx context.Context, arg CreateTournamentPara
 	return err
 }
 
-const deleteOngoingGames = `-- name: DeleteOngoingGames :exec
-DELETE FROM games WHERE result = 'ongoing'
+const deleteLiveGames = `-- name: DeleteLiveGames :exec
+DELETE FROM games WHERE result = 0
 `
 
-func (q *Queries) DeleteOngoingGames(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, deleteOngoingGames)
+func (q *Queries) DeleteLiveGames(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteLiveGames)
 	return err
 }
 
@@ -134,7 +134,7 @@ WHERE id = $8
 `
 
 type EndGameWithResultParams struct {
-	Result           string
+	Result           int16
 	ResultReason     *string
 	ChangeW          *int32
 	ChangeB          *int32
@@ -189,7 +189,7 @@ type GetGameInfoRow struct {
 	WhiteID          *int32
 	BlackID          *int32
 	GameLength       int16
-	Result           string
+	Result           int16
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
@@ -276,9 +276,9 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID string) ([]GetGameMov
 const getGameNumbers = `-- name: GetGameNumbers :one
 SELECT
 COUNT(*) FILTER(WHERE games.white_id = users.id OR games.black_id = users.id) AS game_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = '1-0') OR (games.black_id = users.id AND result = '0-1')) AS win_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = '1/2-1/2') AS draw_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = '0-1') OR (games.black_id = users.id AND result = '1-0')) AS loss_count
+COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 1) OR (games.black_id = users.id AND result = 2)) AS win_count,
+COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = 3) AS draw_count,
+COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 2) OR (games.black_id = users.id AND result = 1)) AS loss_count
 FROM games
 JOIN users ON users.id = games.white_id or users.id = games.black_id
 WHERE users.username = $1
@@ -303,12 +303,12 @@ func (q *Queries) GetGameNumbers(ctx context.Context, username *string) (GetGame
 	return i, err
 }
 
-const getOngoingGames = `-- name: GetOngoingGames :many
-SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b FROM games WHERE result = 'ongoing'
+const getLiveGames = `-- name: GetLiveGames :many
+SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b FROM games WHERE result = 0
 `
 
-func (q *Queries) GetOngoingGames(ctx context.Context) ([]Game, error) {
-	rows, err := q.db.Query(ctx, getOngoingGames)
+func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
+	rows, err := q.db.Query(ctx, getLiveGames)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +366,7 @@ type GetPlayerGamesRow struct {
 	Increment     int32
 	WhiteUsername *string
 	BlackUsername *string
-	Result        string
+	Result        int16
 	GameLength    int16
 	ResultReason  *string
 	CreatedAt     time.Time

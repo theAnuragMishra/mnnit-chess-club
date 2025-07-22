@@ -5,6 +5,7 @@
 	// console.log(createdAt);
 	const createdAtString = formatPostgresTimestamp(createdAt);
 	const format = getTimeControl(baseTime, increment);
+	// $effect(() => console.log(result, reason));
 </script>
 
 <div
@@ -28,7 +29,7 @@
 		</div>
 	</div>
 
-	{#if result != '' && result != 'ongoing'}
+	{#if result !== 0}
 		<div class="h-[1px] w-full bg-gray-500 opacity-50"></div>
 		<div class=" flex items-center justify-center">
 			{formatResultAndReason(result, reason)}

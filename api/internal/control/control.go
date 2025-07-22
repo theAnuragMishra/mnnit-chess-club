@@ -24,7 +24,7 @@ func NewController(queries *database.Queries) *Controller {
 	c.TournamentManager = tournament.NewManager()
 	c.Queries = queries
 
-	if err := queries.DeleteOngoingGames(context.Background()); err != nil {
+	if err := queries.DeleteLiveGames(context.Background()); err != nil {
 		log.Println(err)
 	}
 

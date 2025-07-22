@@ -16,7 +16,7 @@ type Game struct {
 	WhiteID          *int32
 	BlackID          *int32
 	GameLength       int16
-	Result           string
+	Result           int16
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32

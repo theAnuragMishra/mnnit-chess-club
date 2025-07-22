@@ -87,10 +87,10 @@
 	<div class="flex w-full flex-col items-center gap-2">
 		{#each items as item}
 			{@const color =
-				(item.WhiteUsername === page.params.username && item.Result === '1-0') ||
-				(item.BlackUsername === page.params.username && item.Result === '0-1')
+				(item.WhiteUsername === page.params.username && item.Result === 1) ||
+				(item.BlackUsername === page.params.username && item.Result === 2)
 					? 'text-green-500'
-					: item.Result === 'ongoing' || item.Result === '1/2-1/2' || item.Result === 'aborted'
+					: item.Result === 0 || item.Result === 3 || item.Result === 4
 						? 'text-gray-300'
 						: 'text-red-500'}
 			<div class="relative flex w-4/5 flex-col gap-2 rounded-sm bg-gray-800 px-8 py-4">
@@ -124,7 +124,7 @@
 					</div>
 				</div>
 				<div class={`text-[14px] ${color} w-full text-center`}>
-					{#if item.Result !== 'ongoing'}
+					{#if item.Result !== 0}
 						{formatResultAndReason(item.Result, item.ResultReason)}
 					{:else}
 						Playing right now

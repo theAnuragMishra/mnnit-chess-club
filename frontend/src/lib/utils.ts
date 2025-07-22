@@ -65,9 +65,9 @@ export function formatPostgresTimestamp(dateObj: Date): string {
 	return dateObj.toLocaleDateString('en-GB', options).replace(',', '');
 }
 
-export function formatResultAndReason(result: string, reason: string) {
-	if (result === 'aborted') return 'Game Aborted';
-	if (result === '1/2-1/2') {
+export function formatResultAndReason(result: number, reason: string) {
+	if (result === 4) return 'Game Aborted';
+	if (result === 3) {
 		if (reason === 'ThreefoldRepetition') return 'Draw by threefold repetition';
 		if (reason === 'FivefoldRepetition') return 'Draw by fivefold repetition';
 		if (reason === 'FiftyMoveRule') return 'Draw by 50 move rule';
@@ -76,7 +76,7 @@ export function formatResultAndReason(result: string, reason: string) {
 		if (reason === 'InsufficientMaterial') return 'Insufficient material | Draw';
 		return reason;
 	}
-	return `${reason} | ${result === '1-0' ? 'White' : 'Black'} Wins`;
+	return `${reason} | ${result === 1 ? 'White' : 'Black'} Wins`;
 }
 
 export function getTimeControl(baseTime: number, increment: number) {

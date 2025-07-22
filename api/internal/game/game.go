@@ -1,7 +1,6 @@
 package game
 
 import (
-	"log"
 	"time"
 
 	"github.com/notnil/chess"
@@ -48,7 +47,7 @@ func NewGame(baseTime time.Duration, increment time.Duration, player1 int32, pla
 	}
 }
 
-func (g *Game) MakeMove(move string) (string, string) {
+func (g *Game) MakeMove(move string) error {
 	moveTime := time.Since(g.LastMoveTime)
 
 	if g.Board.Position().Turn() == chess.White {
@@ -62,8 +61,8 @@ func (g *Game) MakeMove(move string) (string, string) {
 	g.LastMoveTime = time.Now()
 
 	if err := g.Board.MoveStr(move); err != nil {
-		log.Println(err)
-		return "error making move", ""
+		//log.Println(err)
+		return err
 	}
 
 	g.DrawOfferedBy = 0
@@ -72,9 +71,5 @@ func (g *Game) MakeMove(move string) (string, string) {
 		g.Board.Draw(chess.FiftyMoveRule)
 	}
 
-	if g.Board.Outcome() != "*" {
-		return g.Board.Method().String(), string(g.Board.Outcome())
-	}
-
-	return "move successful", ""
+	return nil
 }
