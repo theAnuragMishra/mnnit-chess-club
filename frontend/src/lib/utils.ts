@@ -76,7 +76,7 @@ export function formatResultAndReason(result: string, reason: string) {
 		if (reason === 'InsufficientMaterial') return 'Insufficient material | Draw';
 		return reason;
 	}
-	return `${reason} | ${result === '1-0' ? 'White' : 'Black'} is victorious`;
+	return `${reason} | ${result === '1-0' ? 'White' : 'Black'} Wins`;
 }
 
 export function getTimeControl(baseTime: number, increment: number) {

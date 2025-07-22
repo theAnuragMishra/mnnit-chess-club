@@ -110,25 +110,28 @@ func (c *Controller) abortGame(g *game.Game) {
 
 	_, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
 	reason := "Game Aborted"
+	result := "aborted"
 
 	if affectsTournament {
 		if g.Board.Position().Turn() == chess.White {
 			reason = "White Didn't Play"
+			result = "0-1"
 			c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID].IsActive = false
 		} else {
 			reason = "Black Didn't Play"
+			result = "1-0"
 			c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID].IsActive = false
 		}
 	}
 
 	etl := int32(g.BaseTime.Milliseconds())
 
-	cw, cb, err := c.endGame(g, "aborted", &reason, 0, &etl, &etl)
+	cw, cb, err := c.endGame(g, result, &reason, 0, &etl, &etl)
 	if err != nil {
 		log.Println("error ending game with result", err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": "aborted", "Reason": reason, "changeW": cw, "changeB": cb, "timeWhite": etl, "timeBlack": etl})
+	payload, err := json.Marshal(map[string]any{"gameID": g.ID, "Result": result, "Reason": reason, "changeW": cw, "changeB": cb, "timeWhite": etl, "timeBlack": etl})
 	if err != nil {
 		log.Println(err)
 	}
@@ -178,8 +181,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 }
 
 func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLength int16, etlw, etlb *int32) (int, int, error) {
-	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
-	if result == "aborted" && !affectsTournament {
+	if result == "aborted" {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,
 			ResultReason:     reason,
@@ -189,15 +191,9 @@ func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLe
 		})
 		return 0, 0, err
 	}
+	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
 	var r float64
-
-	if result == "aborted" {
-		if g.Board.Position().Turn() == chess.White {
-			r = 0.0
-		} else {
-			r = 1.0
-		}
-	} else if result == "1-0" {
+	if result == "1-0" {
 		r = 1.0
 	} else if result == "0-1" {
 		r = 0.0
@@ -250,7 +246,7 @@ func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLe
 		p1.Rating = up1.Rating
 		p2.Rating = up2.Rating
 
-		if result == "1-0" || (result == "aborted" && g.Board.Position().Turn() == chess.Black) {
+		if result == "1-0" {
 			p2.Streak = 0
 			p2.Scores = append(p2.Scores, 0)
 			if p1.Streak >= 2 {
@@ -261,7 +257,7 @@ func (c *Controller) endGame(g *game.Game, result string, reason *string, gameLe
 				p1.Scores = append(p1.Scores, 2)
 			}
 			p1.Streak += 1
-		} else if result == "0-1" || (result == "aborted" && g.Board.Position().Turn() == chess.White) {
+		} else if result == "0-1" {
 			p1.Streak = 0
 			p1.Scores = append(p1.Scores, 0)
 			if p2.Streak >= 2 {
