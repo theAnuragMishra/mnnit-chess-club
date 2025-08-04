@@ -219,7 +219,8 @@
 						{:else}
 							{i + 1}
 						{/if}</span
-					>{player.Username} <i>{Math.floor(player.Rating)}</i>
+					><a href={`/member/${player.Username}`}>{player.Username}</a>
+					<i>{Math.floor(player.Rating)}</i>
 				</span><span class="flex items-center text-[16px] text-gray-300">
 					{#each player.Scores as s}
 						{s}
