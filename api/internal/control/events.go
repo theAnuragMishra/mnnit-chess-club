@@ -15,4 +15,6 @@ var handlers = map[string]EventHandler{
 	"create_challenge": CreateChallenge,
 	"accept_challenge": AcceptChallenge,
 	"join_leave":       HandleJoinLeave,
+	"create_rematch":   CreateRematch,
+	"accept_rematch":   AcceptRematch,
 }

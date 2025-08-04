@@ -10,6 +10,7 @@ type Manager struct {
 	Games             map[string]*Game
 	PendingUsers      map[TimeControl]PendingUser
 	PendingChallenges map[string]Challenge
+	Rematches         map[string]Rematch
 	// Users         []string
 }
 
@@ -24,6 +25,12 @@ type Challenge struct {
 	CreatorUsername string
 }
 
+type Rematch struct {
+	TimeControl TimeControl
+	Creator     int32
+	Opponent    int32
+}
+
 type PendingUser struct {
 	ID     int32
 	Client *socket.Client
@@ -34,5 +41,6 @@ func NewManager() *Manager {
 		Games:             make(map[string]*Game),
 		PendingUsers:      make(map[TimeControl]PendingUser),
 		PendingChallenges: make(map[string]Challenge),
+		Rematches:         make(map[string]Rematch),
 	}
 }

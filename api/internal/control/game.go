@@ -174,6 +174,73 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	return nil
 }
 
+func CreateRematch(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var crp createRematchPayload
+	if err := json.Unmarshal(event.Payload, &crp); err != nil {
+		return err
+	}
+	//log.Println(timeControl)
+	if crp.TimeControl.BaseTime <= 0 || crp.TimeControl.BaseTime > 10800 || crp.TimeControl.Increment < 0 || crp.TimeControl.Increment > 180 {
+		return errors.New("invalid time control")
+	}
+	id, err := c.generateUniqueGameID()
+	if err != nil {
+		return err
+	}
+	c.GameManager.Rematches[id] = game.Rematch{
+		TimeControl: crp.TimeControl,
+		Creator:     client.UserID,
+		Opponent:    crp.OpponentID,
+	}
+	payload := map[string]any{"rematchID": id}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, crp.OpponentID)
+	return nil
+}
+
+func AcceptRematch(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
+	var arp GameIDPayload
+	if err := json.Unmarshal(event.Payload, &arp); err != nil {
+		return err
+	}
+	rematch, exists := c.GameManager.Rematches[arp.GameID]
+	if !exists {
+		return errors.New("rematch not found")
+	}
+	if rematch.Opponent != client.UserID || rematch.Creator == client.UserID {
+		return errors.New("not the intended opponent")
+	}
+
+	rating1, err1 := c.Queries.GetUserRating(context.Background(), rematch.Creator)
+	rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
+	if err1 != nil || err2 != nil {
+		return errors.New("server error while fetching ratings")
+	}
+	createdGame, err := c.createGame(arp.GameID, rematch.Creator, client.UserID, rematch.TimeControl, rating1, rating2, "")
+	if err != nil {
+		return err
+	}
+	payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, client.UserID)
+	// fmt.Println(rematch.Opponent, client.UserID)
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, rematch.Creator)
+	delete(c.GameManager.Rematches, arp.GameID)
+	return nil
+}
+
 func Move(c *Controller, event socket.Event, client *socket.Client) error {
 	// fmt.Println(string(event.Payload))
 

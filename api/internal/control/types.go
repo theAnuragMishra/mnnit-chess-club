@@ -1,6 +1,7 @@
 package control
 
 import (
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"time"
 )
 
@@ -57,4 +58,9 @@ type updateScorePlayer struct {
 	Scores []int16
 	Rating float64
 	Streak int32
+}
+
+type createRematchPayload struct {
+	TimeControl game.TimeControl `json:"timeControl"`
+	OpponentID  int32            `json:"opponentID"`
 }
