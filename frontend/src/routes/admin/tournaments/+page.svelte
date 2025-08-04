@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { dateTimeToDate, getBaseURL } from '$lib/utils';
 
 	const { data } = $props();
