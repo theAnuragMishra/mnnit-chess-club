@@ -345,10 +345,11 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 }
 
 const getPlayerGames = `-- name: GetPlayerGames :many
-SELECT games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
+SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
 FROM games
 JOIN users u1 ON games.white_id = u1.id
 JOIN users u2 ON games.black_id = u2.id
+LEFT OUTER JOIN tournaments t ON games.tournament_id = t.id
 WHERE (u1.username = $1 OR u2.username = $1)
 ORDER BY games.created_at DESC
 LIMIT $2 OFFSET $3
@@ -361,19 +362,21 @@ type GetPlayerGamesParams struct {
 }
 
 type GetPlayerGamesRow struct {
-	ID            string
-	BaseTime      int32
-	Increment     int32
-	WhiteUsername *string
-	BlackUsername *string
-	Result        int16
-	GameLength    int16
-	ResultReason  *string
-	CreatedAt     time.Time
-	RatingW       int32
-	RatingB       int32
-	ChangeW       *int32
-	ChangeB       *int32
+	TournamentName *string
+	TournamentID   *string
+	ID             string
+	BaseTime       int32
+	Increment      int32
+	WhiteUsername  *string
+	BlackUsername  *string
+	Result         int16
+	GameLength     int16
+	ResultReason   *string
+	CreatedAt      time.Time
+	RatingW        int32
+	RatingB        int32
+	ChangeW        *int32
+	ChangeB        *int32
 }
 
 func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) ([]GetPlayerGamesRow, error) {
@@ -386,6 +389,8 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 	for rows.Next() {
 		var i GetPlayerGamesRow
 		if err := rows.Scan(
+			&i.TournamentName,
+			&i.TournamentID,
 			&i.ID,
 			&i.BaseTime,
 			&i.Increment,

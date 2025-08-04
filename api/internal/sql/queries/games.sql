@@ -53,10 +53,11 @@ SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length =
 WHERE id = $8;
 
 -- name: GetPlayerGames :many
-SELECT games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
+SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
 FROM games
 JOIN users u1 ON games.white_id = u1.id
 JOIN users u2 ON games.black_id = u2.id
+LEFT OUTER JOIN tournaments t ON games.tournament_id = t.id
 WHERE (u1.username = $1 OR u2.username = $1)
 ORDER BY games.created_at DESC
 LIMIT $2 OFFSET $3;
