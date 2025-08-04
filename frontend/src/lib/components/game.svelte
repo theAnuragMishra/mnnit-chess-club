@@ -14,14 +14,9 @@
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	import type { Config } from 'chessground/config';
 	import Rematch from './Rematch.svelte';
+	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
 	let { data } = $props();
 	// console.log(data);
-
-	//audios
-	let moveAudio: HTMLAudioElement;
-	let captureAudio: HTMLAudioElement;
-	let notifyAudio: HTMLAudioElement;
-	let lowTimeAudio: HTMLAudioElement;
 
 	let ground: Api | null = $state(null);
 	const baseTime = data.gameData.game.BaseTime;
@@ -68,6 +63,7 @@
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
 		timeBlack = payload.timeBlack;
+		notifyAudio.play();
 	};
 	// $effect(() => {
 	// 	console.log(timeWhite, timeBlack);
@@ -80,6 +76,7 @@
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
 		timeBlack = payload.timeBlack;
+		notifyAudio.play();
 	};
 
 	const handleMoveResponse = (payload: any) => {
@@ -89,11 +86,15 @@
 		timeWhite = payload.timeWhite;
 		if (activeIndex === moveHistory.length - 2) activeIndex = moveHistory.length - 1;
 
+		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
+		else moveAudio?.play();
+
 		if (payload.Result !== 0) {
 			result = payload.Result;
 			reason = payload.reason;
 			changeBlack = payload.changeB;
 			changeWhite = payload.changeW;
+			notifyAudio.play();
 		}
 		ground?.set({
 			fen: payload.move.MoveFen,
@@ -101,8 +102,7 @@
 			movable: { dests: getValidMoves(chessLatest) }
 		});
 		// console.log('finished movehandler');
-		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
-		else moveAudio?.play();
+
 		ground?.playPremove();
 		// console.log(x);
 	};
@@ -251,10 +251,6 @@
 		websocketStore.onMessage('game_abort', handleTimeUp);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
 		websocketStore.onMessage('resignation', handleResignation);
-		moveAudio = new Audio('/Move.mp3');
-		captureAudio = new Audio('/Capture.mp3');
-		notifyAudio = new Audio('/GenericNotify.mp3');
-		lowTimeAudio = new Audio('/LowTime.mp3');
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('timeup', handleTimeUp);

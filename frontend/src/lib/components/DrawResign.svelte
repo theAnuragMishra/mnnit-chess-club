@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
+	import { notifyAudio } from '$lib/audios';
 
 	const { userID, gameID, setResultReason, isDisabled } = $props();
 	let offer = $state(false);
@@ -40,6 +41,7 @@
 			payload.timeWhite,
 			payload.timeBlack
 		);
+		notifyAudio.play();
 	};
 
 	const handleDrawOffer = (payload: any) => {
