@@ -6,6 +6,7 @@ CREATE TABLE tournaments (
     duration INT NOT NULL,
     base_time INT NOT NULL,
     increment INT NOT NULL,
+    status SMALLINT CHECK(status IN (0,1,2))  NOT NULL DEFAULT 0,
     created_by INT REFERENCES users(id) ON DELETE SET NULL
 );
 

@@ -68,15 +68,17 @@
 	};
 
 	//timers
-	let totalTime = data.tournamentData.ongoing
-		? getTimeLeft(data.tournamentData.startTime, data.tournamentData.duration)
-		: new Date(data.tournamentData.startTime).getTime() - new Date().getTime();
+	let totalTime =
+		data.tournamentData.status === 1
+			? getTimeLeft(data.tournamentData.startTime, data.tournamentData.duration)
+			: new Date(data.tournamentData.startTime).getTime() - new Date().getTime();
 	let animationFrame: number | null;
 	let startTime: DOMHighResTimeStamp | null;
 	let timeToShow = $state(totalTime);
 
 	$effect(() => {
-		if (totalTime > 0) {
+		if (data.tournamentData.status !== 2) {
+			//console.log('effect working');
 			startTime = performance.now();
 			const tick = (currentTime: number) => {
 				if (!startTime) return;
@@ -122,9 +124,9 @@
 <div class="flex w-full flex-col-reverse gap-10 p-5 md:flex-row md:gap-2">
 	<div class="flex w-full flex-col gap-2 md:w-1/4">
 		<div>
-			{#if !data.tournamentData.ongoing}
+			{#if data.tournamentData.status !== 1}
 				<p>
-					{#if totalTime >= 0}
+					{#if data.tournamentData.status === 0}
 						Starts{/if}
 					{new Date(data.tournamentData.startTime).toLocaleString('en-IN', {
 						year: 'numeric',
@@ -143,9 +145,9 @@
 				)} &bull; {data.tournamentData.duration / 60}m
 			</p>
 			<p>By <a href={`/member/${data.tournamentData.creator}`}>{data.tournamentData.creator}</a></p>
-			{#if totalTime >= 0}
+			{#if data.tournamentData.status !== 2}
 				<div>
-					{#if !data.tournamentData.ongoing}
+					{#if data.tournamentData.status === 0}
 						<p>Starting in</p>
 					{/if}
 					<Clock time={timeToShow} active={true} lowTime={0} />min:sec
@@ -154,7 +156,7 @@
 					onclick={handleJoinLeave}
 					class={`${!joined[0] || (joined[0] && joined[1] === false) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
 					disabled={loading}
-					>{data.tournamentData.ongoing
+					>{data.tournamentData.status === 1
 						? joined[0]
 							? joined[1]
 								? 'Pause'

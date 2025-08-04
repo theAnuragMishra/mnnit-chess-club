@@ -93,7 +93,7 @@ INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2);
 UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1;
 
 -- name: GetUpcomingTournaments :many
-SELECT * FROM tournaments WHERE start_time > NOW();
+SELECT * FROM tournaments WHERE status = 0;
 
 -- name: GetTournamentPlayer :one
 SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
@@ -101,8 +101,11 @@ SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
 -- name: DeleteTournamentPlayer :exec
 DELETE FROM tournament_players WHERE player_id = $1;
 
--- name: GetTournamentStartTime :one
-SELECT start_time, duration FROM tournaments WHERE id = $1;
+-- name: GetTournamentStatus :one
+SELECT status FROM tournaments WHERE id = $1;
+
+-- name: UpdateTournamentStatus :exec
+UPDATE tournaments SET status = $1 WHERE id=$2;
 
 -- name: BatchUpdateTournamentPlayers :exec
 WITH players_data (

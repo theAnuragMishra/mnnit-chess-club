@@ -474,7 +474,10 @@ func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.D
 
 func (c *Controller) EndTournament(t *tournament.Tournament) {
 	close(t.Done)
-
+	err := c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
+		Status: 2,
+		ID:     t.Id,
+	})
 	input := make([]tournamentPlayer, 0, len(t.Players))
 
 	for _, v := range t.Players {

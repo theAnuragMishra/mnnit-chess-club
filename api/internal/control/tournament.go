@@ -98,7 +98,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 			"increment": serverTournament.TimeControl.Increment,
 			"createdBy": serverTournament.CreatedBy,
 			"creator":   serverTournament.Creator,
-			"ongoing":   true,
+			"status":    1,
 		})
 		return
 	}
@@ -117,7 +117,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		"increment": tournamentInfo.Increment,
 		"createdBy": tournamentInfo.CreatedBy,
 		"creator":   tournamentInfo.Username,
-		"ongoing":   false,
+		"status":    tournamentInfo.Status,
 	})
 }
 
@@ -140,6 +140,15 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	err = c.Queries.UpdateTournamentStartTime(context.Background(), tournamentInfo.ID)
 	if err != nil {
 		log.Println("Error updating tournament start time", err)
+	}
+
+	err = c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
+		Status: 1,
+		ID:     tournamentInfo.ID,
+	})
+
+	if err != nil {
+		log.Println("Error updating tournament status", err)
 	}
 
 	players, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
@@ -215,12 +224,12 @@ func HandleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 }
 
 func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
-	startTimeAndDuration, err := c.Queries.GetTournamentStartTime(context.Background(), tournamentID)
+	status, err := c.Queries.GetTournamentStatus(context.Background(), tournamentID)
 	if err != nil {
 		client.Send(e)
 		return err
 	}
-	if time.Now().After(startTimeAndDuration.StartTime.Add(time.Duration(startTimeAndDuration.Duration) * time.Second)) {
+	if status == 2 {
 		client.Send(e)
 		return errors.New("tournament ended")
 	}

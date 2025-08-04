@@ -52,6 +52,7 @@ type Tournament struct {
 	Duration  int32
 	BaseTime  int32
 	Increment int32
+	Status    int16
 	CreatedBy *int32
 }
 

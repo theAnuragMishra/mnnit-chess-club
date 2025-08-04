@@ -421,7 +421,7 @@ func (q *Queries) GetTournamentByID(ctx context.Context, id string) (string, err
 }
 
 const getTournamentInfo = `-- name: GetTournamentInfo :one
-SELECT t.id, t.name, t.start_time, t.duration, t.base_time, t.increment, t.created_by, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1
+SELECT t.id, t.name, t.start_time, t.duration, t.base_time, t.increment, t.status, t.created_by, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1
 `
 
 type GetTournamentInfoRow struct {
@@ -431,6 +431,7 @@ type GetTournamentInfoRow struct {
 	Duration  int32
 	BaseTime  int32
 	Increment int32
+	Status    int16
 	CreatedBy *int32
 	Username  *string
 }
@@ -445,6 +446,7 @@ func (q *Queries) GetTournamentInfo(ctx context.Context, id string) (GetTourname
 		&i.Duration,
 		&i.BaseTime,
 		&i.Increment,
+		&i.Status,
 		&i.CreatedBy,
 		&i.Username,
 	)
@@ -507,24 +509,19 @@ func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string)
 	return items, nil
 }
 
-const getTournamentStartTime = `-- name: GetTournamentStartTime :one
-SELECT start_time, duration FROM tournaments WHERE id = $1
+const getTournamentStatus = `-- name: GetTournamentStatus :one
+SELECT status FROM tournaments WHERE id = $1
 `
 
-type GetTournamentStartTimeRow struct {
-	StartTime time.Time
-	Duration  int32
-}
-
-func (q *Queries) GetTournamentStartTime(ctx context.Context, id string) (GetTournamentStartTimeRow, error) {
-	row := q.db.QueryRow(ctx, getTournamentStartTime, id)
-	var i GetTournamentStartTimeRow
-	err := row.Scan(&i.StartTime, &i.Duration)
-	return i, err
+func (q *Queries) GetTournamentStatus(ctx context.Context, id string) (int16, error) {
+	row := q.db.QueryRow(ctx, getTournamentStatus, id)
+	var status int16
+	err := row.Scan(&status)
+	return status, err
 }
 
 const getUpcomingTournaments = `-- name: GetUpcomingTournaments :many
-SELECT id, name, start_time, duration, base_time, increment, created_by FROM tournaments WHERE start_time > NOW()
+SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0
 `
 
 func (q *Queries) GetUpcomingTournaments(ctx context.Context) ([]Tournament, error) {
@@ -543,6 +540,7 @@ func (q *Queries) GetUpcomingTournaments(ctx context.Context) ([]Tournament, err
 			&i.Duration,
 			&i.BaseTime,
 			&i.Increment,
+			&i.Status,
 			&i.CreatedBy,
 		); err != nil {
 			return nil, err
@@ -585,5 +583,19 @@ UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1
 
 func (q *Queries) UpdateTournamentStartTime(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, updateTournamentStartTime, id)
+	return err
+}
+
+const updateTournamentStatus = `-- name: UpdateTournamentStatus :exec
+UPDATE tournaments SET status = $1 WHERE id=$2
+`
+
+type UpdateTournamentStatusParams struct {
+	Status int16
+	ID     string
+}
+
+func (q *Queries) UpdateTournamentStatus(ctx context.Context, arg UpdateTournamentStatusParams) error {
+	_, err := q.db.Exec(ctx, updateTournamentStatus, arg.Status, arg.ID)
 	return err
 }
