@@ -13,6 +13,7 @@
 	import { getValidMoves, isPromoting } from '$lib/utils.js';
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	import type { Config } from 'chessground/config';
+	import Rematch from './Rematch.svelte';
 	let { data } = $props();
 	// console.log(data);
 
@@ -336,7 +337,15 @@
 						: chessLatest.turn() === 'b'}
 			/>
 		</div>
-
+		<div class="rematch w-full">
+			{#if result !== 0}
+				<Rematch
+					{baseTime}
+					{increment}
+					opponentID={whiteUp ? data.gameData.game.WhiteID : data.gameData.game.BlackID}
+				/>
+			{/if}
+		</div>
 		<div class="namet flex h-fit justify-between md:w-[300px]">
 			<a href={`/member/${whiteUp ? whiteUsername : blackUsername}`}
 				>{whiteUp ? whiteUsername : blackUsername}&nbsp;&nbsp;</a
@@ -440,6 +449,7 @@
 			'nameb clockb'
 			'btt btt'
 			'draw-resign draw-resign'
+			'rematch rematch'
 			'history history';
 	}
 	.namet {
@@ -481,6 +491,9 @@
 	.abortb {
 		grid-area: abortb;
 	}
+	.rematch {
+		grid-area: rematch;
+	}
 	@media (width>= 768px) {
 		.acontainer {
 			row-gap: 3px;
@@ -495,6 +508,7 @@
 				'board btt'
 				'board history'
 				'board draw-resign'
+				'board rematch'
 				'board abortb'
 				'board nameb'
 				'board clockb'

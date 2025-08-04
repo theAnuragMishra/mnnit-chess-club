@@ -34,6 +34,8 @@ class WebSocketStore {
 		const data = JSON.parse(event.data);
 		const { type, payload } = data;
 
+		//console.log(data);
+
 		if (type === 'GoTo') {
 			window.location.href = `/${payload.Type}/${payload.ID}`;
 		} else if (type === 'Refresh') {
