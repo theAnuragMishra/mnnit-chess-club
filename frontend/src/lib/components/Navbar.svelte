@@ -19,7 +19,6 @@
 	</div>
 	<div class="flex items-center justify-center gap-5 text-sm md:text-xl">
 		<a href="/play">Play</a>
-		<a href="/about">About</a>
 		<a href="/tournaments">Tournaments</a>
 		<a href="/achievements">Achievements</a>
 		<a href="/leaderboard">Leaderboard</a>
