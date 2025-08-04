@@ -6,8 +6,8 @@ import (
 )
 
 func RoomChange(c *Controller, event socket.Event, client *socket.Client) error {
-	c.SocketManager.Lock()
-	defer c.SocketManager.Unlock()
+	c.SocketManager.RoomsMu.Lock()
+	defer c.SocketManager.RoomsMu.Unlock()
 	var payload RoomPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
 		return err
@@ -31,8 +31,8 @@ func RoomChange(c *Controller, event socket.Event, client *socket.Client) error 
 }
 
 func LeaveRoom(c *Controller, event socket.Event, client *socket.Client) error {
-	c.SocketManager.Lock()
-	defer c.SocketManager.Unlock()
+	c.SocketManager.RoomsMu.Lock()
+	defer c.SocketManager.RoomsMu.Unlock()
 	var payload RoomPayload
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
 		return err

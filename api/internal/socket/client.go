@@ -95,8 +95,8 @@ func (c *Client) Send(event Event) {
 }
 
 func (c *Client) SendIfConnected(event Event) {
-	c.manager.RLock()
-	defer c.manager.RUnlock()
+	c.manager.clientsMu.RLock()
+	defer c.manager.clientsMu.RUnlock()
 	clients, ok := c.manager.clients[c.UserID]
 	if ok {
 		_, ok := clients[c]
@@ -107,16 +107,16 @@ func (c *Client) SendIfConnected(event Event) {
 }
 
 func (m *Manager) BroadcastToRoom(event Event, room string) {
-	m.RLock()
-	defer m.RUnlock()
+	m.RoomsMu.RLock()
+	defer m.RoomsMu.RUnlock()
 	for client := range m.Rooms[room] {
 		client.egress <- event
 	}
 }
 
 func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, player2 int32) {
-	m.RLock()
-	defer m.RUnlock()
+	m.RoomsMu.RLock()
+	defer m.RoomsMu.RUnlock()
 	for client := range m.Rooms[room] {
 		if client.UserID != player2 && client.UserID != player1 {
 			client.egress <- event
@@ -126,8 +126,8 @@ func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, playe
 
 // Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
-	m.RLock() // Read lock to safely access the clients' map
-	defer m.RUnlock()
+	m.clientsMu.RLock() // Read lock to safely access the clients' map
+	defer m.clientsMu.RUnlock()
 
 	for _, clients := range m.clients {
 		for client := range clients {
@@ -137,8 +137,8 @@ func (m *Manager) Broadcast(event Event) {
 }
 
 func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
-	m.RLock()
-	defer m.RUnlock()
+	m.clientsMu.RLock()
+	defer m.clientsMu.RUnlock()
 	clients, ok := m.clients[id]
 	if ok {
 		for client := range clients {
@@ -150,8 +150,8 @@ func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
 }
 
 func (m *Manager) IsUserInARoom(room string, id int32) bool {
-	m.RLock()
-	defer m.RUnlock()
+	m.clientsMu.RLock()
+	defer m.clientsMu.RUnlock()
 	clients, ok := m.clients[id]
 	if ok {
 		for client := range clients {
