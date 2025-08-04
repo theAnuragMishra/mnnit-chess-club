@@ -179,7 +179,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 		}
 		e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 		c.SocketManager.BroadcastToRoom(e, tournamentInfo.ID)
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 3)
 
 		time.AfterFunc(time.Duration(tournamentInfo.Duration)*time.Second, func() { c.EndTournament(createdTournament) })
 
