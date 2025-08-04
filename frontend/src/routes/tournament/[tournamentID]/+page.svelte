@@ -5,6 +5,7 @@
 	import { getTimeLeft, getTimeControl } from '$lib/utils';
 	import Clock from '$lib/components/Clock.svelte';
 	import Chat from '$lib/components/Chat.svelte';
+	import TopThree from '$lib/components/TopThree.svelte';
 
 	interface Player {
 		ID: number;
@@ -176,6 +177,13 @@
 		</div>
 	</div>
 	<div class="mr-10 w-full md:w-1/2">
+		{#if data.tournamentData.status === 2}
+			<TopThree
+				u1={sortedPlayers[0]?.Username}
+				u2={sortedPlayers[1]?.Username}
+				u3={sortedPlayers[2]?.Username}
+			/>
+		{/if}
 		{#if joined[1]}
 			<h2 class="shiny relative mb-5 overflow-hidden bg-green-600 px-2 py-0.5 text-center text-xl">
 				Wait {data.user.username}, pairing players. Get ready!
