@@ -95,6 +95,8 @@ func (c *Client) Send(event Event) {
 }
 
 func (c *Client) SendIfConnected(event Event) {
+	c.manager.RLock()
+	defer c.manager.RUnlock()
 	clients, ok := c.manager.clients[c.UserID]
 	if ok {
 		_, ok := clients[c]
@@ -135,6 +137,8 @@ func (m *Manager) Broadcast(event Event) {
 }
 
 func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
+	m.RLock()
+	defer m.RUnlock()
 	clients, ok := m.clients[id]
 	if ok {
 		for client := range clients {

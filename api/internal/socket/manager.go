@@ -22,8 +22,6 @@ type Manager struct {
 	sync.RWMutex
 	Rooms     map[string]map[*Client]bool
 	OnMessage func(event Event, client *Client) error
-
-	// handlers map[string]EventHandler
 }
 
 func NewManager(onMessage func(event Event, client *Client) error) *Manager {
@@ -31,27 +29,9 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 		clients:   make(ClientList),
 		OnMessage: onMessage,
 		Rooms:     make(map[string]map[*Client]bool),
-		// handlers: make(map[string]EventHandler),
 	}
-	// m.setupEventHandlers()
 	return m
 }
-
-// setting up event handlers
-//func (m *Manager) setupEventHandlers() {
-//	m.handlers[EventSendMessage] = SendMessage
-//}
-
-//func (m *Manager) routeEvent(event Event, c *Client) error {
-//	if handler, ok := m.handlers[event.Type]; ok {
-//		if err := handler(event, c); err != nil {
-//			return err
-//		}
-//		return nil
-//	} else {
-//		return errors.New("there is no event of this type")
-//	}
-//}
 
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("new connection request")
@@ -62,16 +42,12 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// upgrading http to websocket connection
-
 	conn, err := webSocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	// Create New Client
 	client := NewClient(conn, m, session.UserID, *session.Username)
-	// Add the newly created client to the manager
 	m.addClient(client)
 
 	// for _, client := range m.clients {
@@ -83,34 +59,27 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	go client.writeMessages()
 }
 
-// addClient will add clients to our clientList
 func (m *Manager) addClient(client *Client) {
-	// Lock so we can manipulate
 	m.Lock()
 	defer m.Unlock()
 	log.Println("adding client", client)
-	// Add Client
 	if m.clients[client.UserID] == nil {
 		m.clients[client.UserID] = make(map[*Client]struct{})
 	}
 	m.clients[client.UserID][client] = struct{}{}
 }
 
-// RemoveClient will remove the client and clean up
 func (m *Manager) RemoveClient(client *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	// Check if the client exists, then delete it
 	if clients, ok := m.clients[client.UserID]; ok {
 		if _, ok := clients[client]; ok {
-			// close connection
 			err := client.connection.Close()
 			if err != nil {
 				log.Println("error trying to close connection of ", client, err)
 				return
 			}
-			// remove
 			close(client.egress)
 			delete(m.Rooms[client.Room], client)
 			delete(m.clients[client.UserID], client)
@@ -124,7 +93,6 @@ func (m *Manager) RemoveClient(client *Client) {
 	}
 }
 
-// RemoveUser will remove all the connections of a user
 func (m *Manager) RemoveUser(id int32) {
 	m.Lock()
 	defer m.Unlock()
@@ -145,7 +113,6 @@ func (m *Manager) RemoveUser(id int32) {
 }
 
 func checkOrigin(r *http.Request) bool {
-	// Grab the request origin
 	origin := r.Header.Get("Origin")
 
 	switch origin {
