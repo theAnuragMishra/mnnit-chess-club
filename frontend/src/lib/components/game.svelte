@@ -334,7 +334,7 @@
 			/>
 		</div>
 		<div class="rematch w-full">
-			{#if result !== 0}
+			{#if result !== 0 && isPlayer && !tournamentID}
 				<Rematch
 					{baseTime}
 					{increment}
