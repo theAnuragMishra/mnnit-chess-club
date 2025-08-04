@@ -415,6 +415,43 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 	return items, nil
 }
 
+const getTopN = `-- name: GetTopN :many
+SELECT id, username, avatar_url, rating FROM users
+ORDER BY rating DESC LIMIT $1 OFFSET 0
+`
+
+type GetTopNRow struct {
+	ID        int32
+	Username  *string
+	AvatarUrl *string
+	Rating    float64
+}
+
+func (q *Queries) GetTopN(ctx context.Context, limit int32) ([]GetTopNRow, error) {
+	rows, err := q.db.Query(ctx, getTopN, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopNRow
+	for rows.Next() {
+		var i GetTopNRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.AvatarUrl,
+			&i.Rating,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTournamentByID = `-- name: GetTournamentByID :one
 SELECT id FROM tournaments WHERE id = $1
 `
@@ -526,7 +563,7 @@ func (q *Queries) GetTournamentStatus(ctx context.Context, id string) (int16, er
 }
 
 const getUpcomingTournaments = `-- name: GetUpcomingTournaments :many
-SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0
+SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0 ORDER BY start_time
 `
 
 func (q *Queries) GetUpcomingTournaments(ctx context.Context) ([]Tournament, error) {

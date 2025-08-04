@@ -51,7 +51,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 		username := r.FormValue("username")
 		log.Println(username)
 	})
-
+	router.Get("/get-leaderboard", controller.WriteLeaderBoard)
 	// game subroute
 
 	gameRouter := chi.NewRouter()

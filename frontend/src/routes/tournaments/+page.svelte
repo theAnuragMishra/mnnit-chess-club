@@ -2,7 +2,7 @@
 	const { data } = $props();
 </script>
 
-<div class="w-full">
+<div class="w-full p-10">
 	<h2 class="text-2xl">Upcoming:</h2>
 	<div>
 		<p class="mb-[5px] flex justify-around text-xl">
@@ -27,6 +27,6 @@
 		{/each}
 	</div>
 </div>
-<div class="w-full">
+<div class="w-full p-10">
 	<h2 class="text-2xl">Past:</h2>
 </div>

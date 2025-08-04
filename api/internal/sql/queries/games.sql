@@ -94,7 +94,7 @@ INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2);
 UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1;
 
 -- name: GetUpcomingTournaments :many
-SELECT * FROM tournaments WHERE status = 0;
+SELECT * FROM tournaments WHERE status = 0 ORDER BY start_time;
 
 -- name: GetTournamentPlayer :one
 SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
@@ -129,3 +129,7 @@ SET score = players_data.score,
     streak = players_data.streak
 FROM players_data
 WHERE t.tournament_id = $1 AND t.player_id = players_data.id;
+
+-- name: GetTopN :many
+SELECT id, username, avatar_url, rating FROM users
+ORDER BY rating DESC LIMIT $1 OFFSET 0;
