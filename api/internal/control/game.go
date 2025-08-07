@@ -360,13 +360,9 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func Draw(c *Controller, event socket.Event, client *socket.Client) error {
-	var draw DRPayload
+	var draw GameIDPayload
 	if err := json.Unmarshal(event.Payload, &draw); err != nil {
 		return err
-	}
-
-	if client.UserID != draw.PlayerID {
-		return errors.New("not the player")
 	}
 
 	gameID := draw.GameID
@@ -380,27 +376,25 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 	if len(foundGame.Moves) < 2 {
 		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
-
-	if foundGame.WhiteID != draw.PlayerID && foundGame.BlackID != draw.PlayerID {
+	if foundGame.WhiteID != client.UserID && foundGame.BlackID != client.UserID {
 		return errors.New("not one of the players")
 	}
 
 	if foundGame.DrawOfferedBy == 0 {
-		foundGame.DrawOfferedBy = draw.PlayerID
-
+		foundGame.DrawOfferedBy = client.UserID
 		e := socket.Event{
 			Type:    "drawOffer",
 			Payload: json.RawMessage("[]"),
 		}
 
 		var other int32
-		if draw.PlayerID == foundGame.BlackID {
+		if client.UserID == foundGame.BlackID {
 			other = foundGame.WhiteID
 		} else {
 			other = foundGame.BlackID
 		}
 		c.SocketManager.SendToUserClientsInARoom(e, client.Room, other)
-	} else if foundGame.DrawOfferedBy != draw.PlayerID {
+	} else if foundGame.DrawOfferedBy != client.UserID {
 		reason := "Draw by mutual agreement"
 		timeTaken := time.Since(foundGame.LastMoveTime)
 
@@ -436,15 +430,10 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func Resign(c *Controller, event socket.Event, client *socket.Client) error {
-	var resign DRPayload
+	var resign GameIDPayload
 	if err := json.Unmarshal(event.Payload, &resign); err != nil {
 		return err
 	}
-
-	if client.UserID != resign.PlayerID {
-		return errors.New("not the player")
-	}
-
 	gameID := resign.GameID
 
 	foundGame, exists := c.GameManager.Games[gameID]
@@ -457,14 +446,13 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("cannot resign a game where one or both sides haven't played")
 	}
 
-	if foundGame.WhiteID != resign.PlayerID && foundGame.BlackID != resign.PlayerID {
+	if foundGame.WhiteID != client.UserID && foundGame.BlackID != client.UserID {
 		return errors.New("not one of the players")
 	}
 
 	var result int16
 	var reason string
-
-	if foundGame.WhiteID == resign.PlayerID {
+	if foundGame.WhiteID == client.UserID {
 		result = 2
 		reason = "White Resigned"
 	} else {

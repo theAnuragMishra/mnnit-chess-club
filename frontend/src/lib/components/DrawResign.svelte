@@ -11,8 +11,7 @@
 		websocketStore.sendMessage({
 			type: 'draw',
 			payload: {
-				playerID: userID,
-				gameID: gameID
+				GameID: gameID
 			}
 		});
 	};
@@ -25,8 +24,7 @@
 		websocketStore.sendMessage({
 			type: 'resign',
 			payload: {
-				playerID: userID,
-				gameID: gameID
+				GameID: gameID
 			}
 		});
 	};
