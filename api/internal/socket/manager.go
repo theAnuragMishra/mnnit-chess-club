@@ -117,5 +117,5 @@ func (m *Manager) RemoveUser(id int32) {
 func checkOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 
-	return origin == config.BaseURL || origin == config.FrontendURL
+	return origin == config.FrontendURL
 }
