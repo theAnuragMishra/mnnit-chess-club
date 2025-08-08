@@ -1,17 +1,19 @@
 package auth
 
+import "C"
 import (
 	"context"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 )
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state := generateToken(16)
 	stateMap[state] = struct{}{}
-	url := Config().AuthCodeURL(state)
+	url := oauthCfg.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -31,7 +33,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := r.URL.Query().Get("code")
-	token, err := Config().Exchange(context.Background(), code)
+	token, err := oauthCfg.Exchange(context.Background(), code)
 	if err != nil {
 		log.Println(err, "failed to exchange token")
 		http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
@@ -83,13 +85,17 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	sessionToken := generateToken(32)
 
-	http.SetCookie(w, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     "session_token",
 		Value:    sessionToken,
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
 		Path:     "/",
-	})
+		Secure:   CookieCfg.Secure,
+		SameSite: CookieCfg.SameSite,
+	}
+
+	http.SetCookie(w, cookie)
 	err = h.queries.CreateSession(r.Context(), database.CreateSessionParams{
 		ID:        sessionToken,
 		UserID:    databaseUser.ID,

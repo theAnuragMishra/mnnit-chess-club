@@ -1,26 +1,36 @@
 package auth
 
 import (
+	"net/http"
 	"os"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
-type Role int
+var oauthCfg *oauth2.Config
 
-const (
-	User Role = iota
-	Moderator
-	Admin
-)
+type cookieConfig struct {
+	SameSite http.SameSite
+	Secure   bool
+}
 
-func Config() *oauth2.Config {
-	return &oauth2.Config{
+var CookieCfg cookieConfig
+
+func Config() {
+	oauthCfg = &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		RedirectURL:  "http://localhost:8080/auth/callback/google",
 		Scopes:       []string{"email", "profile", "openid"},
 		Endpoint:     google.Endpoint,
 	}
+	if os.Getenv("APP_ENV") == "prod" {
+		CookieCfg.SameSite = http.SameSiteLaxMode
+		CookieCfg.Secure = true
+	} else {
+		CookieCfg.SameSite = http.SameSiteDefaultMode
+		CookieCfg.Secure = false
+	}
+
 }

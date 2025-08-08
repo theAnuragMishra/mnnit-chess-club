@@ -2,9 +2,10 @@ package auth
 
 import (
 	"context"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"net/http"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
@@ -25,13 +26,16 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 
 		session, err := h.ValidateSession(r.Context(), sessionTokenCookie.Value)
 		if err != nil {
-			http.SetCookie(w, &http.Cookie{
+			cookie := &http.Cookie{
 				Name:     "session_token",
 				Value:    "",
 				Expires:  time.Now().Add(-time.Hour),
 				HttpOnly: true,
 				Path:     "/",
-			})
+				Secure:   CookieCfg.Secure,
+				SameSite: CookieCfg.SameSite,
+			}
+			http.SetCookie(w, cookie)
 
 			// also set csrf cookie
 
@@ -39,13 +43,14 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		if time.Now().Add(time.Hour * 24 * 15).After(session.ExpiresAt) {
-			http.SetCookie(w, &http.Cookie{
+			cookie := &http.Cookie{
 				Name:     "session_token",
 				Value:    sessionTokenCookie.Value,
 				Expires:  time.Now().Add(time.Hour * 24 * 30),
 				HttpOnly: true,
 				Path:     "/",
-			})
+			}
+			http.SetCookie(w, cookie)
 		}
 
 		// setting session context for use by the handler

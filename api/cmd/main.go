@@ -26,6 +26,9 @@ func main() {
 }
 
 func setupAPI() {
+	//oauth config setup
+	auth.Config()
+
 	// database setup
 	portString := os.Getenv("PORT")
 	if portString == "" {
