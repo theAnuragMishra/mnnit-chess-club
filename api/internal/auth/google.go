@@ -1,6 +1,5 @@
 package auth
 
-import "C"
 import (
 	"context"
 	"log"
