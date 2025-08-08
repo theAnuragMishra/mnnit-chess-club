@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -18,10 +19,11 @@ type cookieConfig struct {
 var CookieCfg cookieConfig
 
 func Config() {
+
 	oauthCfg = &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8080/auth/callback/google",
+		RedirectURL:  config.BaseURL + "/auth/callback/google",
 		Scopes:       []string{"email", "profile", "openid"},
 		Endpoint:     google.Endpoint,
 	}

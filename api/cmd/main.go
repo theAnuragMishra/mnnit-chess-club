@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/routes"
@@ -27,6 +28,7 @@ func main() {
 
 func setupAPI() {
 	//oauth config setup
+	config.Config()
 	auth.Config()
 
 	// database setup

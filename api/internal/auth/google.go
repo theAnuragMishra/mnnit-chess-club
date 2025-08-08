@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 )
 
@@ -35,21 +36,21 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	token, err := oauthCfg.Exchange(context.Background(), code)
 	if err != nil {
 		log.Println(err, "failed to exchange token")
-		http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 		return
 	}
 
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		log.Println("No id_token field in oauth2 token")
-		http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 		return
 	}
 
 	googleUser, err := decodeIDToken(idToken)
 	if err != nil {
 		log.Printf("failed to decode ID Token: %v", err)
-		http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -66,7 +67,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		//fmt.Printf("%+v\n", err)
 
 		if err != nil {
-			http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 			return
 
 		}
@@ -102,10 +103,10 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err, "failed to create session")
-		http.Redirect(w, r, "http://localhost:5173/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 		return
 	}
 
-	http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, config.FrontendURL+"/", http.StatusTemporaryRedirect)
 
 }

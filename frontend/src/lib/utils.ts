@@ -1,8 +1,9 @@
 import type { Key } from 'chessground/types';
 import { Chess, type Color, type Piece } from 'chess.js';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export function getBaseURL(): string {
-	return 'http://localhost:8080';
+	return PUBLIC_BASE_URL;
 }
 
 export function colorToCgColor(chessjsColor: Color): 'white' | 'black' {

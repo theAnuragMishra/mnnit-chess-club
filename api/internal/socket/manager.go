@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 )
 
@@ -116,10 +117,5 @@ func (m *Manager) RemoveUser(id int32) {
 func checkOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 
-	switch origin {
-	case "http://localhost:5173":
-		return true
-	default:
-		return false
-	}
+	return origin == config.BaseURL || origin == config.FrontendURL
 }

@@ -1,5 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { getBaseURL } from '$lib/utils.js';
 
 	const { data } = $props();
 	if (data.user) goto('/');
@@ -8,7 +9,7 @@
 <div class="mt-30 flex h-full flex-col items-center justify-center gap-2">
 	<h1 class="mb-10 text-2xl font-bold">Login</h1>
 	<button
-		onclick={() => (window.location.href = 'http://localhost:8080/auth/login/google')}
+		onclick={() => (window.location.href = `${getBaseURL()}/auth/login/google`)}
 		class="flex cursor-pointer items-center gap-2 rounded-md bg-black px-4 py-2 text-xl text-white"
 	>
 		Login with Google <svg

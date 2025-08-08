@@ -1,3 +1,5 @@
+import { PUBLIC_WS_URL } from '$env/static/public';
+
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
@@ -76,4 +78,4 @@ class WebSocketStore {
 	}
 }
 
-export const websocketStore = new WebSocketStore('ws://localhost:8080/ws');
+export const websocketStore = new WebSocketStore(PUBLIC_WS_URL);
