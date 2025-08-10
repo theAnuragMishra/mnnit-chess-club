@@ -28,7 +28,7 @@ func Config() {
 		Endpoint:     google.Endpoint,
 	}
 	if os.Getenv("APP_ENV") == "prod" {
-		CookieCfg.SameSite = http.SameSiteLaxMode
+		CookieCfg.SameSite = http.SameSiteStrictMode
 		CookieCfg.Secure = true
 	} else {
 		CookieCfg.SameSite = http.SameSiteDefaultMode
