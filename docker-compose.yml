@@ -25,7 +25,6 @@ services:
       - 8080
     depends_on:
       - db
-      - frontend
     restart: always
 
   # Caddy
