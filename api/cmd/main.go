@@ -18,16 +18,12 @@ import (
 
 func main() {
 	// loading env
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading env file")
-	}
-
+	godotenv.Load()
 	setupAPI()
 }
 
 func setupAPI() {
-	//oauth config setup
+	// oauth config setup
 	config.Config()
 	auth.Config()
 
