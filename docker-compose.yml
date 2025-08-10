@@ -21,8 +21,8 @@ services:
     container_name: mcc-api
     environment:
       PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=${SSL_MODE}
-    ports:
-      - "8080:8080"
+    expose:
+      - 8080
     depends_on:
       - db
     restart: always
@@ -47,6 +47,8 @@ services:
   caddy:
     image: caddy
     container_name: mcc-caddy
+    environment:
+      - CADDY_HOST={$CADDY_HOST}
     ports:
       - "80:80"
       - "443:443"

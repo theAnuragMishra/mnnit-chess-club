@@ -1,4 +1,4 @@
-localhost{
+{$CADDY_HOST} {
     root * /srv/frontend
     file_server
 
