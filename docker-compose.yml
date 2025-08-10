@@ -33,9 +33,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
-        - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
-        - PUBLIC_WS_URL=${PUBLIC_WS_URL}
+        - PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+        - PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
+        - PUBLIC_WS_URL: ${PUBLIC_WS_URL}
     container_name: mcc-frontend
     volumes:
       - frontend-build:/app/build
@@ -48,7 +48,7 @@ services:
     image: caddy
     container_name: mcc-caddy
     environment:
-      - CADDY_HOST={$CADDY_HOST}
+      - CADDY_HOST: ${CADDY_HOST}
     ports:
       - "80:80"
       - "443:443"
