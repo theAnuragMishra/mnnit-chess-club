@@ -5,6 +5,7 @@ export const ssr = false;
 
 export async function load({ route }) {
 	console.log(getBaseURL());
+	console.log('hi');
 	const res = await fetch(`${getBaseURL()}/me`, { credentials: 'include' });
 
 	if (!res.ok) {
