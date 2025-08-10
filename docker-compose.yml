@@ -11,6 +11,20 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: always
 
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+        PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
+        PUBLIC_WS_URL: ${PUBLIC_WS_URL}
+    container_name: mcc-frontend
+    volumes:
+      - frontend-build:/app/build
+    command: ["true"]
+
   # API service
   api:
     build:
@@ -25,23 +39,8 @@ services:
       - 8080
     depends_on:
       - db
+      - frontend
     restart: always
-
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
-        PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
-        PUBLIC_WS_URL: ${PUBLIC_WS_URL}
-    container_name: mcc-frontend
-    volumes:
-      - frontend-build:/app/build
-    depends_on:
-      - api
-    command: ["true"]
 
   # Caddy
   caddy:
