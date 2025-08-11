@@ -48,9 +48,9 @@
 	{#each timeControls as timeControl, index}
 		<button
 			onclick={() => handleInitGame(timeControl, index)}
-			class="btn relative cursor-pointer bg-gray-800 text-2xl sm:text-3xl"
+			class="btn relative cursor-pointer bg-gray-800"
 			><span>{timeControl.baseTime / 60}+{timeControl.increment}</span>{#if activeState[index]}<span
-					class="loading-bar top-[55px] sm:top-[80px]"
+					class="loading-bar"
 				>
 					<span class="moving-indicator"></span>
 				</span>{/if}</button
@@ -95,6 +95,7 @@
 	.btn {
 		width: 100px;
 		height: 70px;
+		font-size: 24px;
 	}
 
 	.loading-bar {
@@ -102,6 +103,7 @@
 		left: 50%;
 		transform: translateX(-50%);
 		display: inline-block;
+		top: 55px;
 		width: 60%;
 		height: 4px;
 		background-color: #e0e0e0;
@@ -136,6 +138,10 @@
 		.btn {
 			width: 130px;
 			height: 90px;
+			font-size: 30px;
+		}
+		.loading-bar {
+			top: 70px;
 		}
 	}
 
@@ -147,6 +153,9 @@
 		.btn {
 			width: 150px;
 			height: 100px;
+		}
+		.loading-bar {
+			top: 80px;
 		}
 	}
 
