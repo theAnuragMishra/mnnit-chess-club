@@ -26,8 +26,8 @@
 		border-radius: 6px !important;
 	}
 	.bcontainer {
-		height: 80vw;
-		width: 80vw;
+		height: 90vw;
+		width: 90vw;
 	}
 	@media (width >= 768px) {
 		.bcontainer {

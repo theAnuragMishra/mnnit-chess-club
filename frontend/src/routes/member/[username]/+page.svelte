@@ -93,11 +93,11 @@
 					: item.Result === 0 || item.Result === 3 || item.Result === 4
 						? 'text-gray-300'
 						: 'text-red-500'}
-			<div class="relative flex w-4/5 flex-col gap-2 rounded-sm bg-gray-800 px-8 py-4">
+			<div class="relative flex w-full flex-col gap-2 rounded-sm bg-gray-800 px-8 py-4 md:w-4/5">
 				<a
 					aria-label="game link"
 					href={`/game/${item.ID}`}
-					class="absolute top-0 left-0 z-2 h-full w-full"
+					class="z-2 absolute left-0 top-0 h-full w-full"
 				></a>
 
 				<div class="flex items-center justify-between">
@@ -106,7 +106,7 @@
 						{getTimeControl(item.BaseTime, item.Increment)}</span
 					><span class="relative"
 						>{#if item.TournamentID}<a
-								class="absolute top-0 right-0 z-3 flex h-fit w-fit items-center gap-[5px]"
+								class="z-3 absolute right-0 top-0 flex h-fit w-fit items-center gap-[5px]"
 								href={`/tournament/${item.TournamentID}`}
 							>
 								<svg
