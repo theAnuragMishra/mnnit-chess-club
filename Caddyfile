@@ -1,5 +1,5 @@
 {$CADDY_HOST} {
-    root * /srv/frontend
+    root * /usr/share/caddy
     file_server
 
     handle_path /api/* {
