@@ -64,33 +64,33 @@
 	let incrementIndex = $state(0);
 </script>
 
-<div class="w-[100%] p-5">
+<div class="w-[100%] lg:p-5">
 	<h1 class="mb-5 text-xl">You're an mcc admin. Use this page to create or start a tournament!</h1>
 
-	<div class="m-auto flex w-1/2 flex-col gap-2 border-2 p-2 px-10">
+	<div class="m-auto flex w-full flex-col gap-2 border-2 p-[2px] lg:w-1/2 lg:p-2 lg:px-10">
 		<h2>Create tournament</h2>
 		<label
 			>Name:<input
 				type="text"
 				bind:value={name}
 				class={`bg-gray-200 text-black ${nameError ? 'border-2 border-red-500' : ''}`}
-			/>1 to 90 characters long</label
+			/></label
 		>
 		<label
 			>Duration: <input
 				type="text"
 				bind:value={duration}
 				class={`bg-gray-200 text-black ${durationError ? 'border-2 border-red-500' : ''}`}
-			/>in hours</label
+			/></label
 		>
 
-		<div class="">
+		<div class="flex flex-col md:flex-row">
 			<span>Minutes per side: {baseTimes[baseIndex]}</span>
-			<input type="range" bind:value={baseIndex} min="0" max="37" />
+			<input class="mx-[5px]" type="range" bind:value={baseIndex} min="0" max="37" />
 		</div>
-		<div class="">
+		<div class="flex flex-col md:flex-row">
 			<span>Increment: {increments[incrementIndex]}</span>
-			<input type="range" bind:value={incrementIndex} min="0" max="30" />
+			<input class="mx-[5px]" type="range" bind:value={incrementIndex} min="0" max="30" />
 		</div>
 
 		<label>Start Date: <input type="date" bind:value={date} class="bg-gray-200 text-black" /></label
@@ -109,7 +109,14 @@
 				onclick={handleCreateTournament}>Create</button
 			></span
 		>
-		<p>{createError}</p>
+		<p class="text-red-500">
+			{nameError
+				? 'Name length must be in the range [1,90]'
+				: durationError
+					? 'Duration must be a number in the range [1,24] (hours)'
+					: ''}
+		</p>
+		<p class="text-red-500">{createError}</p>
 	</div>
 
 	<div>

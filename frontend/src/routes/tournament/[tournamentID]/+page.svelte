@@ -141,7 +141,7 @@
 		/></svg
 	>{data.tournamentData.name}
 </h1>
-<div class="flex w-full flex-col-reverse gap-10 p-5 md:flex-row md:gap-2">
+<div class="flex w-full flex-col-reverse gap-10 md:flex-row md:gap-2 md:p-5">
 	<div class="flex w-full flex-col gap-2 md:w-1/4">
 		<div>
 			{#if data.tournamentData.status !== 1}
@@ -204,7 +204,9 @@
 			/>
 		{/if}
 		{#if joined[1]}
-			<h2 class="shiny relative mb-5 overflow-hidden bg-green-600 px-2 py-0.5 text-center text-xl">
+			<h2
+				class="shiny relative mb-5 overflow-hidden bg-green-600 py-0.5 text-center text-[16px] md:px-2 md:text-xl"
+			>
 				Wait {data.user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
