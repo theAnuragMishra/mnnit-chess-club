@@ -39,9 +39,9 @@ class WebSocketStore {
 		//console.log(data);
 
 		if (type === 'GoTo') {
-			window.location.href = `/${payload.Type}/${payload.ID}`;
+			window.location.href = `/${payload.Type}/${payload.ID}/`;
 		} else if (type === 'Refresh') {
-			if (window.location.pathname === `/${payload.Type}/${payload.ID}`) window.location.reload();
+			if (window.location.pathname === `/${payload.Type}/${payload.ID}/`) window.location.reload();
 		} else if (this.listeners.has(type)) {
 			this.listeners.get(type)?.forEach((callback) => callback(payload));
 		}

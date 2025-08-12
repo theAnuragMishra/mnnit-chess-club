@@ -3,7 +3,7 @@
 	import { websocketStore } from '$lib/websocket';
 	import { PUBLIC_FRONTEND_URL } from '$env/static/public';
 	const { data } = $props();
-	const gameLink = `${PUBLIC_FRONTEND_URL}/game/${page.params.gameID}`;
+	const gameLink = `${PUBLIC_FRONTEND_URL}/game/${page.params.gameID}/`;
 	let copied = $state(false);
 </script>
 
