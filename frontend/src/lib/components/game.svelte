@@ -15,6 +15,7 @@
 	import type { Config } from 'chessground/config';
 	import Rematch from './Rematch.svelte';
 	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
+	import type { Key } from 'chessground/types';
 	let { data } = $props();
 	// console.log(data);
 
@@ -102,7 +103,7 @@
 			movable: { dests: getValidMoves(chessLatest) }
 		});
 		// console.log('finished movehandler');
-
+		// console.log(ground?.state.premovable.current);
 		ground?.playPremove();
 		// console.log(x);
 	};
@@ -194,6 +195,7 @@
 	});
 
 	//board config
+	let selectedSquare: Key | undefined = $state(undefined);
 	const boardConfig: Config = $derived({
 		fen: chessForView.fen(),
 		orientation: whiteUp ? 'black' : 'white',
@@ -204,6 +206,7 @@
 			moveHistory && activeIndex !== -1
 				? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
 				: [],
+		selected: selectedSquare,
 		check: chessForView.isCheck(),
 		movable: {
 			free: false,
@@ -240,10 +243,17 @@
 							}
 						});
 					}
+					selectedSquare = undefined;
 				}
 			}
 		},
-		highlight: { lastMove: true, check: true }
+		highlight: { lastMove: true, check: true },
+		events: {
+			select: (key) => {
+				if (ground?.state.pieces.get(key) === undefined) return;
+				selectedSquare = key;
+			}
+		}
 	});
 
 	onMount(() => {
