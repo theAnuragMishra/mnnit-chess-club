@@ -36,7 +36,7 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 }
 
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
-	log.Println("new connection request")
+	//log.Println("new connection request")
 
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
@@ -64,7 +64,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 func (m *Manager) addClient(client *Client) {
 	m.clientsMu.Lock()
 	defer m.clientsMu.Unlock()
-	log.Println("adding client", client)
+	//log.Println("adding client", client)
 	if m.clients[client.UserID] == nil {
 		m.clients[client.UserID] = make(map[*Client]struct{})
 	}

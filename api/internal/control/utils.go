@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 	"log"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 
@@ -374,8 +375,8 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 	//log.Println("starting pairing cycle")
 	if len(t.WaitingPlayers) < 2 {
-		log.Println("not enough players")
-		log.Println(t.WaitingPlayers)
+		//log.Println("not enough players")
+		//log.Println(t.WaitingPlayers)
 		return
 	}
 	paired := make(map[int32]bool)

@@ -2,8 +2,9 @@ package socket
 
 import (
 	"encoding/json"
-	"github.com/gorilla/websocket"
 	"log"
+
+	"github.com/gorilla/websocket"
 )
 
 // ClientList is a map used to help manage a map of clients
@@ -34,7 +35,7 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 
 func (c *Client) readMessages() {
 	defer func() {
-		log.Println("client disconnected ", c)
+		//log.Println("client disconnected ", c)
 		c.manager.RemoveClient(c)
 	}()
 	for {
@@ -65,16 +66,16 @@ func (c *Client) readMessages() {
 
 func (c *Client) writeMessages() {
 	defer func() {
-		log.Println("Closing write connection for client:", c.UserID)
+		//log.Println("Closing write connection for client:", c.UserID)
 		c.manager.RemoveClient(c)
 	}()
 	for {
 		select {
 		case message, ok := <-c.egress:
 			if !ok {
-				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Println("connection closed: ", err)
-				}
+				// if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
+				// 	log.Println("connection closed: ", err)
+				// }
 				return
 			}
 			data, err := json.Marshal(message)
