@@ -19,9 +19,8 @@ var webSocketUpgrader = websocket.Upgrader{
 }
 
 type Manager struct {
-	clientsMu sync.RWMutex
+	sync.RWMutex
 	clients   ClientList
-	RoomsMu   sync.RWMutex
 	Rooms     map[string]map[*Client]bool
 	OnMessage func(event Event, client *Client) error
 }
@@ -62,8 +61,8 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Manager) addClient(client *Client) {
-	m.clientsMu.Lock()
-	defer m.clientsMu.Unlock()
+	m.Lock()
+	defer m.Unlock()
 	//log.Println("adding client", client)
 	if m.clients[client.UserID] == nil {
 		m.clients[client.UserID] = make(map[*Client]struct{})
@@ -72,8 +71,8 @@ func (m *Manager) addClient(client *Client) {
 }
 
 func (m *Manager) RemoveClient(client *Client) {
-	m.clientsMu.Lock()
-	defer m.clientsMu.Unlock()
+	m.Lock()
+	defer m.Unlock()
 
 	if clients, ok := m.clients[client.UserID]; ok {
 		if _, ok := clients[client]; ok {
@@ -96,8 +95,8 @@ func (m *Manager) RemoveClient(client *Client) {
 }
 
 func (m *Manager) RemoveUser(id int32) {
-	m.clientsMu.Lock()
-	defer m.clientsMu.Unlock()
+	m.Lock()
+	defer m.Unlock()
 
 	if clients, ok := m.clients[id]; ok {
 		for client := range clients {
