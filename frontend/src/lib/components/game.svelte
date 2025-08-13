@@ -359,10 +359,10 @@
 				<DrawResign isDisabled={!moveHistory || moveHistory.length < 2} {gameID} />
 			{/if}
 		</div>
-		<div class="back_to_tournament w-full px-3 py-2 text-center">
+		<div class="back_to_tournament w-full text-center">
 			{#if isPlayer && tournamentID && result !== 0}
 				<a
-					class="flex w-full items-center justify-center gap-[5px]"
+					class="flex w-full items-center justify-center gap-[5px] px-3 py-2"
 					href={`/tournament/${tournamentID}`}
 					><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
 						><path fill="currentColor" d="M8 5.14v14l11-7z" /></svg
@@ -462,6 +462,7 @@
 	}
 	.abortt {
 		grid-area: abortt;
+		display: none;
 	}
 	.abortb {
 		grid-area: abortb;
@@ -511,6 +512,9 @@
 		}
 		.board {
 			justify-self: auto;
+		}
+		.abortt {
+			display: unset;
 		}
 	}
 </style>
