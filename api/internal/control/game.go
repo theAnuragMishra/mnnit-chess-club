@@ -264,17 +264,16 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return errors.New("not your turn")
 	}
 
+	err := foundGame.MakeMove(move.MoveStr)
+	if err != nil {
+		return err
+	}
+
 	var timeLeft int32
-	if foundGame.Board.Position().Turn() == chess.White {
+	if foundGame.Board.Position().Turn() == chess.Black {
 		timeLeft = int32(foundGame.TimeWhite.Milliseconds())
 	} else {
 		timeLeft = int32(foundGame.TimeBlack.Milliseconds())
-	}
-
-	err := foundGame.MakeMove(move.MoveStr)
-
-	if err != nil {
-		return err
 	}
 
 	moveToSend := game.Move{
