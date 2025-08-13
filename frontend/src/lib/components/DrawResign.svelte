@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
-	import { notifyAudio } from '$lib/audios';
 
-	const { userID, gameID, setResultReason, isDisabled } = $props();
+	const { gameID, isDisabled } = $props();
 	let offer = $state(false);
 	let resignSelected = $state(false);
 
@@ -29,19 +28,6 @@
 		});
 	};
 
-	const handleGameDrawn = (payload: any) => {
-		// console.log('game drawn', payload.Result, payload.Reason);
-		setResultReason(
-			payload.Result,
-			payload.Reason,
-			payload.changeW,
-			payload.changeB,
-			payload.timeWhite,
-			payload.timeBlack
-		);
-		notifyAudio.play();
-	};
-
 	const handleDrawOffer = (payload: any) => {
 		offer = true;
 	};
@@ -51,12 +37,10 @@
 	};
 
 	onMount(() => {
-		websocketStore.onMessage('gameDrawn', handleGameDrawn);
 		websocketStore.onMessage('drawOffer', handleDrawOffer);
 		websocketStore.onMessage('Move_Response', handleCancelDraw);
 	});
 	onDestroy(() => {
-		websocketStore.offMessage('gameDrawn', handleGameDrawn);
 		websocketStore.offMessage('drawOffer', handleDrawOffer);
 		websocketStore.offMessage('Move_Response', handleCancelDraw);
 	});

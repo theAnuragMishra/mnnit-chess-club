@@ -137,7 +137,7 @@ func (c *Controller) abortGame(g *game.Game) {
 		log.Println(err)
 	}
 	e := socket.Event{
-		Type:    "game_abort",
+		Type:    "game_end",
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
@@ -172,7 +172,7 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		log.Println(err)
 	}
 	e := socket.Event{
-		Type:    "timeup",
+		Type:    "game_end",
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
@@ -479,6 +479,11 @@ func (c *Controller) EndTournament(t *tournament.Tournament) {
 		Status: 2,
 		ID:     t.Id,
 	})
+
+	if err != nil {
+		log.Println("error updating tournament status", err)
+	}
+
 	input := make([]tournamentPlayer, 0, len(t.Players))
 
 	for _, v := range t.Players {

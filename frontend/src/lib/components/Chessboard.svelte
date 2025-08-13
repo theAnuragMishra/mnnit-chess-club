@@ -3,14 +3,13 @@
 	import '../../../node_modules/chessground/assets/chessground.base.css';
 	import '../../../node_modules/chessground/assets/chessground.brown.css';
 	import '../../../node_modules/chessground/assets/chessground.cburnett.css';
+	import { onMount } from 'svelte';
 
 	let boardContainer: HTMLDivElement;
 
 	let { setGround, boardConfig } = $props();
 
-	$effect(() => {
-		//console.log('effect ran');
-
+	onMount(() => {
 		if (!boardContainer) return;
 		const cg = Chessground(boardContainer, boardConfig);
 		setGround(cg);

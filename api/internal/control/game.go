@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/notnil/chess"
@@ -415,7 +416,7 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			return err
 		}
 		e := socket.Event{
-			Type:    "gameDrawn",
+			Type:    "game_end",
 			Payload: json.RawMessage(payload),
 		}
 		c.SocketManager.BroadcastToRoom(e, gameID)
@@ -479,7 +480,7 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	e := socket.Event{
-		Type:    "resignation",
+		Type:    "game_end",
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, gameID)

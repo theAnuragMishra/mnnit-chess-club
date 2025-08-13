@@ -15,7 +15,6 @@ export function cgColorToColor(chessgroundColor: 'white' | 'black'): Color {
 
 export const getValidMoves = (chess: Chess) => {
 	const moves = new Map<Key, Key[]>();
-
 	chess.board().forEach((row) => {
 		row.forEach((square) => {
 			if (square) {

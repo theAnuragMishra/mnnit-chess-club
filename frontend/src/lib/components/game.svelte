@@ -15,28 +15,28 @@
 	import type { Config } from 'chessground/config';
 	import Rematch from './Rematch.svelte';
 	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
-	import type { Key } from 'chessground/types';
+
 	let { data } = $props();
 	// console.log(data);
-
+	let d = data.gameData;
 	let ground: Api | null = $state(null);
-	const baseTime = data.gameData.game.BaseTime;
-	const increment = data.gameData.game.Increment;
-	const createdAt = new Date(data.gameData.game.CreatedAt);
-	let tournamentName = data.gameData.game.TournamentName;
-	let tournamentID = data.gameData.game.TournamentID;
-	let whiteUsername = data.gameData.game.WhiteUsername;
-	let blackUsername = data.gameData.game.BlackUsername;
-	let timeBlack = $state(data.gameData.timeBlack);
-	let timeWhite = $state(data.gameData.timeWhite);
-	let ratingWhite = data.gameData.game.RatingW;
-	let ratingBlack = data.gameData.game.RatingB;
-	let changeWhite = $state(data.gameData.game.ChangeW ?? 0);
-	let changeBlack = $state(data.gameData.game.ChangeB ?? 0);
-	let result = $state(data.gameData.game.Result);
-	let reason = $state(data.gameData.game.ResultReason);
-	let moveHistory = $state(data.gameData.moves);
-	let activeIndex = $state(data.gameData.moves ? data.gameData.moves.length - 1 : -1);
+	const baseTime = d.game.BaseTime;
+	const increment = d.game.Increment;
+	const createdAt = new Date(d.game.CreatedAt);
+	let tournamentName = d.game.TournamentName;
+	let tournamentID = d.game.TournamentID;
+	let whiteUsername = d.game.WhiteUsername;
+	let blackUsername = d.game.BlackUsername;
+	let timeBlack = $state(d.timeBlack);
+	let timeWhite = $state(d.timeWhite);
+	let ratingWhite = d.game.RatingW;
+	let ratingBlack = d.game.RatingB;
+	let changeWhite = $state(d.game.ChangeW ?? 0);
+	let changeBlack = $state(d.game.ChangeB ?? 0);
+	let result = $state(d.game.Result);
+	let reason = $state(d.game.ResultReason);
+	let moveHistory = $state(d.moves);
+	let activeIndex = $state(d.moves ? d.moves.length - 1 : -1);
 	let chessLatest = $derived(
 		moveHistory ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
 	);
@@ -44,12 +44,19 @@
 		moveHistory && activeIndex !== -1 ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
 	const isPlayer =
-		data.user.username === data.gameData.game.WhiteUsername ||
-		data.user.username === data.gameData.game.BlackUsername;
-	const whiteUp = data.gameData.game.WhiteUsername !== data.user.username;
+		data.user.username === d.game.WhiteUsername || data.user.username === d.game.BlackUsername;
+	const whiteUp = d.game.WhiteUsername !== data.user.username;
 	const setActiveIndex = (index: number) => {
-		if (index > moveHistory.length - 1 || index < -1) return;
+		if (index > moveHistory.length - 1 || index < -1 || index == activeIndex) return;
 		activeIndex = index;
+		ground?.cancelPremove();
+		ground?.set({
+			fen: chessForView.fen(),
+			lastMove:
+				activeIndex === -1 ? [] : [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest],
+			viewOnly: moveHistory && activeIndex !== moveHistory.length - 1,
+			check: chessForView.isCheck()
+		});
 	};
 	const gameID = page.params.gameID;
 
@@ -57,26 +64,67 @@
 		ground = g;
 	};
 
-	const handleTimeUp = (payload: any) => {
-		result = payload.Result;
-		reason = payload.Reason;
-		changeBlack = payload.changeB;
-		changeWhite = payload.changeW;
-		timeWhite = payload.timeWhite;
-		timeBlack = payload.timeBlack;
-		notifyAudio.play();
+	//board config
+	const boardConfig: Config = {
+		fen: d.moves ? d.moves[d.moves.length - 1].MoveFen : undefined,
+		orientation: whiteUp ? 'black' : 'white',
+		draggable: { enabled: true },
+		turnColor: d.moves ? (d.moves.length % 2 == 0 ? 'white' : 'black') : 'white',
+		viewOnly: !isPlayer || d.game.Result !== 0,
+		lastMove: d.moves ? [d.moves[d.moves.length - 1].Orig, d.moves[d.moves.length - 1].Dest] : [],
+		check: d.moves ? new Chess(d.moves[d.moves.length - 1].MoveFen).isCheck() : false,
+		movable: {
+			free: false,
+			color: whiteUp ? 'black' : 'white',
+			dests: getValidMoves(d.moves ? new Chess(d.moves[d.moves.length - 1].MoveFen) : new Chess()),
+			showDests: true,
+			events: {
+				after: (orig, dest) => {
+					const piece = chessForView.get(orig as Square);
+					if (isPromoting(dest, piece!)) {
+						const move = chessForView.move({
+							from: orig,
+							to: dest,
+							promotion: 'q'
+						});
+						websocketStore.sendMessage({
+							type: 'move',
+							payload: {
+								MoveStr: move.san,
+								orig: orig,
+								dest: dest,
+								GameID: gameID
+							}
+						});
+					} else {
+						const move = chessForView.move({ from: orig, to: dest });
+						websocketStore.sendMessage({
+							type: 'move',
+							payload: {
+								MoveStr: move.san,
+								orig: orig,
+								dest: dest,
+								GameID: gameID
+							}
+						});
+					}
+				}
+			}
+		},
+		highlight: { lastMove: true, check: true }
 	};
-	// $effect(() => {
-	// 	console.log(timeWhite, timeBlack);
-	// });
 
-	const handleResignation = (payload: any) => {
+	const handleGameEnd = (payload: any) => {
 		result = payload.Result;
 		reason = payload.Reason;
 		changeBlack = payload.changeB;
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
 		timeBlack = payload.timeBlack;
+		ground?.set({
+			viewOnly: true
+		});
+		ground?.cancelPremove();
 		notifyAudio.play();
 	};
 
@@ -85,27 +133,37 @@
 		else moveHistory = [payload.move];
 		timeBlack = payload.timeBlack;
 		timeWhite = payload.timeWhite;
-		if (activeIndex === moveHistory.length - 2) activeIndex = moveHistory.length - 1;
-
-		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
-		else moveAudio?.play();
-
+		if (activeIndex === moveHistory.length - 2) {
+			activeIndex = moveHistory.length - 1;
+			ground?.set({
+				fen: payload.move.MoveFen,
+				check: chessForView.isCheck(),
+				lastMove: [
+					moveHistory[moveHistory.length - 1].Orig,
+					moveHistory[moveHistory.length - 1].Dest
+				]
+			});
+		}
+		ground?.set({
+			turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
+			movable: { dests: getValidMoves(chessLatest) }
+		});
+		//console.log(ground?.state.movable);
 		if (payload.Result !== 0) {
 			result = payload.Result;
 			reason = payload.reason;
 			changeBlack = payload.changeB;
 			changeWhite = payload.changeW;
+			ground?.set({
+				viewOnly: true
+			});
 			notifyAudio.play();
+			return;
 		}
-		ground?.set({
-			fen: payload.move.MoveFen,
-			turnColor: chessLatest.turn() === 'w' ? 'white' : 'black',
-			movable: { dests: getValidMoves(chessLatest) }
-		});
-		// console.log('finished movehandler');
-		// console.log(ground?.state.premovable.current);
+
+		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
+		else moveAudio?.play();
 		ground?.playPremove();
-		// console.log(x);
 	};
 
 	//timer setup
@@ -194,79 +252,13 @@
 		};
 	});
 
-	//board config
-	let selectedSquare: Key | undefined = $state(undefined);
-	const boardConfig: Config = $derived({
-		fen: chessForView.fen(),
-		orientation: whiteUp ? 'black' : 'white',
-		draggable: { enabled: true },
-		turnColor: chessForView.turn() == 'w' ? 'white' : 'black',
-		viewOnly: !isPlayer || result !== 0 || (moveHistory && activeIndex !== moveHistory.length - 1),
-		lastMove:
-			moveHistory && activeIndex !== -1
-				? [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest]
-				: [],
-		selected: selectedSquare,
-		check: chessForView.isCheck(),
-		movable: {
-			free: false,
-			color: whiteUp ? 'black' : 'white',
-			dests: getValidMoves(chessForView),
-			showDests: true,
-			events: {
-				after: (orig, dest) => {
-					const piece = chessForView.get(orig as Square);
-					if (isPromoting(dest, piece!)) {
-						const move = chessForView.move({
-							from: orig,
-							to: dest,
-							promotion: 'q'
-						});
-						websocketStore.sendMessage({
-							type: 'move',
-							payload: {
-								MoveStr: move.san,
-								orig: orig,
-								dest: dest,
-								GameID: gameID
-							}
-						});
-					} else {
-						const move = chessForView.move({ from: orig, to: dest });
-						websocketStore.sendMessage({
-							type: 'move',
-							payload: {
-								MoveStr: move.san,
-								orig: orig,
-								dest: dest,
-								GameID: gameID
-							}
-						});
-					}
-					selectedSquare = undefined;
-				}
-			}
-		},
-		highlight: { lastMove: true, check: true },
-		events: {
-			select: (key) => {
-				if (ground?.state.pieces.get(key) === undefined) return;
-				selectedSquare = key;
-			}
-		}
-	});
-
 	onMount(() => {
-		websocketStore.onMessage('timeup', handleTimeUp);
-		websocketStore.onMessage('game_abort', handleTimeUp);
+		websocketStore.onMessage('game_end', handleGameEnd);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
-		websocketStore.onMessage('resignation', handleResignation);
 	});
 	onDestroy(() => {
-		websocketStore.offMessage('timeup', handleTimeUp);
-		websocketStore.offMessage('game_abort', handleTimeUp);
 		websocketStore.offMessage('Move_Response', handleMoveResponse);
-		websocketStore.offMessage('resignation', handleResignation);
+		websocketStore.offMessage('resignation', handleGameEnd);
 	});
 </script>
 
@@ -345,11 +337,7 @@
 		</div>
 		<div class="rematch w-full">
 			{#if result !== 0 && isPlayer && !tournamentID}
-				<Rematch
-					{baseTime}
-					{increment}
-					opponentID={whiteUp ? data.gameData.game.WhiteID : data.gameData.game.BlackID}
-				/>
+				<Rematch {baseTime} {increment} opponentID={whiteUp ? d.game.WhiteID : d.game.BlackID} />
 			{/if}
 		</div>
 		<div class="namet flex h-fit justify-between md:w-[300px]">
@@ -368,26 +356,7 @@
 		</div>
 		<div class="draw-resign h-fit w-full">
 			{#if isPlayer && result === 0}
-				<DrawResign
-					isDisabled={!moveHistory || moveHistory.length < 2}
-					{gameID}
-					userID={data.user.userID}
-					setResultReason={(
-						res: string,
-						rea: string,
-						cw: number,
-						cb: number,
-						tw: number,
-						tb: number
-					) => {
-						result = res;
-						reason = rea;
-						changeBlack = cb;
-						changeWhite = cw;
-						timeWhite = tw;
-						timeBlack = tb;
-					}}
-				/>
+				<DrawResign isDisabled={!moveHistory || moveHistory.length < 2} {gameID} />
 			{/if}
 		</div>
 		<div class="back_to_tournament w-full px-3 py-2 text-center">
