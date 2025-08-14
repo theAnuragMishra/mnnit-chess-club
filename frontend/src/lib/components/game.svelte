@@ -50,6 +50,7 @@
 		if (index > moveHistory.length - 1 || index < -1 || index == activeIndex) return;
 		activeIndex = index;
 		ground?.cancelPremove();
+		ground?.selectSquare(null);
 		ground?.set({
 			fen: chessForView.fen(),
 			lastMove:
@@ -121,10 +122,11 @@
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
 		timeBlack = payload.timeBlack;
+		ground?.cancelPremove();
+		ground?.selectSquare(null);
 		ground?.set({
 			viewOnly: true
 		});
-		ground?.cancelPremove();
 		notifyAudio.play();
 	};
 
