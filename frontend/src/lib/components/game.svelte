@@ -135,6 +135,10 @@
 		else moveHistory = [payload.move];
 		timeBlack = payload.timeBlack;
 		timeWhite = payload.timeWhite;
+		ground?.set({
+			turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
+			movable: { dests: getValidMoves(chessLatest) }
+		});
 		if (activeIndex === moveHistory.length - 2) {
 			activeIndex = moveHistory.length - 1;
 			ground?.set({
@@ -146,10 +150,7 @@
 				]
 			});
 		}
-		ground?.set({
-			turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
-			movable: { dests: getValidMoves(chessLatest) }
-		});
+
 		//console.log(ground?.state.movable);
 		if (payload.Result !== 0) {
 			result = payload.Result;
