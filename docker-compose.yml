@@ -30,7 +30,7 @@ services:
   # Caddy
   caddy:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
