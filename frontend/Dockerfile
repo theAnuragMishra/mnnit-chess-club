@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node AS build-stage
+FROM node AS builder
 WORKDIR /app
 
 ARG PUBLIC_BASE_URL
@@ -11,10 +11,3 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
-
-FROM caddy AS caddy
-
-COPY --from=build-stage /app/build /usr/share/caddy
-COPY Caddyfile /etc/caddy/Caddyfile
-
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
