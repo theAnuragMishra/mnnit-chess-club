@@ -11,7 +11,7 @@
 </script>
 
 <span
-	class={`inline-block w-fit rounded-md px-2 py-1 text-2xl md:text-3xl lg:text-4xl ${
+	class={`inline-block w-fit px-2 py-1 text-2xl md:text-3xl lg:text-4xl ${
 		active ? 'font-bold ' : 'bg-black text-gray-400'
 	} ${active && time > lowTime ? 'bg-white text-black' : ''} ${time < lowTime ? 'bg-red-500 text-white' : ''}`}
 >

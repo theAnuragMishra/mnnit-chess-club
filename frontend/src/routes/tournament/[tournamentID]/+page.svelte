@@ -141,7 +141,7 @@
 		/></svg
 	>{data.tournamentData.name}
 </h1>
-<div class="flex w-full flex-col-reverse gap-10 md:flex-row md:gap-2 md:p-5">
+<div class="flex w-full flex-col-reverse gap-10 p-2 md:flex-row md:gap-2 md:p-5">
 	<div class="flex w-full flex-col gap-2 md:w-1/4">
 		<div>
 			{#if data.tournamentData.status !== 1}

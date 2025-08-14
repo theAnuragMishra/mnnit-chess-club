@@ -8,10 +8,10 @@
 </script>
 
 <div
-	class="movescontainer relative z-0 h-[40px] w-[80vw] bg-gray-800 text-sm md:h-[200px] md:w-[300px] md:px-3 md:text-lg"
+	class="movescontainer relative z-0 h-[40px] w-full bg-gray-800 text-sm md:h-[200px] md:w-[300px] md:px-3 md:text-lg"
 >
 	<div
-		class="moves flex w-full items-center overflow-x-auto md:grid md:h-[150px] md:grid-cols-[1fr_5fr_5fr] md:place-items-center md:content-start md:items-center md:overflow-x-hidden md:overflow-y-auto"
+		class="moves flex w-full items-center justify-center overflow-x-auto md:grid md:h-[150px] md:grid-cols-[1fr_5fr_5fr] md:place-items-center md:content-start md:items-center md:overflow-y-auto md:overflow-x-hidden"
 	>
 		{#each moveHistory as move, index}
 			{#if index % 2 == 0}
@@ -77,7 +77,7 @@
 <style>
 	.movescontainer {
 		display: grid;
-		/* grid-template-columns: 1fr 4fr 1fr; */
+		grid-template-columns: auto 4fr auto;
 		grid-template-areas: 'prev moves next';
 	}
 	.moves {

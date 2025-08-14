@@ -265,7 +265,7 @@
 	});
 </script>
 
-<div class="flex flex-col-reverse items-center justify-center gap-5 xl:flex-row">
+<div class="flex w-full flex-col-reverse items-center justify-center gap-5 xl:flex-row">
 	<div class="flex w-[95%] flex-col gap-5 md:flex-row xl:w-[300px] xl:flex-col">
 		{#if tournamentID}
 			<a
@@ -305,7 +305,7 @@
 		/>
 		<Chat hei="256px" />
 	</div>
-	<div class="acontainer xl:w-3/4">
+	<div class="acontainer w-full xl:w-3/4">
 		<div class="abortt">
 			{#if result === 0 && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
 				<AbortTimer
@@ -315,7 +315,7 @@
 				/>
 			{/if}
 		</div>
-		<div class="board flex flex-col justify-center">
+		<div class="board flex w-full flex-col justify-center">
 			<Chessboard {setGround} {boardConfig} />
 		</div>
 		<div class="abortb">
@@ -338,7 +338,7 @@
 						: chessLatest.turn() === 'b'}
 			/>
 		</div>
-		<div class="rematch w-full">
+		<div class="rematch flex w-full justify-center">
 			{#if result !== 0 && isPlayer && !tournamentID}
 				<Rematch {baseTime} {increment} opponentID={whiteUp ? d.game.WhiteID : d.game.BlackID} />
 			{/if}
@@ -433,12 +433,14 @@
 	.namet {
 		grid-area: namet;
 		justify-self: start;
-		align-self: end;
+		align-self: center;
+		margin-left: 10px;
 	}
 	.nameb {
 		grid-area: nameb;
 		justify-self: start;
-		align-self: start;
+		align-self: center;
+		margin-left: 10px;
 	}
 	.board {
 		grid-area: board;
@@ -477,7 +479,7 @@
 		.acontainer {
 			row-gap: 3px;
 			column-gap: 10px;
-			place-content: start;
+			place-content: center;
 			place-items: start;
 			grid-template-areas:
 				'board .'
@@ -495,9 +497,11 @@
 		}
 		.nameb {
 			justify-self: auto;
+			margin: 0;
 		}
 		.namet {
 			justify-self: auto;
+			margin: 0;
 		}
 		.clockt {
 			justify-self: auto;

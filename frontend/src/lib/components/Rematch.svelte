@@ -41,6 +41,6 @@
 </script>
 
 <button
-	class={`mb-2 flex h-[50px] w-full cursor-pointer items-center justify-center rounded-lg text-2xl ${offer ? 'animate-pulse bg-blue-600' : 'bg-gray-400 '}`}
+	class={`mb-2 flex h-[50px] w-full cursor-pointer items-center justify-center text-2xl ${offer ? 'animate-pulse bg-blue-600' : 'bg-gray-400 '}`}
 	onclick={handleRematch}>Rematch</button
 >

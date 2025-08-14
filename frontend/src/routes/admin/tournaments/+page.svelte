@@ -64,7 +64,7 @@
 	let incrementIndex = $state(0);
 </script>
 
-<div class="w-[100%] lg:p-5">
+<div class="w-[100%] p-2 lg:p-5">
 	<h1 class="mb-5 text-xl">You're an mcc admin. Use this page to create or start a tournament!</h1>
 
 	<div class="m-auto flex w-full flex-col gap-2 border-2 p-[2px] lg:w-1/2 lg:p-2 lg:px-10">

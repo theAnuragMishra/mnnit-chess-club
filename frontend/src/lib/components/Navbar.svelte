@@ -16,8 +16,8 @@
 	let expanded = $state(false);
 </script>
 
-<nav class="relative z-50 w-full bg-gray-900 text-xl text-white">
-	<div class="mx-auto flex max-w-7xl items-center justify-between px-4">
+<nav class="relative z-50 mt-2 w-full bg-gray-900 text-xl text-white">
+	<div class="flex items-center justify-between px-4">
 		<div class="flex flex-shrink-0 items-center">
 			<a href="/">
 				<img src={logo} alt="mcc-logo" class="invert-100 h-10" />

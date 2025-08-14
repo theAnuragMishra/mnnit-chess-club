@@ -21,17 +21,17 @@
 <div bind:this={boardContainer} class="bcontainer"></div>
 
 <style>
-	.bcontainer :global(cg-board) {
-		border-radius: 6px !important;
-	}
 	.bcontainer {
-		height: 90vw;
-		width: 90vw;
+		width: 100%;
+		aspect-ratio: 1;
 	}
 	@media (width >= 768px) {
 		.bcontainer {
 			height: 60vw;
 			width: 60vw;
+		}
+		.bcontainer :global(cg-board) {
+			border-radius: 6px !important;
 		}
 	}
 	@media (width >= 64rem) {
