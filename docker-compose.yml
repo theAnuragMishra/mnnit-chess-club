@@ -11,24 +11,14 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: always
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
-        - PUBLIC_WS_URL=${PUBLIC_WS_URL}
-        - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
-    container_name: mcc-frontend
-
   # API service
-  api:
+  api-server:
     build:
       context: ./api
       dockerfile: Dockerfile
     env_file:
       - api/.env
-    container_name: mcc-api
+    container_name: api
     environment:
       PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=${SSL_MODE}
     expose:
@@ -38,11 +28,15 @@ services:
     restart: always
 
   # Caddy
-  caddy:
+  frontend-server:
     build:
-      context: ./caddy
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: mcc-caddy
+      args:
+        - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
+        - PUBLIC_WS_URL=${PUBLIC_WS_URL}
+        - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
+    container_name: frontend
     environment:
       CADDY_HOST: ${CADDY_HOST}
     ports:
@@ -51,9 +45,9 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
     depends_on:
       - api
-      - frontend
     restart: always
 
 volumes:

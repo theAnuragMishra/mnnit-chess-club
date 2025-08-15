@@ -12,6 +12,5 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
-FROM alpine as output
-WORKDIR /app
-COPY --from=builder /app/build ./build
+FROM caddy AS server
+COPY --from=builder /app/build /usr/share/caddy
