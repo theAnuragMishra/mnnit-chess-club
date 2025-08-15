@@ -1,8 +1,8 @@
 services:
   # PostgreSQL service
-  db:
+  postgres:
     image: postgres
-    container_name: mcc-postgres
+    container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -12,7 +12,7 @@ services:
     restart: always
 
   # API service
-  api-server:
+  api:
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -20,11 +20,11 @@ services:
       - api/.env
     container_name: api
     environment:
-      PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=${SSL_MODE}
+      PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=${SSL_MODE}
     expose:
       - 8080
     depends_on:
-      - db
+      - postgres
     restart: always
 
   # Caddy
