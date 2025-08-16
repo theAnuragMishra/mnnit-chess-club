@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Chessground } from 'chessground';
-	import '../../../node_modules/chessground/assets/chessground.base.css';
-	import '../../../node_modules/chessground/assets/chessground.brown.css';
-	import '../../../node_modules/chessground/assets/chessground.cburnett.css';
+	import { Chessground } from '@lichess-org/chessground';
+	import '../../../node_modules/@lichess-org/chessground/assets/chessground.base.css';
+	import '../../../node_modules/@lichess-org/chessground/assets/chessground.brown.css';
+	import '../../../node_modules/@lichess-org/chessground/assets/chessground.cburnett.css';
 	import { onMount } from 'svelte';
 
 	let boardContainer: HTMLDivElement;

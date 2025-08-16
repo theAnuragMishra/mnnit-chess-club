@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@lichess-org/chessground':
+        specifier: ^9.5.0
+        version: 9.5.0
       chess.js:
         specifier: ^1.2.0
         version: 1.2.0
-      chessground:
-        specifier: ^9.1.1
-        version: 9.1.1
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.9
@@ -313,6 +313,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
+
+  '@lichess-org/chessground@9.5.0':
+    resolution: {integrity: sha512-rM8vw3ZC30mcFAsOrmMabwigfL/KhWbEDDp4/AmNmw2WKJsO2ocu43+DDeLRtY06e01FH0z32I58mhNlvqmSPg==}
 
   '@modelcontextprotocol/sdk@1.11.0':
     resolution: {integrity: sha512-k/1pb70eD638anoi0e8wUGAlbMJXyvdV4p62Ko+EZ7eBe1xMx8Uhak1R5DgfoofsK5IBBnRwsYGTaLZl+6/+RQ==}
@@ -684,9 +687,6 @@ packages:
 
   chess.js@1.2.0:
     resolution: {integrity: sha512-QWdfpAkMslQ48hDDoEzEko6GbYTAKKx4UdXAPEF8nFnAuqp+woyL8LHSbziRP8u1aMAbnlOF0YkXF4ui0Nsubg==}
-
-  chessground@9.1.1:
-    resolution: {integrity: sha512-X4xrBICrixaLATCn+jGEzk58UXcas+9QqJnwVq9nT7AaX2M1CJLMA0vC7noG0s6Tr2zoAHZ1FOviE5b05MgduQ==}
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -1828,6 +1828,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  '@lichess-org/chessground@9.5.0': {}
+
   '@modelcontextprotocol/sdk@1.11.0':
     dependencies:
       content-type: 1.0.5
@@ -2189,8 +2191,6 @@ snapshots:
       supports-color: 7.2.0
 
   chess.js@1.2.0: {}
-
-  chessground@9.1.1: {}
 
   chokidar@4.0.3:
     dependencies:

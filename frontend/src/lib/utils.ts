@@ -1,4 +1,4 @@
-import type { Key } from 'chessground/types';
+import type { Key } from '@lichess-org/chessground/types';
 import { Chess, type Color, type Piece } from 'chess.js';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 

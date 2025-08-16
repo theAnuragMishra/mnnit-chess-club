@@ -9,10 +9,10 @@
 	import { websocketStore } from '$lib/websocket';
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import type { Api } from 'chessground/api';
+	import type { Api } from '@lichess-org/chessground/api';
 	import { getValidMoves, isPromoting } from '$lib/utils.js';
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
-	import type { Config } from 'chessground/config';
+	import type { Config } from '@lichess-org/chessground/config';
 	import Rematch from './Rematch.svelte';
 	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Chessboard from '$lib/components/Chessboard.svelte';
-	import type { Api } from 'chessground/api';
+	import type { Api } from '@lichess-org/chessground/api';
 
 	let g: Api | null = $state(null);
 </script>
