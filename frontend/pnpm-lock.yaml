@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@lichess-org/chessground':
-        specifier: ^9.5.0
-        version: 9.5.0
+        specifier: ^9.4.1
+        version: 9.4.1
       chess.js:
         specifier: ^1.2.0
         version: 1.2.0
@@ -314,8 +314,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@lichess-org/chessground@9.5.0':
-    resolution: {integrity: sha512-rM8vw3ZC30mcFAsOrmMabwigfL/KhWbEDDp4/AmNmw2WKJsO2ocu43+DDeLRtY06e01FH0z32I58mhNlvqmSPg==}
+  '@lichess-org/chessground@9.4.1':
+    resolution: {integrity: sha512-CbrJwhaXKz9uBXBAjQCtEeJSyU0SFOk6GsWfU/oijLLOC1qXGXReyRX6WsHQ66CoufPX3kd8jQUvr8k33XoWLA==}
 
   '@modelcontextprotocol/sdk@1.11.0':
     resolution: {integrity: sha512-k/1pb70eD638anoi0e8wUGAlbMJXyvdV4p62Ko+EZ7eBe1xMx8Uhak1R5DgfoofsK5IBBnRwsYGTaLZl+6/+RQ==}
@@ -1828,7 +1828,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@lichess-org/chessground@9.5.0': {}
+  '@lichess-org/chessground@9.4.1': {}
 
   '@modelcontextprotocol/sdk@1.11.0':
     dependencies:

@@ -25,6 +25,7 @@
 		width: 100%;
 		aspect-ratio: 1;
 	}
+
 	@media (width >= 768px) {
 		.bcontainer {
 			height: 60vw;
