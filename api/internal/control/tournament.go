@@ -47,6 +47,7 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 
 	id, err := c.generateUniqueTournamentID()
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error creating tournament")
 		return
 	}
@@ -62,7 +63,8 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Tournament name already in use")
+		log.Println(err)
+		utils.RespondWithError(w, http.StatusBadRequest, "Error creating tournament")
 		return
 	}
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"id": id})
@@ -74,7 +76,12 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
 		return
 	}
-	dbPlayers, err2 := c.Queries.GetTournamentPlayers(r.Context(), tournamentID)
+	dbPlayers, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID)
+	if err != nil {
+		log.Println(err)
+		utils.RespondWithError(w, 500, "error getting players")
+		return
+	}
 	c.TournamentManager.RLock()
 	serverTournament, exists := c.TournamentManager.Tournaments[tournamentID]
 	c.TournamentManager.RUnlock()
@@ -107,9 +114,10 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		serverTournament.RUnlock()
 		return
 	}
-	tournamentInfo, err1 := c.Queries.GetTournamentInfo(r.Context(), tournamentID)
+	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID)
 
-	if err1 != nil || err2 != nil {
+	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
 		return
 	}
@@ -138,6 +146,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	}
 	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID.TournamentID)
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament info")
 		return
 	}
@@ -159,6 +168,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	players, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
 
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament players")
 		return
 	}
@@ -197,6 +207,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) WriteUpcomingTournaments(w http.ResponseWriter, r *http.Request) {
 	tournaments, err := c.Queries.GetUpcomingTournaments(r.Context())
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting upcoming tournaments")
 		return
 	}

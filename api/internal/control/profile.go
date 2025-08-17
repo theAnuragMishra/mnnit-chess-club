@@ -18,6 +18,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.Queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Internal server error")
 		return
 	}
@@ -40,7 +41,6 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		ID:       session.UserID,
 	})
 	if err != nil {
-
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Username already in use")
 		return
@@ -86,6 +86,7 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	profile, err := c.Queries.GetUserPublicInfo(r.Context(), &username)
 	if err != nil {
+		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "user not found")
 		return
 	}
