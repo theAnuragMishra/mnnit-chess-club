@@ -29,7 +29,7 @@ type Player struct {
 	Scores          []int16
 	Rating          float64
 	Streak          int32
-	Opponents       map[int32]struct{}
+	Opponents       map[int32]int16
 	LastPlayedColor chess.Color
 }
 
@@ -60,6 +60,6 @@ func NewPlayer(id int32, rating float64) *Player {
 		Scores:    make([]int16, 0),
 		Rating:    rating,
 		Streak:    0,
-		Opponents: make(map[int32]struct{}),
+		Opponents: make(map[int32]int16),
 	}
 }

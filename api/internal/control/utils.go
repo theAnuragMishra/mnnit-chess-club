@@ -254,8 +254,8 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		t.Lock()
 		p1 := t.Players[g.WhiteID]
 		p2 := t.Players[g.BlackID]
-		p1.Opponents[g.BlackID] = struct{}{}
-		p2.Opponents[g.WhiteID] = struct{}{}
+		p1.Opponents[g.BlackID] += 1
+		p2.Opponents[g.WhiteID] += 1
 		p1.LastPlayedColor = chess.White
 		p2.LastPlayedColor = chess.Black
 		p1.Rating = up1.Rating
@@ -301,8 +301,8 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 			p1.Streak = 0
 			p2.Streak = 0
 		}
-		t.WaitingPlayers = append(t.WaitingPlayers, p1)
 		t.WaitingPlayers = append(t.WaitingPlayers, p2)
+		t.WaitingPlayers = append(t.WaitingPlayers, p1)
 		t.Unlock()
 	}
 
@@ -420,6 +420,12 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			} else {
 				currentDiff = utils.Abs(int(playerA.Score) - int(playerB.Score))
 			}
+			currentDiff += int(playerA.Opponents[playerB.Id]) * 10
+
+			if playerA.LastPlayedColor == playerB.LastPlayedColor {
+				currentDiff += 20
+			}
+
 			if currentDiff < minScoreDiff {
 				minScoreDiff = currentDiff
 				bestMatch = j
