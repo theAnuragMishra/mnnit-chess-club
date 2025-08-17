@@ -7,13 +7,13 @@
 	let copied = $state(false);
 </script>
 
-<div class="flex flex-col items-center justify-center gap-3 text-2xl">
+<div class="flex flex-col items-center justify-center gap-3 text-lg md:text-2xl">
 	<p class="text-3xl">
 		{data.gameData.TimeControl.baseTime / 60}+{data.gameData.TimeControl.increment}
 	</p>
 	{#if data.user.username == data.gameData.CreatorUsername}
-		<p>The first person to accept the challenge via the link will play you.</p>
-		<a class="text-blue-600 underline" href={gameLink}>{gameLink}</a><button
+		<p class="text-center">The first person to accept the challenge via the link will play you.</p>
+		<a class="text-sm text-blue-600 underline sm:text-2xl" href={gameLink}>{gameLink}</a><button
 			class="cursor-pointer rounded-md bg-gray-800 px-3 py-2"
 			onclick={async () => {
 				await navigator.clipboard.writeText(gameLink);
