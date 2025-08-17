@@ -3,7 +3,7 @@ package tournament
 import "sync"
 
 type Manager struct {
-	sync.Mutex
+	sync.RWMutex
 	Tournaments map[string]*Tournament
 }
 

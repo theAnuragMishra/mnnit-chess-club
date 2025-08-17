@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
-	"log"
-	"net/http"
-	"time"
 )
 
 func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
@@ -74,8 +75,11 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	dbPlayers, err2 := c.Queries.GetTournamentPlayers(r.Context(), tournamentID)
+	c.TournamentManager.RLock()
 	serverTournament, exists := c.TournamentManager.Tournaments[tournamentID]
+	c.TournamentManager.RUnlock()
 	if exists {
+		serverTournament.RLock()
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
@@ -100,6 +104,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 			"creator":   serverTournament.Creator,
 			"status":    1,
 		})
+		serverTournament.RUnlock()
 		return
 	}
 	tournamentInfo, err1 := c.Queries.GetTournamentInfo(r.Context(), tournamentID)
@@ -213,7 +218,9 @@ func HandleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 		client.Send(e)
 		return errors.New("tournament ID can't be empty")
 	}
+	c.TournamentManager.RLock()
 	t, ok := c.TournamentManager.Tournaments[tidP.TournamentID]
+	c.TournamentManager.RUnlock()
 	if !ok {
 		err = HandleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err
@@ -265,6 +272,9 @@ func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		payload, err := json.Marshal(map[string]any{"id": client.UserID})
+		if err != nil {
+			return err
+		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
 		c.SocketManager.BroadcastToRoom(e, tournamentID)
 	}
@@ -272,11 +282,13 @@ func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 }
 
 func HandleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
+	t.RLock()
 	p, exists := t.Players[client.UserID]
+	t.RUnlock()
 	if exists {
-		p.Lock()
+		t.Lock()
 		p.IsActive = !p.IsActive
-		p.Unlock()
+		t.Unlock()
 		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": p.IsActive}})
 		if err != nil {
 			client.Send(e)

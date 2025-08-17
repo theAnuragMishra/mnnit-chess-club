@@ -1,14 +1,15 @@
 package tournament
 
 import (
-	"github.com/notnil/chess"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"sync"
 	"time"
+
+	"github.com/notnil/chess"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 )
 
 type Tournament struct {
-	sync.Mutex
+	sync.RWMutex
 	Id             string
 	Name           string
 	Players        map[int32]*Player
@@ -22,7 +23,6 @@ type Tournament struct {
 }
 
 type Player struct {
-	sync.Mutex
 	Id              int32
 	IsActive        bool
 	Score           int32

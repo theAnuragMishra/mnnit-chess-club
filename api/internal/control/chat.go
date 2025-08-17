@@ -3,6 +3,7 @@ package control
 import (
 	"encoding/json"
 	"errors"
+
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
@@ -21,8 +22,9 @@ func Chat(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "chat",
 		Payload: json.RawMessage(payload),
 	}
-
+	c.GameManager.RLock()
 	foundGame, exists := c.GameManager.Games[client.Room]
+	c.GameManager.RUnlock()
 	if !exists {
 		// handle game ended message
 		c.SocketManager.BroadcastToRoom(e, client.Room)

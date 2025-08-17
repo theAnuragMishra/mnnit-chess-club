@@ -1,17 +1,20 @@
 package game
 
 import (
+	"sync"
 	"time"
 
 	"github.com/notnil/chess"
 )
 
 type Game struct {
+	sync.RWMutex
 	ID            string
 	BaseTime      time.Duration
 	Increment     time.Duration
 	WhiteID       int32
 	BlackID       int32
+	Result        int16
 	Board         *chess.Game
 	LastMoveTime  time.Time
 	TimeWhite     time.Duration

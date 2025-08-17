@@ -20,13 +20,16 @@ import (
 )
 
 func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
-	_, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	c.TournamentManager.RLock()
+	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	c.TournamentManager.RUnlock()
 	if !affectsTournament {
 		return
 	}
+	t.RLock()
 	p1 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID]
 	p2 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID]
-
+	t.RUnlock()
 	p1Res := updateScorePlayer{
 		ID:     p1.Id,
 		Score:  p1.Score,
@@ -54,15 +57,6 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 	}
 
 	c.SocketManager.BroadcastToRoom(ee, g.TournamentID)
-
-	//payloaddd, err := json.Marshal(map[string]any{"ID": g.TournamentID, "Type": "tournament"})
-	//eee := socket.Event{Type: "Refresh", Payload: json.RawMessage(payloaddd)}
-	//if whiteClient != nil {
-	//	whiteClient.Send(eee)
-	//}
-	//if blackClient != nil {
-	//	blackClient.Send(eee)
-	//}
 }
 
 func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeControl, r1 float64, r2 float64, tournamentID string) (*game.Game, error) {
@@ -106,10 +100,14 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 }
 
 func (c *Controller) abortGame(g *game.Game) {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
-
-	_, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	g.Lock()
+	defer g.Unlock()
+	if g.Result != 0 {
+		return
+	}
+	c.TournamentManager.RLock()
+	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	c.TournamentManager.RUnlock()
 	reason := "Game Aborted"
 	var result int16 = 4
 
@@ -117,11 +115,17 @@ func (c *Controller) abortGame(g *game.Game) {
 		if g.Board.Position().Turn() == chess.White {
 			reason = "White Didn't Play"
 			result = 2
-			c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID].IsActive = false
+			t.Lock()
+			p := t.Players[g.WhiteID]
+			p.IsActive = false
+			t.Unlock()
 		} else {
 			reason = "Black Didn't Play"
 			result = 1
-			c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID].IsActive = false
+			t.Lock()
+			p := t.Players[g.BlackID]
+			p.IsActive = false
+			t.Unlock()
 		}
 	}
 
@@ -142,12 +146,17 @@ func (c *Controller) abortGame(g *game.Game) {
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
 	c.sendScoreUpdateEvent(g)
+	c.GameManager.Lock()
 	delete(c.GameManager.Games, g.ID)
+	c.GameManager.Unlock()
 }
 
 func (c *Controller) handleGameTimeout(g *game.Game) {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
+	g.Lock()
+	defer g.Unlock()
+	if g.Result != 0 {
+		return
+	}
 	var result int16
 	var reason string
 	if g.Board.Position().Turn() == chess.White {
@@ -178,10 +187,14 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 	c.SocketManager.BroadcastToRoom(e, g.ID)
 	c.sendScoreUpdateEvent(g)
 	c.BatchInsertMoves(g)
+	c.GameManager.Lock()
 	delete(c.GameManager.Games, g.ID)
+	c.GameManager.Unlock()
+
 }
 
 func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLength int16, etlw, etlb *int32) (int, int, error) {
+	g.Result = result
 	if result == 4 {
 		err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 			Result:           result,
@@ -192,7 +205,9 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		})
 		return 0, 0, err
 	}
+	c.TournamentManager.RLock()
 	t, affectsTournament := c.TournamentManager.Tournaments[g.TournamentID]
+	c.TournamentManager.RUnlock()
 	var r float64
 	if result == 1 {
 		r = 1.0
@@ -236,10 +251,9 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 
 	//update scores in tournament
 	if affectsTournament {
-		p1 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.WhiteID]
-		p2 := c.TournamentManager.Tournaments[g.TournamentID].Players[g.BlackID]
-		p1.Lock()
-		p2.Lock()
+		t.Lock()
+		p1 := t.Players[g.WhiteID]
+		p2 := t.Players[g.BlackID]
 		p1.Opponents[g.BlackID] = struct{}{}
 		p2.Opponents[g.WhiteID] = struct{}{}
 		p1.LastPlayedColor = chess.White
@@ -287,9 +301,6 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 			p1.Streak = 0
 			p2.Streak = 0
 		}
-		p1.Unlock()
-		p2.Unlock()
-		t.Lock()
 		t.WaitingPlayers = append(t.WaitingPlayers, p1)
 		t.WaitingPlayers = append(t.WaitingPlayers, p2)
 		t.Unlock()
@@ -374,14 +385,13 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 
 func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 	//log.Println("starting pairing cycle")
+	t.RLock()
 	if len(t.WaitingPlayers) < 2 {
 		//log.Println("not enough players")
 		//log.Println(t.WaitingPlayers)
 		return
 	}
 	paired := make(map[int32]bool)
-	t.Lock()
-	defer t.Unlock()
 	availableToPair := make([]*tournament.Player, 0, len(t.WaitingPlayers))
 	//copy(availableToPair, t.WaitingPlayers)
 	for _, player := range t.WaitingPlayers {
@@ -426,9 +436,9 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			}
 			r1 := playerA.Rating
 			r2 := playerB.Rating
-
+			c.GameManager.Lock()
 			createdGame, err := c.createGame(id, playerA.Id, playerB.Id, t.TimeControl, r1, r2, t.Id)
-
+			c.GameManager.Unlock()
 			if err != nil {
 				log.Println("error creating game", err)
 				continue
@@ -454,7 +464,10 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			newWaitingPlayers = append(newWaitingPlayers, player)
 		}
 	}
+	t.RUnlock()
+	t.Lock()
 	t.WaitingPlayers = newWaitingPlayers
+	t.Unlock()
 	//log.Println("out of pairing cycle")
 }
 
@@ -474,6 +487,8 @@ func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.D
 }
 
 func (c *Controller) EndTournament(t *tournament.Tournament) {
+	t.Lock()
+	defer t.Unlock()
 	close(t.Done)
 	err := c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
 		Status: 2,
@@ -511,5 +526,7 @@ func (c *Controller) EndTournament(t *tournament.Tournament) {
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 	c.SocketManager.BroadcastToRoom(e, t.Id)
+	c.TournamentManager.Lock()
 	delete(c.TournamentManager.Tournaments, t.Id)
+	c.TournamentManager.Unlock()
 }

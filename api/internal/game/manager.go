@@ -1,17 +1,17 @@
 package game
 
 import (
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"sync"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
 type Manager struct {
-	sync.Mutex
+	sync.RWMutex
 	Games             map[string]*Game
 	PendingUsers      map[TimeControl]PendingUser
 	PendingChallenges map[string]Challenge
 	Rematches         map[string]Rematch
-	// Users         []string
 }
 
 type TimeControl struct {

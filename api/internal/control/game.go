@@ -19,17 +19,21 @@ import (
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameID := chi.URLParam(r, "gameID")
 
-	// fmt.Println(gameID)
 	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
 	if err != nil {
-		if challenge, exists := c.GameManager.PendingChallenges[gameID]; exists {
+		c.GameManager.RLock()
+		challenge, exists := c.GameManager.PendingChallenges[gameID]
+		c.GameManager.RUnlock()
+		if exists {
 			utils.RespondWithJSON(w, http.StatusOK, challenge)
 			return
 		}
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 		return
 	}
+	c.GameManager.RLock()
 	serverGame, exists := c.GameManager.Games[gameID]
+	c.GameManager.RUnlock()
 	if !exists {
 		//database game response
 		moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
@@ -49,6 +53,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		//server game response
+		serverGame.RLock()
 		timePassed := time.Since(serverGame.LastMoveTime)
 		if serverGame.Board.Position().Turn() == chess.White {
 			serverGame.TimeWhite = max(serverGame.TimeWhite-timePassed, 0)
@@ -58,13 +63,12 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		serverGame.LastMoveTime = time.Now()
 		timeWhite := int32(serverGame.TimeWhite.Milliseconds())
 		timeBlack := int32(serverGame.TimeBlack.Milliseconds())
+		serverGame.RUnlock()
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
 	}
 }
 
 func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
 	var timeControl game.TimeControl
 	if err := json.Unmarshal(event.Payload, &timeControl); err != nil {
 		return err
@@ -73,6 +77,7 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if timeControl.BaseTime <= 0 || timeControl.BaseTime > 10800 || timeControl.Increment < 0 || timeControl.Increment > 180 {
 		return errors.New("invalid time control")
 	}
+	c.GameManager.Lock()
 	p, exists := c.GameManager.PendingUsers[timeControl]
 	if !exists {
 		//log.Println("no pending game, creating...")
@@ -80,9 +85,11 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 			ID:     client.UserID,
 			Client: client,
 		}
+		c.GameManager.Unlock()
 	} else {
 		//log.Println("game found...")
 		delete(c.GameManager.PendingUsers, timeControl)
+		c.GameManager.Unlock()
 		if p.ID == client.UserID {
 			return nil
 		}
@@ -95,7 +102,9 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			return err
 		}
+		c.GameManager.Lock()
 		createdGame, err := c.createGame(id, p.ID, client.UserID, timeControl, rating1, rating2, "")
+		c.GameManager.Unlock()
 		if err != nil {
 			return err
 		}
@@ -112,8 +121,6 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) error {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
 	var timeControl game.TimeControl
 	if err := json.Unmarshal(event.Payload, &timeControl); err != nil {
 		return err
@@ -126,11 +133,13 @@ func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err != nil {
 		return err
 	}
+	c.GameManager.Lock()
 	c.GameManager.PendingChallenges[id] = game.Challenge{
 		TimeControl:     timeControl,
 		Creator:         client.UserID,
 		CreatorUsername: client.Username,
 	}
+	c.GameManager.Unlock()
 	payload := map[string]any{"ID": id, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -142,12 +151,12 @@ func CreateChallenge(c *Controller, event socket.Event, client *socket.Client) e
 }
 
 func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) error {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
 	var acceptChallengePayload GameIDPayload
 	if err := json.Unmarshal(event.Payload, &acceptChallengePayload); err != nil {
 		return err
 	}
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
 	challenge, exists := c.GameManager.PendingChallenges[acceptChallengePayload.GameID]
 	if !exists {
 		return errors.New("challenge not found")
@@ -176,8 +185,6 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 }
 
 func CreateRematch(c *Controller, event socket.Event, client *socket.Client) error {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
 	var crp createRematchPayload
 	if err := json.Unmarshal(event.Payload, &crp); err != nil {
 		return err
@@ -190,11 +197,13 @@ func CreateRematch(c *Controller, event socket.Event, client *socket.Client) err
 	if err != nil {
 		return err
 	}
+	c.GameManager.Lock()
 	c.GameManager.Rematches[id] = game.Rematch{
 		TimeControl: crp.TimeControl,
 		Creator:     client.UserID,
 		Opponent:    crp.OpponentID,
 	}
+	c.GameManager.Unlock()
 	payload := map[string]any{"rematchID": id}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -206,12 +215,12 @@ func CreateRematch(c *Controller, event socket.Event, client *socket.Client) err
 }
 
 func AcceptRematch(c *Controller, event socket.Event, client *socket.Client) error {
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
 	var arp GameIDPayload
 	if err := json.Unmarshal(event.Payload, &arp); err != nil {
 		return err
 	}
+	c.GameManager.Lock()
+	defer c.GameManager.Unlock()
 	rematch, exists := c.GameManager.Rematches[arp.GameID]
 	if !exists {
 		return errors.New("rematch not found")
@@ -250,11 +259,18 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := move.GameID
-
+	c.GameManager.RLock()
 	foundGame, exists := c.GameManager.Games[gameID]
+	c.GameManager.RUnlock()
 
 	if !exists {
 		return errors.New("game not found")
+	}
+	foundGame.Lock()
+	defer foundGame.Unlock()
+
+	if foundGame.Result != 0 {
+		return nil
 	}
 
 	if foundGame.Board.Position().Turn() == chess.White && client.UserID != foundGame.WhiteID {
@@ -286,40 +302,8 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 
 	foundGame.Moves = append(foundGame.Moves, moveToSend)
 
-	if foundGame.AbortTimer != nil {
-		if len(foundGame.Moves) == 1 {
-			if foundGame.BaseTime >= time.Second*20 {
-				foundGame.AbortTimer.Reset(time.Second * 20)
-			} else if foundGame.BaseTime >= time.Second*10 {
-				foundGame.AbortTimer.Reset(time.Second * 10)
-			} else {
-				foundGame.AbortTimer.Reset(foundGame.BaseTime)
-			}
-		} else {
-			foundGame.AbortTimer.Stop()
-			foundGame.AbortTimer = nil
-		}
-	}
-
-	if len(foundGame.Moves) == 2 {
-		if foundGame.Board.Position().Turn() == chess.White {
-			timer := time.AfterFunc(foundGame.TimeWhite, func() { c.handleGameTimeout(foundGame) })
-			foundGame.ClockTimer = timer
-		} else {
-			timer := time.AfterFunc(foundGame.TimeBlack, func() { c.handleGameTimeout(foundGame) })
-			foundGame.ClockTimer = timer
-		}
-	} else if len(foundGame.Moves) > 2 {
-		if foundGame.Board.Position().Turn() == chess.White {
-			foundGame.ClockTimer.Reset(foundGame.TimeWhite)
-		} else {
-			foundGame.ClockTimer.Reset(foundGame.TimeBlack)
-		}
-	}
-
-	// log.Println(foundGame.Board.Position().Turn())
 	var cw, cb int
-	res := 0
+	var res int16
 	result := foundGame.Board.Outcome()
 	reason := foundGame.Board.Method().String()
 	if result != "*" {
@@ -333,12 +317,47 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		// log.Println("game ho gya over")
 		etlb := int32(foundGame.TimeBlack.Milliseconds())
 		etlw := int32(foundGame.TimeWhite.Milliseconds())
-		cw, cb, err = c.endGame(foundGame, int16(res), &reason, int16(len(foundGame.Moves)), &etlw, &etlb)
+		cw, cb, err = c.endGame(foundGame, res, &reason, int16(len(foundGame.Moves)), &etlw, &etlb)
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
 		foundGame.ClockTimer.Stop()
 		c.sendScoreUpdateEvent(foundGame)
+		c.BatchInsertMoves(foundGame)
+		c.GameManager.Lock()
+		delete(c.GameManager.Games, gameID)
+		c.GameManager.Unlock()
+	} else {
+		if foundGame.AbortTimer != nil {
+			if len(foundGame.Moves) == 1 {
+				if foundGame.BaseTime >= time.Second*20 {
+					foundGame.AbortTimer.Reset(time.Second * 20)
+				} else if foundGame.BaseTime >= time.Second*10 {
+					foundGame.AbortTimer.Reset(time.Second * 10)
+				} else {
+					foundGame.AbortTimer.Reset(foundGame.BaseTime)
+				}
+			} else {
+				foundGame.AbortTimer.Stop()
+				foundGame.AbortTimer = nil
+			}
+		}
+
+		if len(foundGame.Moves) == 2 {
+			if foundGame.Board.Position().Turn() == chess.White {
+				timer := time.AfterFunc(foundGame.TimeWhite, func() { c.handleGameTimeout(foundGame) })
+				foundGame.ClockTimer = timer
+			} else {
+				timer := time.AfterFunc(foundGame.TimeBlack, func() { c.handleGameTimeout(foundGame) })
+				foundGame.ClockTimer = timer
+			}
+		} else if len(foundGame.Moves) > 2 {
+			if foundGame.Board.Position().Turn() == chess.White {
+				foundGame.ClockTimer.Reset(foundGame.TimeWhite)
+			} else {
+				foundGame.ClockTimer.Reset(foundGame.TimeBlack)
+			}
+		}
 	}
 	payload, err := json.Marshal(map[string]any{"move": moveToSend, "Result": res, "reason": reason, "timeBlack": foundGame.TimeBlack.Milliseconds(), "timeWhite": foundGame.TimeWhite.Milliseconds(), "changeW": cw, "changeB": cb})
 	if err != nil {
@@ -350,12 +369,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, gameID)
-
-	if result != "*" {
-		c.BatchInsertMoves(foundGame)
-		delete(c.GameManager.Games, gameID)
-	}
-
 	return nil
 }
 
@@ -366,11 +379,16 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	gameID := draw.GameID
-
+	c.GameManager.RLock()
 	foundGame, exists := c.GameManager.Games[gameID]
-
+	c.GameManager.RUnlock()
 	if !exists {
 		return errors.New("game not found")
+	}
+	foundGame.Lock()
+	defer foundGame.Unlock()
+	if foundGame.Result != 0 {
+		return nil
 	}
 
 	if len(foundGame.Moves) < 2 {
@@ -423,7 +441,9 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 		c.sendScoreUpdateEvent(foundGame)
 
 		c.BatchInsertMoves(foundGame)
+		c.GameManager.Lock()
 		delete(c.GameManager.Games, gameID)
+		c.GameManager.Unlock()
 	}
 
 	return nil
@@ -435,11 +455,16 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := resign.GameID
-
+	c.GameManager.RLock()
 	foundGame, exists := c.GameManager.Games[gameID]
-
+	c.GameManager.RUnlock()
 	if !exists {
 		return errors.New("game not found")
+	}
+	foundGame.Lock()
+	defer foundGame.Unlock()
+	if foundGame.Result != 0 {
+		return nil
 	}
 
 	if len(foundGame.Moves) < 2 {
@@ -489,6 +514,8 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 	c.sendScoreUpdateEvent(foundGame)
 
 	c.BatchInsertMoves(foundGame)
+	c.GameManager.Lock()
 	delete(c.GameManager.Games, gameID)
+	c.GameManager.Unlock()
 	return nil
 }
