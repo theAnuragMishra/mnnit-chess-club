@@ -15,6 +15,9 @@
 	import type { Config } from '@lichess-org/chessground/config';
 	import Rematch from './Rematch.svelte';
 	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
+	import { getCapturedAndMaterial } from '$lib/chessUtils';
+
+	import CapturedPieces from './CapturedPieces.svelte';
 
 	let { data } = $props();
 	// console.log(data);
@@ -255,6 +258,10 @@
 		};
 	});
 
+	//captured pieces
+	let { white: wCap, black: bCap, balance } = $derived(getCapturedAndMaterial(chessForView));
+	//$inspect(balance);
+
 	onMount(() => {
 		websocketStore.onMessage('game_end', handleGameEnd);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
@@ -326,6 +333,19 @@
 					tb="b"
 				/>
 			{/if}
+		</div>
+		<div
+			class="piecest flex h-[15px] items-center text-[10px] text-gray-400 md:h-[35px] md:w-[300px] md:flex-wrap-reverse md:text-[20px]"
+		>
+			<CapturedPieces pieces={whiteUp ? bCap : wCap} /><span class="ml-[6px]"
+				>{whiteUp
+					? balance > 0
+						? `+${Math.abs(balance)}`
+						: ''
+					: balance < 0
+						? `+${Math.abs(balance)}`
+						: ''}
+			</span>
 		</div>
 		<div class="clockt h-fit">
 			<Clock
@@ -410,6 +430,20 @@
 						: chessLatest.turn() === 'w'}
 			/>
 		</div>
+		<div
+			class="piecesb flex h-[15px] items-center text-[10px] text-gray-400 md:h-[35px] md:w-[300px] md:flex-wrap md:text-[20px]"
+		>
+			<CapturedPieces pieces={whiteUp ? wCap : bCap} />
+			<span class="ml-[6px]"
+				>{whiteUp
+					? balance < 0
+						? `+${Math.abs(balance)}`
+						: ''
+					: balance > 0
+						? `+${Math.abs(balance)}`
+						: ''}
+			</span>
+		</div>
 	</div>
 </div>
 
@@ -421,9 +455,11 @@
 		grid-template-rows: auto auto auto auto auto; */
 		grid-template-areas:
 			'namet clockt'
+			'piecest clockt'
 			'abortt abortt'
 			'board board'
 			'abortb abortb'
+			'piecesb clockb'
 			'nameb clockb'
 			'btt btt'
 			'draw-resign draw-resign'
@@ -475,6 +511,17 @@
 	.rematch {
 		grid-area: rematch;
 	}
+
+	.piecest {
+		grid-area: piecest;
+		align-self: center;
+		margin-left: 8px;
+	}
+	.piecesb {
+		grid-area: piecesb;
+		align-self: center;
+		margin-left: 8px;
+	}
 	@media (width>= 768px) {
 		.acontainer {
 			row-gap: 3px;
@@ -483,6 +530,7 @@
 			place-items: start;
 			grid-template-areas:
 				'board .'
+				'board piecest'
 				'board clockt'
 				'board namet'
 				'board abortt'
@@ -493,6 +541,7 @@
 				'board abortb'
 				'board nameb'
 				'board clockb'
+				'board piecesb'
 				'board .';
 		}
 		.nameb {
@@ -522,6 +571,12 @@
 		}
 		.abortt {
 			display: unset;
+		}
+		.piecesb {
+			margin: 0;
+		}
+		.piecest {
+			margin: 0;
 		}
 	}
 </style>
