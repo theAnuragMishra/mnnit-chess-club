@@ -145,10 +145,6 @@ func (c *Controller) abortGame(g *game.Game) {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
-	c.sendScoreUpdateEvent(g)
-	c.GameManager.Lock()
-	delete(c.GameManager.Games, g.ID)
-	c.GameManager.Unlock()
 }
 
 func (c *Controller) handleGameTimeout(g *game.Game) {
@@ -185,12 +181,6 @@ func (c *Controller) handleGameTimeout(g *game.Game) {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, g.ID)
-	c.sendScoreUpdateEvent(g)
-	c.BatchInsertMoves(g)
-	c.GameManager.Lock()
-	delete(c.GameManager.Games, g.ID)
-	c.GameManager.Unlock()
-
 }
 
 func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLength int16, etlw, etlb *int32) (int, int, error) {
@@ -203,6 +193,13 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 			EndTimeLeftBlack: etlb,
 			EndTimeLeftWhite: etlw,
 		})
+		go func() {
+			c.sendScoreUpdateEvent(g)
+			time.Sleep(time.Second * 30)
+			c.GameManager.Lock()
+			delete(c.GameManager.Games, g.ID)
+			c.GameManager.Unlock()
+		}()
 		return 0, 0, err
 	}
 	c.TournamentManager.RLock()
@@ -319,6 +316,17 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		EndTimeLeftWhite: etlw,
 		EndTimeLeftBlack: etlb,
 	})
+
+	go func() {
+		g.ClockTimer.Stop()
+		c.BatchInsertMoves(g)
+		c.sendScoreUpdateEvent(g)
+		time.Sleep(time.Second * 30)
+		c.GameManager.Lock()
+		delete(c.GameManager.Games, g.ID)
+		c.GameManager.Unlock()
+	}()
+
 	return int(up1.Rating - p1info.Rating), int(up2.Rating - p2info.Rating), err
 }
 

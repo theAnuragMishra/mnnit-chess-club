@@ -53,7 +53,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		//server game response
-		serverGame.RLock()
+		serverGame.Lock()
 		timePassed := time.Since(serverGame.LastMoveTime)
 		if serverGame.Board.Position().Turn() == chess.White {
 			serverGame.TimeWhite = max(serverGame.TimeWhite-timePassed, 0)
@@ -63,7 +63,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		serverGame.LastMoveTime = time.Now()
 		timeWhite := int32(serverGame.TimeWhite.Milliseconds())
 		timeBlack := int32(serverGame.TimeBlack.Milliseconds())
-		serverGame.RUnlock()
+		serverGame.Unlock()
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
 	}
 }
@@ -321,12 +321,6 @@ func Move(c *Controller, event socket.Event, client *socket.Client) error {
 		if err != nil {
 			log.Println("error ending game with result", err)
 		}
-		foundGame.ClockTimer.Stop()
-		c.sendScoreUpdateEvent(foundGame)
-		c.BatchInsertMoves(foundGame)
-		c.GameManager.Lock()
-		delete(c.GameManager.Games, gameID)
-		c.GameManager.Unlock()
 	} else {
 		if foundGame.AbortTimer != nil {
 			if len(foundGame.Moves) == 1 {
@@ -437,13 +431,6 @@ func Draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Payload: json.RawMessage(payload),
 		}
 		c.SocketManager.BroadcastToRoom(e, gameID)
-		foundGame.ClockTimer.Stop()
-		c.sendScoreUpdateEvent(foundGame)
-
-		c.BatchInsertMoves(foundGame)
-		c.GameManager.Lock()
-		delete(c.GameManager.Games, gameID)
-		c.GameManager.Unlock()
 	}
 
 	return nil
@@ -508,14 +495,5 @@ func Resign(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.SocketManager.BroadcastToRoom(e, gameID)
-
-	foundGame.ClockTimer.Stop()
-
-	c.sendScoreUpdateEvent(foundGame)
-
-	c.BatchInsertMoves(foundGame)
-	c.GameManager.Lock()
-	delete(c.GameManager.Games, gameID)
-	c.GameManager.Unlock()
 	return nil
 }
