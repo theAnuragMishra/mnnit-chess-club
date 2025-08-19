@@ -2,45 +2,36 @@
 	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
 
-	const { baseTime, increment, opponentID } = $props();
 	let offer = $state(false);
-	let rematchID: string;
+	let disabled = $state(false);
 
 	const handleRematch = () => {
-		if (offer) {
-			websocketStore.sendMessage({
-				type: 'accept_rematch',
-				payload: {
-					GameId: rematchID
-				}
-			});
-		} else {
-			websocketStore.sendMessage({
-				type: 'create_rematch',
-				payload: {
-					//to fix
-					timeControl: {
-						baseTime,
-						increment
-					},
-					opponentID
-				}
-			});
-		}
+		if (disabled) return;
+		websocketStore.sendMessage({
+			type: 'rematch'
+		});
 	};
 	const handleRematchOffer = (payload: any) => {
 		offer = true;
-		rematchID = payload.rematchID;
 	};
+
+	const handleGameDeleted = (payload: any) => {
+		disabled = true;
+		offer = false;
+	};
+
 	onMount(() => {
 		websocketStore.onMessage('rematchOffer', handleRematchOffer);
+		websocketStore.onMessage('GameDeleted', handleGameDeleted);
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('rematchOffer', handleRematchOffer);
+		websocketStore.offMessage('GameDeleted', handleGameDeleted);
 	});
 </script>
 
 <button
-	class={`mb-2 flex h-[50px] w-full cursor-pointer items-center justify-center text-2xl ${offer ? 'animate-pulse bg-blue-600' : 'bg-gray-400 '}`}
+	{disabled}
+	class={`mb-2 flex h-[50px] w-full cursor-pointer items-center justify-center text-xl disabled:cursor-not-allowed md:text-2xl ${offer ? 'animate-pulse bg-blue-600' : 'bg-[#2a2e34] '} ${disabled ? 'bg-[#1f2125] text-[#63666b]' : ''}`}
 	onclick={handleRematch}>Rematch</button
 >

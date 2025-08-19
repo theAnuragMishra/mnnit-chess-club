@@ -359,8 +359,8 @@
 			/>
 		</div>
 		<div class="rematch flex w-full justify-center">
-			{#if result !== 0 && isPlayer && !tournamentID}
-				<Rematch {baseTime} {increment} opponentID={whiteUp ? d.game.WhiteID : d.game.BlackID} />
+			{#if result !== 0 && d.live && isPlayer && !tournamentID}
+				<Rematch />
 			{/if}
 		</div>
 		<div class="namet flex h-fit justify-between md:w-[300px]">

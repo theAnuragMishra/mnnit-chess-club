@@ -24,6 +24,7 @@ type Game struct {
 	ClockTimer    *time.Timer
 	Moves         []Move
 	TournamentID  string
+	RematchOffer  bool
 }
 
 type Move struct {

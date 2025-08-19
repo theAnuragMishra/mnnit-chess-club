@@ -49,7 +49,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		if foundGame.EndTimeLeftBlack != nil {
 			timeBlack = *foundGame.EndTimeLeftBlack
 		}
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack, "live": false})
 
 	} else {
 		//server game response
@@ -64,7 +64,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		timeWhite := int32(serverGame.TimeWhite.Milliseconds())
 		timeBlack := int32(serverGame.TimeBlack.Milliseconds())
 		serverGame.Unlock()
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": serverGame.Moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack, "live": true})
 	}
 }
 
@@ -103,12 +103,12 @@ func InitGame(c *Controller, event socket.Event, client *socket.Client) error {
 			return err
 		}
 		c.GameManager.Lock()
-		createdGame, err := c.createGame(id, p.ID, client.UserID, timeControl, rating1, rating2, "")
+		_, err = c.createGame(id, p.ID, client.UserID, time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, rating1, rating2, "")
 		c.GameManager.Unlock()
 		if err != nil {
 			return err
 		}
-		payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+		payload := map[string]any{"ID": id, "Type": "game"}
 		rawPayload, err := json.Marshal(payload)
 		if err != nil {
 			return err
@@ -169,11 +169,11 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err1 != nil || err2 != nil {
 		return errors.New("server error while fetching ratings")
 	}
-	createdGame, err := c.createGame(acceptChallengePayload.GameID, challenge.Creator, client.UserID, challenge.TimeControl, rating1, rating2, "")
+	_, err := c.createGame(acceptChallengePayload.GameID, challenge.Creator, client.UserID, time.Duration(challenge.TimeControl.BaseTime)*time.Second, time.Duration(challenge.TimeControl.Increment)*time.Second, rating1, rating2, "")
 	if err != nil {
 		return err
 	}
-	payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+	payload := map[string]any{"ID": acceptChallengePayload.GameID, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
@@ -184,70 +184,47 @@ func AcceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	return nil
 }
 
-func CreateRematch(c *Controller, event socket.Event, client *socket.Client) error {
-	var crp createRematchPayload
-	if err := json.Unmarshal(event.Payload, &crp); err != nil {
-		return err
+func Rematch(c *Controller, event socket.Event, client *socket.Client) error {
+	c.GameManager.RLock()
+	foundGame, exists := c.GameManager.Games[client.Room]
+	c.GameManager.RUnlock()
+	if !exists {
+		return nil
 	}
-	//log.Println(timeControl)
-	if crp.TimeControl.BaseTime <= 0 || crp.TimeControl.BaseTime > 10800 || crp.TimeControl.Increment < 0 || crp.TimeControl.Increment > 180 {
-		return errors.New("invalid time control")
+	foundGame.Lock()
+	defer foundGame.Unlock()
+	if !foundGame.RematchOffer {
+		opp := foundGame.WhiteID
+		if foundGame.WhiteID == client.UserID {
+			opp = foundGame.BlackID
+		}
+		e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage("[]")}
+		c.SocketManager.SendToUserClientsInARoom(e, client.Room, opp)
+		foundGame.RematchOffer = true
+		return nil
 	}
 	id, err := c.generateUniqueGameID()
 	if err != nil {
 		return err
 	}
-	c.GameManager.Lock()
-	c.GameManager.Rematches[id] = game.Rematch{
-		TimeControl: crp.TimeControl,
-		Creator:     client.UserID,
-		Opponent:    crp.OpponentID,
-	}
-	c.GameManager.Unlock()
-	payload := map[string]any{"rematchID": id}
-	rawPayload, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.SendToUserClientsInARoom(e, client.Room, crp.OpponentID)
-	return nil
-}
-
-func AcceptRematch(c *Controller, event socket.Event, client *socket.Client) error {
-	var arp GameIDPayload
-	if err := json.Unmarshal(event.Payload, &arp); err != nil {
-		return err
-	}
-	c.GameManager.Lock()
-	defer c.GameManager.Unlock()
-	rematch, exists := c.GameManager.Rematches[arp.GameID]
-	if !exists {
-		return errors.New("rematch not found")
-	}
-	if rematch.Opponent != client.UserID || rematch.Creator == client.UserID {
-		return errors.New("not the intended opponent")
-	}
-
-	rating1, err1 := c.Queries.GetUserRating(context.Background(), rematch.Creator)
-	rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
+	rating1, err1 := c.Queries.GetUserRating(context.Background(), foundGame.BlackID)
+	rating2, err2 := c.Queries.GetUserRating(context.Background(), foundGame.WhiteID)
 	if err1 != nil || err2 != nil {
 		return errors.New("server error while fetching ratings")
 	}
-	createdGame, err := c.createGame(arp.GameID, rematch.Creator, client.UserID, rematch.TimeControl, rating1, rating2, "")
+	_, err = c.createGame(id, foundGame.BlackID, foundGame.WhiteID, foundGame.BaseTime, foundGame.Increment, rating1, rating2, "")
 	if err != nil {
 		return err
 	}
-	payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+
+	payload := map[string]any{"ID": id, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.SendToUserClientsInARoom(e, client.Room, client.UserID)
-	// fmt.Println(rematch.Opponent, client.UserID)
-	c.SocketManager.SendToUserClientsInARoom(e, client.Room, rematch.Creator)
-	delete(c.GameManager.Rematches, arp.GameID)
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, foundGame.BlackID)
+	c.SocketManager.SendToUserClientsInARoom(e, client.Room, foundGame.WhiteID)
 	return nil
 }
 

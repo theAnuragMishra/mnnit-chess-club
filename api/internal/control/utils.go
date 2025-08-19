@@ -59,9 +59,9 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 	c.SocketManager.BroadcastToRoom(ee, g.TournamentID)
 }
 
-func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeControl, r1 float64, r2 float64, tournamentID string) (*game.Game, error) {
+func (c *Controller) createGame(id string, p1, p2 int32, baseTime, increment time.Duration, r1 float64, r2 float64, tournamentID string) (*game.Game, error) {
 
-	createdGame := game.NewGame(time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p1, p2, tournamentID)
+	createdGame := game.NewGame(baseTime, increment, p1, p2, tournamentID)
 
 	var tidParam *string
 	if tournamentID != "" {
@@ -70,8 +70,8 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 
 	err := c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,
-		BaseTime:     timeControl.BaseTime,
-		Increment:    timeControl.Increment,
+		BaseTime:     int32(baseTime.Seconds()),
+		Increment:    int32(increment.Seconds()),
 		WhiteID:      &p1,
 		BlackID:      &p2,
 		RatingW:      int32(r1),
@@ -86,12 +86,12 @@ func (c *Controller) createGame(id string, p1, p2 int32, timeControl game.TimeCo
 	c.GameManager.Games[id] = createdGame
 
 	var t time.Duration
-	if timeControl.BaseTime >= 20 {
+	if baseTime >= 20*time.Second {
 		t = time.Second * 20
-	} else if timeControl.BaseTime >= 10 {
+	} else if baseTime >= 10*time.Second {
 		t = time.Second * 10
 	} else {
-		t = time.Duration(timeControl.BaseTime) * time.Second
+		t = baseTime
 	}
 
 	timer := time.AfterFunc(t, func() { c.abortGame(createdGame) })
@@ -196,6 +196,9 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		go func() {
 			c.sendScoreUpdateEvent(g)
 			time.Sleep(time.Second * 30)
+			e := socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
+			c.SocketManager.SendToUserClientsInARoom(e, g.ID, g.BlackID)
+			c.SocketManager.SendToUserClientsInARoom(e, g.ID, g.WhiteID)
 			c.GameManager.Lock()
 			delete(c.GameManager.Games, g.ID)
 			c.GameManager.Unlock()
@@ -322,6 +325,9 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		c.BatchInsertMoves(g)
 		c.sendScoreUpdateEvent(g)
 		time.Sleep(time.Second * 30)
+		e := socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
+		c.SocketManager.SendToUserClientsInARoom(e, g.ID, g.BlackID)
+		c.SocketManager.SendToUserClientsInARoom(e, g.ID, g.WhiteID)
 		c.GameManager.Lock()
 		delete(c.GameManager.Games, g.ID)
 		c.GameManager.Unlock()
@@ -451,13 +457,13 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			r1 := playerA.Rating
 			r2 := playerB.Rating
 			c.GameManager.Lock()
-			createdGame, err := c.createGame(id, playerA.Id, playerB.Id, t.TimeControl, r1, r2, t.Id)
+			_, err = c.createGame(id, playerA.Id, playerB.Id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, r1, r2, t.Id)
 			c.GameManager.Unlock()
 			if err != nil {
 				log.Println("error creating game", err)
 				continue
 			}
-			payload := map[string]any{"ID": createdGame.ID, "Type": "game"}
+			payload := map[string]any{"ID": id, "Type": "game"}
 			rawPayload, err := json.Marshal(payload)
 			if err != nil {
 				log.Println(err)
