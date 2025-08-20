@@ -321,7 +321,9 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 	})
 
 	go func() {
-		g.ClockTimer.Stop()
+		if g.ClockTimer != nil {
+			g.ClockTimer.Stop()
+		}
 		c.BatchInsertMoves(g)
 		c.sendScoreUpdateEvent(g)
 		time.Sleep(time.Second * 30)
