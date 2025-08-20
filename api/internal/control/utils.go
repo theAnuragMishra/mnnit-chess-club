@@ -60,7 +60,6 @@ func (c *Controller) sendScoreUpdateEvent(g *game.Game) {
 }
 
 func (c *Controller) createGame(id string, p1, p2 int32, baseTime, increment time.Duration, r1 float64, r2 float64, tournamentID string) (*game.Game, error) {
-
 	createdGame := game.NewGame(baseTime, increment, p1, p2, tournamentID)
 
 	var tidParam *string
@@ -249,7 +248,7 @@ func (c *Controller) endGame(g *game.Game, result int16, reason *string, gameLen
 		log.Println("error updating rating", err1, err2)
 	}
 
-	//update scores in tournament
+	// update scores in tournament
 	if affectsTournament {
 		t.Lock()
 		p1 := t.Players[g.WhiteID]
@@ -400,16 +399,17 @@ func (c *Controller) BatchInsertMoves(g *game.Game) {
 }
 
 func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
-	//log.Println("starting pairing cycle")
+	// log.Println("starting pairing cycle")
 	t.RLock()
 	if len(t.WaitingPlayers) < 2 {
-		//log.Println("not enough players")
-		//log.Println(t.WaitingPlayers)
+		// log.Println("not enough players")
+		// log.Println(t.WaitingPlayers)
+		t.RUnlock()
 		return
 	}
 	paired := make(map[int32]bool)
 	availableToPair := make([]*tournament.Player, 0, len(t.WaitingPlayers))
-	//copy(availableToPair, t.WaitingPlayers)
+	// copy(availableToPair, t.WaitingPlayers)
 	for _, player := range t.WaitingPlayers {
 		if c.SocketManager.IsUserInARoom(t.Id, player.Id) {
 			availableToPair = append(availableToPair, player)
@@ -417,7 +417,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 	}
 
 	for i := 0; i < len(availableToPair); i++ {
-		//log.Println("inside i loop")
+		// log.Println("inside i loop")
 		playerA := availableToPair[i]
 		if paired[playerA.Id] || !playerA.IsActive {
 			continue
@@ -425,7 +425,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 		bestMatch := -1
 		minScoreDiff := 1000000
 		for j := i + 1; j < len(availableToPair); j++ {
-			//log.Println("inside j loop")
+			// log.Println("inside j loop")
 			playerB := availableToPair[j]
 			if paired[playerB.Id] || !playerB.IsActive {
 				continue
@@ -446,7 +446,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 				minScoreDiff = currentDiff
 				bestMatch = j
 			}
-			//log.Println("out of j")
+			// log.Println("out of j")
 		}
 		if bestMatch != -1 {
 			playerB := availableToPair[bestMatch]
@@ -478,7 +478,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 			paired[playerA.Id] = true
 			paired[playerB.Id] = true
 		}
-		//log.Println("out of i")
+		// log.Println("out of i")
 	}
 	var newWaitingPlayers []*tournament.Player
 	for _, player := range t.WaitingPlayers {
@@ -490,7 +490,7 @@ func (c *Controller) RunPairingCycle(t *tournament.Tournament, isInitial bool) {
 	t.Lock()
 	t.WaitingPlayers = newWaitingPlayers
 	t.Unlock()
-	//log.Println("out of pairing cycle")
+	// log.Println("out of pairing cycle")
 }
 
 func (c *Controller) StartPairingCycle(t *tournament.Tournament, interval time.Duration) {
@@ -516,7 +516,6 @@ func (c *Controller) EndTournament(t *tournament.Tournament) {
 		Status: 2,
 		ID:     t.Id,
 	})
-
 	if err != nil {
 		log.Println("error updating tournament status", err)
 	}
@@ -525,7 +524,6 @@ func (c *Controller) EndTournament(t *tournament.Tournament) {
 
 	for _, v := range t.Players {
 		input = append(input, tournamentPlayer{v.Id, v.Score, v.Scores, v.Streak})
-
 	}
 
 	inputBytes, err := json.Marshal(input)
