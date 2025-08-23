@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { websocketStore } from '$lib/websocket';
+	import { onDestroy, onMount } from 'svelte';
 
 	const { data } = $props();
 
@@ -42,6 +43,13 @@
 	let activeState = $state(Array(12).fill(false));
 	let baseIndex = $state(6);
 	let incrementIndex = $state(0);
+
+	onMount(() => {
+		websocketStore.sendMessage({ type: 'room_change', payload: { room: 'play' } });
+	});
+	onDestroy(() => {
+		websocketStore.sendMessage({ type: 'leave_room' });
+	});
 </script>
 
 <div class="box">

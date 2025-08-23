@@ -11,7 +11,7 @@
 		websocketStore.sendMessage({ type: 'room_change', payload: { room: gameID } });
 	});
 	onDestroy(() => {
-		websocketStore.sendMessage({ type: 'leave_room', payload: { room: gameID } });
+		websocketStore.sendMessage({ type: 'leave_room' });
 	});
 </script>
 

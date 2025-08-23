@@ -113,7 +113,7 @@
 		websocketStore.onMessage('update_score', handleScoreUpdate);
 	});
 	onDestroy(() => {
-		websocketStore.sendMessage({ type: 'leave_room', payload: { room: tournamentID } });
+		websocketStore.sendMessage({ type: 'leave_room' });
 		websocketStore.offMessage('jl_response', handleJLResponse);
 		websocketStore.offMessage('update_score', handleScoreUpdate);
 	});

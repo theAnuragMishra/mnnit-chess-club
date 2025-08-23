@@ -92,18 +92,8 @@ func (c *Client) writeMessages() {
 
 // Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
-	c.egress <- event
-}
-
-func (c *Client) SendIfConnected(event Event) {
-	c.manager.RLock()
-	defer c.manager.RUnlock()
-	clients, ok := c.manager.clients[c.UserID]
-	if ok {
-		_, ok := clients[c]
-		if ok {
-			c.Send(event)
-		}
+	if c.egress != nil {
+		c.egress <- event
 	}
 }
 

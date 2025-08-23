@@ -20,7 +20,7 @@
 	import CapturedPieces from './CapturedPieces.svelte';
 
 	let { data } = $props();
-	// console.log(data);
+	//console.log(data);
 	let d = data.gameData;
 	let ground: Api | null = $state(null);
 	const baseTime = d.game.BaseTime;
@@ -134,10 +134,11 @@
 	};
 
 	const handleMoveResponse = (payload: any) => {
-		if (moveHistory) moveHistory = [...moveHistory, payload.move];
-		else moveHistory = [payload.move];
-		timeBlack = payload.timeBlack;
-		timeWhite = payload.timeWhite;
+		//console.log(payload);
+		if (moveHistory) moveHistory = [...moveHistory, payload.Move];
+		else moveHistory = [payload.Move];
+		timeBlack = payload.TimeBlack;
+		timeWhite = payload.TimeWhite;
 		ground?.set({
 			turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
 			movable: { dests: getValidMoves(chessLatest) }
@@ -145,7 +146,7 @@
 		if (activeIndex === moveHistory.length - 2) {
 			activeIndex = moveHistory.length - 1;
 			ground?.set({
-				fen: payload.move.MoveFen,
+				fen: payload.Move.MoveFen,
 				check: chessForView.isCheck(),
 				lastMove: [
 					moveHistory[moveHistory.length - 1].Orig,
@@ -153,21 +154,8 @@
 				]
 			});
 		}
-
 		//console.log(ground?.state.movable);
-		if (payload.Result !== 0) {
-			result = payload.Result;
-			reason = payload.reason;
-			changeBlack = payload.changeB;
-			changeWhite = payload.changeW;
-			ground?.set({
-				viewOnly: true
-			});
-			notifyAudio.play();
-			return;
-		}
-
-		if (payload.move.MoveNotation[1] == 'x') captureAudio?.play();
+		if (payload.Move.MoveNotation[1] == 'x') captureAudio?.play();
 		else moveAudio?.play();
 		ground?.playPremove();
 	};
@@ -359,8 +347,8 @@
 			/>
 		</div>
 		<div class="rematch flex w-full justify-center">
-			{#if result !== 0 && d.live && isPlayer && !tournamentID}
-				<Rematch />
+			{#if result !== 0 && isPlayer && !tournamentID}
+				<Rematch canRematch={d.canRematch} />
 			{/if}
 		</div>
 		<div class="namet flex h-fit justify-between md:w-[300px]">

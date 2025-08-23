@@ -29,7 +29,7 @@
 	};
 
 	const handleDrawOffer = (payload: any) => {
-		offer = true;
+		offer = !offer;
 	};
 
 	const handleCancelDraw = (payload: any) => {

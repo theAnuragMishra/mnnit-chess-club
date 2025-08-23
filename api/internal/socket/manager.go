@@ -82,6 +82,7 @@ func (m *Manager) RemoveClient(client *Client) {
 				return
 			}
 			close(client.egress)
+			client.egress = nil
 			delete(m.Rooms[client.Room], client)
 			delete(m.clients[client.UserID], client)
 			if len(m.Rooms[client.Room]) == 0 {
@@ -111,6 +112,24 @@ func (m *Manager) RemoveUser(id int32) {
 		}
 	}
 	delete(m.clients, id)
+}
+
+func (m *Manager) AddClientToRoom(room string, client *Client) {
+	m.Lock()
+	defer m.Unlock()
+	if m.Rooms[room] == nil {
+		m.Rooms[room] = make(map[*Client]bool)
+	}
+	m.Rooms[room][client] = true
+}
+
+func (m *Manager) DeleteClientFromRoom(room string, client *Client) {
+	m.Lock()
+	defer m.Unlock()
+	delete(m.Rooms[room], client)
+	if len(m.Rooms[room]) == 0 {
+		delete(m.Rooms, room)
+	}
 }
 
 func checkOrigin(r *http.Request) bool {

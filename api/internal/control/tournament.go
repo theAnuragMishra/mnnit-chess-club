@@ -5,216 +5,45 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"net/http"
-	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
-func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
-
-	var tournamentPayload TournamentPayload
-	if err := json.NewDecoder(r.Body).Decode(&tournamentPayload); err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	if tournamentPayload.Name == "" || len(tournamentPayload.Name) > 90 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Tournament name should have a length between 1 and 90 characters")
-		return
-	}
-
-	if tournamentPayload.StartTime.Before(time.Now()) {
-		utils.RespondWithError(w, http.StatusBadRequest, "Tournament start time cannot be in the past")
-		return
-	}
-
-	if tournamentPayload.Duration <= 0 || tournamentPayload.Duration > 86400 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Tournament duration must be between 1 and 24 hours")
-		return
-	}
-
-	if tournamentPayload.BaseTime <= 0 || tournamentPayload.BaseTime > 10800 || tournamentPayload.Increment < 0 || tournamentPayload.Increment > 180 {
-		utils.RespondWithError(w, http.StatusBadRequest, "time control not allowed")
-		return
-	}
-
-	id, err := c.generateUniqueTournamentID()
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Error creating tournament")
-		return
-	}
-
-	err = c.Queries.CreateTournament(r.Context(), database.CreateTournamentParams{
-		ID:        id,
-		Name:      tournamentPayload.Name,
-		StartTime: tournamentPayload.StartTime,
-		Duration:  tournamentPayload.Duration,
-		BaseTime:  tournamentPayload.BaseTime,
-		Increment: tournamentPayload.Increment,
-		CreatedBy: &session.UserID,
+func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
+	err := c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
+		Status: 2,
+		ID:     id,
 	})
+	if err != nil {
+		log.Println("error updating tournament status", err)
+	}
 
+	inputBytes, err := json.Marshal(players)
 	if err != nil {
 		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Error creating tournament")
-		return
-	}
-	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"id": id})
-}
-
-func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request) {
-	tournamentID := chi.URLParam(r, "tournamentID")
-	if tournamentID == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
-		return
-	}
-	dbPlayers, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID)
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, 500, "error getting players")
-		return
-	}
-	c.TournamentManager.RLock()
-	serverTournament, exists := c.TournamentManager.Tournaments[tournamentID]
-	c.TournamentManager.RUnlock()
-	if exists {
-		serverTournament.RLock()
-		players := make([]any, len(dbPlayers))
-		for i, player := range dbPlayers {
-			players[i] = map[string]any{
-				"Score":    serverTournament.Players[player.ID].Score,
-				"ID":       player.ID,
-				"IsActive": serverTournament.Players[player.ID].IsActive,
-				"Username": player.Username,
-				"Rating":   player.Rating,
-				"Streak":   serverTournament.Players[player.ID].Streak,
-				"Scores":   serverTournament.Players[player.ID].Scores,
-			}
-		}
-		//log.Println(players)
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-			"name":      serverTournament.Name,
-			"players":   players,
-			"startTime": serverTournament.StartTime,
-			"duration":  serverTournament.Duration,
-			"baseTime":  serverTournament.TimeControl.BaseTime,
-			"increment": serverTournament.TimeControl.Increment,
-			"createdBy": serverTournament.CreatedBy,
-			"creator":   serverTournament.Creator,
-			"status":    1,
+	} else {
+		err = c.Queries.BatchUpdateTournamentPlayers(context.Background(), database.BatchUpdateTournamentPlayersParams{
+			TournamentID: id,
+			PlayersInput: inputBytes,
 		})
-		serverTournament.RUnlock()
-		return
-	}
-	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID)
-
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
-		return
-	}
-	utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-		"name":      tournamentInfo.Name,
-		"players":   dbPlayers,
-		"startTime": tournamentInfo.StartTime,
-		"duration":  tournamentInfo.Duration,
-		"baseTime":  tournamentInfo.BaseTime,
-		"increment": tournamentInfo.Increment,
-		"createdBy": tournamentInfo.CreatedBy,
-		"creator":   tournamentInfo.Username,
-		"status":    tournamentInfo.Status,
-	})
-}
-
-func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
-	var tournamentID TournamentIDPayload
-	if json.NewDecoder(r.Body).Decode(&tournamentID) != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	if tournamentID.TournamentID == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
-		return
-	}
-	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID.TournamentID)
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament info")
-		return
-	}
-
-	err = c.Queries.UpdateTournamentStartTime(context.Background(), tournamentInfo.ID)
-	if err != nil {
-		log.Println("Error updating tournament start time", err)
-	}
-
-	err = c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
-		Status: 1,
-		ID:     tournamentInfo.ID,
-	})
-
-	if err != nil {
-		log.Println("Error updating tournament status", err)
-	}
-
-	players, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
-
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament players")
-		return
-	}
-
-	go func() {
-		c.TournamentManager.Lock()
-		createdTournament := tournament.NewTournament(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, len(players))
-		c.TournamentManager.Tournaments[tournamentInfo.ID] = createdTournament
-		c.TournamentManager.Unlock()
-
-		createdTournament.Lock()
-		for i, player := range players {
-			p := tournament.NewPlayer(player.ID, player.Rating)
-			createdTournament.Players[player.ID] = p
-			createdTournament.WaitingPlayers[i] = p
-		}
-		createdTournament.Unlock()
-		//send refresh event to all the players on the tournament page
-		payload := map[string]any{"ID": tournamentInfo.ID, "Type": "tournament"}
-		rawPayload, err := json.Marshal(payload)
 		if err != nil {
 			log.Println(err)
 		}
-		e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
-		c.SocketManager.BroadcastToRoom(e, tournamentInfo.ID)
-		time.Sleep(time.Second * 3)
+	}
 
-		time.AfterFunc(time.Duration(tournamentInfo.Duration)*time.Second, func() { c.EndTournament(createdTournament) })
-
-		c.RunPairingCycle(createdTournament, true)
-		c.StartPairingCycle(createdTournament, time.Second*20)
-	}()
-	utils.RespondWithJSON(w, http.StatusOK, "")
-}
-
-func (c *Controller) WriteUpcomingTournaments(w http.ResponseWriter, r *http.Request) {
-	tournaments, err := c.Queries.GetUpcomingTournaments(r.Context())
+	payload := map[string]any{"ID": id, "Type": "tournament"}
+	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Println(err)
-		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting upcoming tournaments")
-		return
 	}
-	utils.RespondWithJSON(w, http.StatusOK, tournaments)
+	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.BroadcastToRoom(e, id)
+	c.TournamentManager.RemoveTournament(id)
 }
 
-func HandleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
+func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
 	payload, err := json.Marshal(map[string]any{})
 	if err != nil {
 		return err
@@ -229,19 +58,17 @@ func HandleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 		client.Send(e)
 		return errors.New("tournament ID can't be empty")
 	}
-	c.TournamentManager.RLock()
-	t, ok := c.TournamentManager.Tournaments[tidP.TournamentID]
-	c.TournamentManager.RUnlock()
+	t, ok := c.TournamentManager.GetTournament(tidP.TournamentID)
 	if !ok {
-		err = HandleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
+		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err
 	} else {
-		err = HandleJoinLeaveDuringTournament(c, e, client, t)
+		err = handleJoinLeaveDuringTournament(c, e, client, t)
 		return err
 	}
 }
 
-func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
+func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
 	status, err := c.Queries.GetTournamentStatus(context.Background(), tournamentID)
 	if err != nil {
 		client.Send(e)
@@ -292,15 +119,21 @@ func HandleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 	return nil
 }
 
-func HandleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
-	t.RLock()
-	p, exists := t.Players[client.UserID]
-	t.RUnlock()
+func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
+	msg := tournament.CheckIfPlayerExists{
+		ID:    client.UserID,
+		Reply: make(chan bool, 1),
+	}
+	t.Inbox() <- msg
+	exists := <-msg.Reply
 	if exists {
-		t.Lock()
-		p.IsActive = !p.IsActive
-		t.Unlock()
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": p.IsActive}})
+		msg := tournament.TogglePlayerActiveMsg{
+			ID:    client.UserID,
+			Reply: make(chan bool, 1),
+		}
+		t.Inbox() <- msg
+		active := <-msg.Reply
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": active}})
 		if err != nil {
 			client.Send(e)
 			return err
@@ -321,11 +154,13 @@ func HandleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			client.Send(e)
 			return err
 		}
-		player := tournament.NewPlayer(client.UserID, rating)
-		t.Lock()
-		t.Players[client.UserID] = player
-		t.WaitingPlayers = append(t.WaitingPlayers, player)
-		t.Unlock()
+		msg := tournament.AddPlayer{
+			ID:     client.UserID,
+			Rating: rating,
+			Reply:  make(chan *tournament.Player, 1),
+		}
+		t.Inbox() <- msg
+		player := <-msg.Reply
 		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": player.Score, "Username": client.Username, "Rating": rating, "IsActive": player.IsActive}})
 		if err != nil {
 			client.Send(e)
