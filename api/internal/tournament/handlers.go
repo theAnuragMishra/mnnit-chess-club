@@ -1,28 +1,22 @@
 package tournament
 
 import (
-	"fmt"
-
 	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
 func (t *Tournament) PairPlayers() {
-	fmt.Println("Pairing")
 	if len(t.waitingPlayers) < 2 {
-		fmt.Println("Not enough players")
 		return
 	}
 	paired := make(map[int32]bool)
 	availableToPair := make([]*Player, 0, len(t.waitingPlayers))
 	for _, player := range t.waitingPlayers {
-		fmt.Println(player.Id, player.IsConnected)
 		if player.IsActive && player.IsConnected {
 			availableToPair = append(availableToPair, player)
 		}
 	}
 	if len(availableToPair) < 2 {
-		fmt.Println("not enough available")
 		return
 	}
 	for i := 0; i < len(availableToPair); i++ {

@@ -20,16 +20,18 @@ var webSocketUpgrader = websocket.Upgrader{
 
 type Manager struct {
 	sync.RWMutex
-	clients   ClientList
-	Rooms     map[string]map[*Client]bool
-	OnMessage func(event Event, client *Client) error
+	clients            ClientList
+	Rooms              map[string]map[*Client]bool
+	OnMessage          func(event Event, client *Client) error
+	OnClientDisconnect func(client *Client)
 }
 
-func NewManager(onMessage func(event Event, client *Client) error) *Manager {
+func NewManager(onMessage func(event Event, client *Client) error, onDisconnect func(client *Client)) *Manager {
 	m := &Manager{
-		clients:   make(ClientList),
-		OnMessage: onMessage,
-		Rooms:     make(map[string]map[*Client]bool),
+		clients:            make(ClientList),
+		OnMessage:          onMessage,
+		OnClientDisconnect: onDisconnect,
+		Rooms:              make(map[string]map[*Client]bool),
 	}
 	return m
 }
