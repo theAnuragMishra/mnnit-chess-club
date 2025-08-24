@@ -224,10 +224,10 @@
 				Standby {data.user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
-		<div class="grid grid-cols-[auto_auto] content-start gap-[10px] text-xl">
+		<div class="grid grid-cols-[auto_auto] content-start gap-[10px] text-[16px] md:text-xl">
 			{#each sortedPlayers as player, i}
-				<span class="flex items-center gap-2">
-					<span class="flex w-[30px] items-center justify-center">
+				<div>
+					<span class="mr-[5px] w-[30px] text-center">
 						{#if player.IsActive === false}
 							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
 								><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z" /></svg
@@ -237,13 +237,14 @@
 						{/if}</span
 					><a href={`/member/${player.Username}`}>{player.Username}</a>
 					<i>{Math.floor(player.Rating)}</i>
-					<span class="flex items-center text-[16px] text-gray-300">
+					<span class="text-[16px] text-gray-300">
 						{#each player.Scores as s}
 							{s}
 						{/each}
 					</span>
-				</span><span class="inline-flex items-center justify-end gap-1 justify-self-end"
-					><svg
+				</div>
+				<div class="inline-flex justify-end gap-1 justify-self-end">
+					<svg
 						class={`h-[24px] w-[24px] ${player.Streak >= 2 ? '' : 'hidden'}`}
 						xmlns="http://www.w3.org/2000/svg"
 						width="512"
@@ -260,8 +261,8 @@
 							d="M323.176 348.596c-2.563-10.69-11.755 14.14-10.6 24.254c1.155 10.113 16.731 1.322 10.6-24.254"
 						/></svg
 					>
-					{player.Score}</span
-				>
+					{player.Score}
+				</div>
 			{/each}
 		</div>
 	</div>
