@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { dateTimeToDate, getBaseURL } from '$lib/utils';
 
 	const { data } = $props();
@@ -43,11 +44,10 @@
 
 		if (!res.ok) {
 			createError = response.error;
-			createLoading = false;
 			return;
 		}
-
-		window.location.reload();
+		invalidateAll();
+		createLoading = false;
 	};
 
 	const baseTimes = [
@@ -164,10 +164,10 @@
 
 								if (!res.ok) {
 									startError = true;
-									startLoading = false;
 									return;
 								}
-								window.location.reload();
+								startLoading = false;
+								invalidateAll();
 							}}>Start</button
 						></span
 					>

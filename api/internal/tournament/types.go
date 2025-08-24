@@ -17,7 +17,7 @@ type SnapShot struct {
 	Creator     string
 }
 type PlayerSnapShot struct {
-	Id     int32
+	ID     int32
 	Score  int32
 	Scores []int16
 	Rating float64

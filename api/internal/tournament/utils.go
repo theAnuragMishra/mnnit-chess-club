@@ -16,7 +16,7 @@ func (t *Tournament) snapshot() SnapShot {
 func (t *Tournament) playerSnapshot(id int32) PlayerSnapShot {
 	player := t.players[id]
 	return PlayerSnapShot{
-		Id:     player.Id,
+		ID:     player.Id,
 		Score:  player.Score,
 		Scores: player.Scores,
 		Rating: player.Rating,

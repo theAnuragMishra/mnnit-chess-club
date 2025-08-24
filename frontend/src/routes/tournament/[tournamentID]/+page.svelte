@@ -20,10 +20,13 @@
 	const tournamentID = page.params.tournamentID;
 
 	let loading = $state(false);
-	let players = $state(data.tournamentData.players ? data.tournamentData.players : []);
+	let players = $state(data.tournamentData.players ?? []);
 	// $effect(() => {
 	// 	players.forEach((player: Player) => console.log(player));
 	// });
+	$effect(() => {
+		players = data.tournamentData.players ?? [];
+	});
 	let sortedPlayers = $derived(players.toSorted((a: any, b: any) => b.Score - a.Score));
 
 	let joined = $derived(isJoinedActive());
@@ -55,27 +58,31 @@
 				players.splice(i, 1);
 			}
 		}
+		//console.log(players);
 	};
 
 	function updateScore(p: Player) {
 		const i = players.findIndex((player: any) => player.ID === p.ID);
 		if (i === -1) return;
 		Object.assign(players[i], p);
+		// console.log(players);
 	}
 
 	const handleScoreUpdate = (payload: any) => {
+		// console.log(payload);
 		updateScore(payload.p1);
 		updateScore(payload.p2);
 	};
 
 	//timers
-	let totalTime =
+	let totalTime = $derived(
 		data.tournamentData.status === 1
 			? getTimeLeft(data.tournamentData.startTime, data.tournamentData.duration)
-			: new Date(data.tournamentData.startTime).getTime() - new Date().getTime();
+			: new Date(data.tournamentData.startTime).getTime() - new Date().getTime()
+	);
 	let animationFrame: number | null;
 	let startTime: DOMHighResTimeStamp | null;
-	let timeToShow = $state(totalTime);
+	let timeToShow = $derived(totalTime);
 
 	$effect(() => {
 		if (data.tournamentData.status !== 2) {
@@ -207,7 +214,7 @@
 			<h2
 				class="shiny relative mb-5 overflow-hidden bg-green-600 py-0.5 text-center text-[16px] md:px-2 md:text-xl"
 			>
-				Wait {data.user.username}, pairing players. Get ready!
+				Standby {data.user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
 		<div class="grid grid-cols-[140px_auto_50px] content-start gap-[10px] text-xl">
