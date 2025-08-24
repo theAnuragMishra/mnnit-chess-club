@@ -59,7 +59,7 @@
 		{/if}
 	</div>
 	<div
-		class="grid h-[50px] grid-cols-[1fr_5fr_5fr] place-items-center content-center items-center overflow-y-auto px-2 py-2 md:h-[70px] md:overflow-x-hidden"
+		class="grid h-[50px] grid-cols-[1fr_5fr_5fr] place-items-center overflow-y-auto px-2 py-2 md:h-[70px] md:overflow-x-hidden"
 	>
 		{#each moveHistory as move, index}
 			{#if index % 2 == 0}
