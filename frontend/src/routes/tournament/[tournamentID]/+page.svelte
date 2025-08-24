@@ -131,7 +131,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.tournamentData.name} - MCC</title>
+	<title>{data.tournamentData.name} - MCC Arena</title>
 </svelte:head>
 <h1 class="flex items-center gap-[5px] text-3xl">
 	<svg
