@@ -11,19 +11,16 @@ type Player struct {
 	Streak          int32
 	Opponents       map[int32]int16
 	LastPlayedColor chess.Color
-	//todo fix this
-	IsConnected bool
 }
 
 func NewPlayer(id int32, rating float64, connected bool) *Player {
 	return &Player{
-		Id:          id,
-		IsActive:    true,
-		Score:       0,
-		Scores:      make([]int16, 0),
-		Rating:      rating,
-		Streak:      0,
-		Opponents:   make(map[int32]int16),
-		IsConnected: connected,
+		Id:        id,
+		IsActive:  true,
+		Score:     0,
+		Scores:    make([]int16, 0),
+		Rating:    rating,
+		Streak:    0,
+		Opponents: make(map[int32]int16),
 	}
 }

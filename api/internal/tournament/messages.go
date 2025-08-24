@@ -52,13 +52,6 @@ type UpdatePlayers struct {
 
 func (UpdatePlayers) isMessage() {}
 
-type UpdatePlayerConnectionStatus struct {
-	ID        int32
-	Connected bool
-}
-
-func (UpdatePlayerConnectionStatus) isMessage() {}
-
 // messages going out
 
 type ControllerMsg interface {
@@ -80,3 +73,11 @@ type EndRequest struct {
 }
 
 func (EndRequest) isControllerMessage() {}
+
+type GetPairable struct {
+	TournamentID string
+	Players      []*Player
+	Reply        chan []*Player
+}
+
+func (GetPairable) isControllerMessage() {}

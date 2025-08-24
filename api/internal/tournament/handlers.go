@@ -10,12 +10,13 @@ func (t *Tournament) PairPlayers() {
 		return
 	}
 	paired := make(map[int32]bool)
-	availableToPair := make([]*Player, 0, len(t.waitingPlayers))
-	for _, player := range t.waitingPlayers {
-		if player.IsActive && player.IsConnected {
-			availableToPair = append(availableToPair, player)
-		}
+	msg := GetPairable{
+		TournamentID: t.Id,
+		Players:      t.waitingPlayers,
+		Reply:        make(chan []*Player, 1),
 	}
+	t.ControllerChan <- msg
+	availableToPair := <-msg.Reply
 	if len(availableToPair) < 2 {
 		return
 	}

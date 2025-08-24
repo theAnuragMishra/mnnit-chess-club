@@ -9,7 +9,6 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 )
 
 func chat(c *Controller, event socket.Event, client *socket.Client) error {
@@ -129,32 +128,11 @@ func roomChange(c *Controller, event socket.Event, client *socket.Client) error 
 	c.SocketManager.DeleteClientFromRoom(client.Room, client)
 	client.Room = payload.RoomID
 	c.SocketManager.AddClientToRoom(payload.RoomID, client)
-
-	t, exists := c.TournamentManager.GetTournament(client.Room)
-	if exists {
-		if c.SocketManager.IsUserInARoom(client.Room, client.UserID) {
-			t.Inbox() <- tournament.UpdatePlayerConnectionStatus{
-				ID:        client.UserID,
-				Connected: true,
-			}
-		}
-	}
 	return nil
 }
 
 func leaveRoom(c *Controller, _ socket.Event, client *socket.Client) error {
-	room := client.Room
+	c.SocketManager.DeleteClientFromRoom(client.Room, client)
 	client.Room = ""
-	c.SocketManager.DeleteClientFromRoom(room, client)
-
-	t, exists := c.TournamentManager.GetTournament(room)
-	if exists {
-		if !c.SocketManager.IsUserInARoom(room, client.UserID) {
-			t.Inbox() <- tournament.UpdatePlayerConnectionStatus{
-				ID:        client.UserID,
-				Connected: false,
-			}
-		}
-	}
 	return nil
 }

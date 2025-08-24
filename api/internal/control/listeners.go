@@ -61,6 +61,18 @@ func (c *Controller) tournamentReceiveListener() {
 			c.SocketManager.SendToUserClientsInARoom(e, t.Id, msg.PlayerB.Id)
 		case tournament.EndRequest:
 			go c.endTournament(msg.TournamentId, msg.Players)
+		case tournament.GetPairable:
+			go func() {
+				availableToPair := make([]*tournament.Player, 0, len(msg.Players))
+				for _, player := range msg.Players {
+					if player.IsActive && c.SocketManager.IsUserInARoom(msg.TournamentID, player.Id) {
+						availableToPair = append(availableToPair, player)
+					}
+				}
+				if msg.Reply != nil {
+					msg.Reply <- availableToPair
+				}
+			}()
 		}
 	}
 }

@@ -77,9 +77,6 @@ func (t *Tournament) run() {
 				if msg.Reply != nil {
 					msg.Reply <- p.IsActive
 				}
-			case UpdatePlayerConnectionStatus:
-				p := t.players[msg.ID]
-				p.IsConnected = msg.Connected
 			case AddPlayer:
 				p := NewPlayer(msg.ID, msg.Rating, true)
 				t.players[msg.ID] = p

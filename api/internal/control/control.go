@@ -38,7 +38,7 @@ type Controller struct {
 
 func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
-	c.SocketManager = socket.NewManager(c.handleEvent, c.handleClientDisconnect)
+	c.SocketManager = socket.NewManager(c.handleEvent)
 	c.GameManager = game.NewManager()
 	c.TournamentManager = tournament.NewManager()
 	c.Queries = queries
@@ -63,17 +63,5 @@ func (c *Controller) handleEvent(event socket.Event, client *socket.Client) erro
 		return nil
 	} else {
 		return errors.New("there is no event of this type")
-	}
-}
-
-func (c *Controller) handleClientDisconnect(client *socket.Client) {
-	t, exists := c.TournamentManager.GetTournament(client.Room)
-	if exists {
-		if !c.SocketManager.IsUserInARoom(client.Room, client.UserID) {
-			t.Inbox() <- tournament.UpdatePlayerConnectionStatus{
-				ID:        client.UserID,
-				Connected: false,
-			}
-		}
 	}
 }
