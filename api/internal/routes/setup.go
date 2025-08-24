@@ -64,7 +64,8 @@ func NewChiRouter(authHandler *auth.Handler, controller *control.Controller) *ch
 	tournamentRouter.Use(authHandler.AuthMiddleware)
 	router.Mount("/tournament", tournamentRouter)
 	tournamentRouter.Get("/{tournamentID}", controller.WriteTournamentInfo)
-	tournamentRouter.Get("/upcoming", controller.WriteUpcomingTournaments)
+	tournamentRouter.Get("/scheduled", controller.WriteScheduledTournaments)
+	tournamentRouter.Get("/live", controller.WriteLiveTournaments)
 
 	return router
 }

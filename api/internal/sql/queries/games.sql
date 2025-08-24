@@ -93,8 +93,11 @@ INSERT INTO tournament_players (player_id, tournament_id) VALUES ($1, $2);
 -- name: UpdateTournamentStartTime :exec
 UPDATE tournaments SET start_time = CURRENT_TIMESTAMP where id = $1;
 
--- name: GetUpcomingTournaments :many
+-- name: GetScheduledTournaments :many
 SELECT * FROM tournaments WHERE status = 0 ORDER BY start_time;
+
+-- name: GetLiveTournaments :many
+SELECT * FROM tournaments WHERE status = 1 ORDER BY start_time;
 
 -- name: GetTournamentPlayer :one
 SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;

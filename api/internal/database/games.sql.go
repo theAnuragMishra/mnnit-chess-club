@@ -344,6 +344,39 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 	return items, nil
 }
 
+const getLiveTournaments = `-- name: GetLiveTournaments :many
+SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 1 ORDER BY start_time
+`
+
+func (q *Queries) GetLiveTournaments(ctx context.Context) ([]Tournament, error) {
+	rows, err := q.db.Query(ctx, getLiveTournaments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tournament
+	for rows.Next() {
+		var i Tournament
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.Duration,
+			&i.BaseTime,
+			&i.Increment,
+			&i.Status,
+			&i.CreatedBy,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPlayerGames = `-- name: GetPlayerGames :many
 SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
 FROM games
@@ -404,6 +437,39 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 			&i.RatingB,
 			&i.ChangeW,
 			&i.ChangeB,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getScheduledTournaments = `-- name: GetScheduledTournaments :many
+SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0 ORDER BY start_time
+`
+
+func (q *Queries) GetScheduledTournaments(ctx context.Context) ([]Tournament, error) {
+	rows, err := q.db.Query(ctx, getScheduledTournaments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tournament
+	for rows.Next() {
+		var i Tournament
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.Duration,
+			&i.BaseTime,
+			&i.Increment,
+			&i.Status,
+			&i.CreatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -560,39 +626,6 @@ func (q *Queries) GetTournamentStatus(ctx context.Context, id string) (int16, er
 	var status int16
 	err := row.Scan(&status)
 	return status, err
-}
-
-const getUpcomingTournaments = `-- name: GetUpcomingTournaments :many
-SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0 ORDER BY start_time
-`
-
-func (q *Queries) GetUpcomingTournaments(ctx context.Context) ([]Tournament, error) {
-	rows, err := q.db.Query(ctx, getUpcomingTournaments)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Tournament
-	for rows.Next() {
-		var i Tournament
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.StartTime,
-			&i.Duration,
-			&i.BaseTime,
-			&i.Increment,
-			&i.Status,
-			&i.CreatedBy,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 type InsertMovesParams struct {

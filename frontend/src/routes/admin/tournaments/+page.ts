@@ -6,7 +6,7 @@ export async function load({ parent }) {
 	//console.log(user);
 	if (user.role != 2) redirect(303, '/');
 
-	const response = await fetch(`${getBaseURL()}/tournament/upcoming`, {
+	const response = await fetch(`${getBaseURL()}/tournament/scheduled`, {
 		credentials: 'include'
 	});
 

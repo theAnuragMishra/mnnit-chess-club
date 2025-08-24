@@ -1,12 +1,14 @@
 import { getBaseURL } from '$lib/utils.js';
 
 export async function load() {
-	const response = await fetch(`${getBaseURL()}/tournament/upcoming`, {
+	const scheduledRes = await fetch(`${getBaseURL()}/tournament/scheduled`, {
 		credentials: 'include'
 	});
+	const liveRes = await fetch(`${getBaseURL()}/tournament/live`, {
+		credentials: 'include'
+	});
+	const scheduled = scheduledRes.ok ? await scheduledRes.json() : null;
+	const live = liveRes.ok ? await liveRes.json() : null;
 
-	if (!response.ok) {
-		return { tournaments: undefined };
-	}
-	return { tournaments: await response.json() };
+	return { scheduled, live };
 }

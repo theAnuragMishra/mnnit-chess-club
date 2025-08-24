@@ -124,7 +124,7 @@
 				Error fetching tournaments. Refresh or try again after some time.
 			</p>
 		{:else if data.tournaments === null}
-			<p class="text-xl">No upcoming tournaments</p>
+			<p class="text-xl">No scheduled tournaments</p>
 		{:else}
 			<p class="text-xl">Upcoming tournaments:</p>
 			<p class="mb-[5px] flex justify-around text-xl">

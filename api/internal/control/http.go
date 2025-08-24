@@ -237,11 +237,21 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func (c *Controller) WriteUpcomingTournaments(w http.ResponseWriter, r *http.Request) {
-	tournaments, err := c.Queries.GetUpcomingTournaments(r.Context())
+func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Request) {
+	tournaments, err := c.Queries.GetScheduledTournaments(r.Context())
 	if err != nil {
 		log.Println(err)
-		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting upcoming tournaments")
+		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting scheduled tournaments")
+		return
+	}
+	utils.RespondWithJSON(w, http.StatusOK, tournaments)
+}
+
+func (c *Controller) WriteLiveTournaments(w http.ResponseWriter, r *http.Request) {
+	tournaments, err := c.Queries.GetLiveTournaments(r.Context())
+	if err != nil {
+		log.Println(err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting live tournaments")
 		return
 	}
 	utils.RespondWithJSON(w, http.StatusOK, tournaments)
