@@ -41,7 +41,7 @@ class WebSocketStore {
 
 		if (type === 'GoTo') {
 			//window.location.href = `/${payload.Type}/${payload.ID}/`;
-			goto(`/${payload.Type}/${payload.ID}/`);
+			goto(`/${payload.Type}/${payload.ID}/`, { invalidateAll: true });
 		} else if (type === 'Refresh') {
 			if (window.location.pathname === `/${payload.Type}/${payload.ID}/`)
 				//window.location.reload();
