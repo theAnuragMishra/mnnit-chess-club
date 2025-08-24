@@ -59,7 +59,7 @@ type ControllerMsg interface {
 }
 
 type PairingRequest struct {
-	TournamentId string
+	TournamentID string
 	PlayerA      *Player
 	PlayerB      *Player
 	Reply        chan bool
@@ -68,7 +68,7 @@ type PairingRequest struct {
 func (PairingRequest) isControllerMessage() {}
 
 type EndRequest struct {
-	TournamentId string
+	TournamentID string
 	Players      []EndPlayer
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 type SnapShot struct {
-	Id          string
+	ID          string
 	Name        string
 	Players     map[int32]*Player
 	StartTime   time.Time

@@ -15,7 +15,7 @@ func NewManager() *Manager {
 
 func (m *Manager) AddTournament(t *Tournament) {
 	m.Lock()
-	m.Tournaments[t.Id] = t
+	m.Tournaments[t.ID] = t
 	m.Unlock()
 }
 

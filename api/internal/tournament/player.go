@@ -3,7 +3,7 @@ package tournament
 import "github.com/notnil/chess"
 
 type Player struct {
-	Id              int32
+	ID              int32
 	IsActive        bool
 	Score           int32
 	Scores          []int16
@@ -15,7 +15,7 @@ type Player struct {
 
 func NewPlayer(id int32, rating float64, connected bool) *Player {
 	return &Player{
-		Id:        id,
+		ID:        id,
 		IsActive:  true,
 		Score:     0,
 		Scores:    make([]int16, 0),

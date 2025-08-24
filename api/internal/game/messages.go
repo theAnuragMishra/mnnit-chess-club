@@ -10,7 +10,7 @@ type MoveInfo struct {
 	MoveStr string `json:"MoveStr"`
 	Orig    string `json:"orig"`
 	Dest    string `json:"dest"`
-	GameID  string `json:"GameId"`
+	GameID  string `json:"GameID"`
 }
 
 type MoveMessage struct {

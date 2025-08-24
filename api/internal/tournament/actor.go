@@ -7,7 +7,7 @@ import (
 )
 
 type Tournament struct {
-	Id             string
+	ID             string
 	Name           string
 	players        map[int32]*Player
 	StartTime      time.Time
@@ -27,7 +27,7 @@ func New(id, name string, duration int32, creator string, createdBy, baseTime, i
 		Increment: increment,
 	}
 	t := &Tournament{
-		Id:             id,
+		ID:             id,
 		players:        initialPlayers,
 		waitingPlayers: make([]*Player, 0, len(initialPlayers)),
 		StartTime:      time.Now(),

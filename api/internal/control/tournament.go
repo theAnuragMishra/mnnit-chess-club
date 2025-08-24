@@ -139,11 +139,11 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, t.Id)
+		c.SocketManager.BroadcastToRoom(e, t.ID)
 	} else {
 		err := c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
 			PlayerID:     client.UserID,
-			TournamentID: t.Id,
+			TournamentID: t.ID,
 		})
 		if err != nil {
 			client.Send(e)
@@ -167,7 +167,7 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, t.Id)
+		c.SocketManager.BroadcastToRoom(e, t.ID)
 	}
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type GameIDPayload struct {
-	GameID string `json:"GameId"`
+	GameID string `json:"GameID"`
 }
 
 type UserNamePayload struct {

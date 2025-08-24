@@ -2,7 +2,7 @@ package tournament
 
 func (t *Tournament) snapshot() SnapShot {
 	return SnapShot{
-		Id:          t.Id,
+		ID:          t.ID,
 		Name:        t.Name,
 		Players:     t.players,
 		StartTime:   t.StartTime,
@@ -16,7 +16,7 @@ func (t *Tournament) snapshot() SnapShot {
 func (t *Tournament) playerSnapshot(id int32) PlayerSnapShot {
 	player := t.players[id]
 	return PlayerSnapShot{
-		ID:     player.Id,
+		ID:     player.ID,
 		Score:  player.Score,
 		Scores: player.Scores,
 		Rating: player.Rating,

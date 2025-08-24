@@ -11,7 +11,7 @@ func (t *Tournament) PairPlayers() {
 	}
 	paired := make(map[int32]bool)
 	msg := GetPairable{
-		TournamentID: t.Id,
+		TournamentID: t.ID,
 		Players:      t.waitingPlayers,
 		Reply:        make(chan []*Player, 1),
 	}
@@ -22,20 +22,20 @@ func (t *Tournament) PairPlayers() {
 	}
 	for i := 0; i < len(availableToPair); i++ {
 		playerA := availableToPair[i]
-		if paired[playerA.Id] {
+		if paired[playerA.ID] {
 			continue
 		}
 		bestMatch := -1
 		minScoreDiff := 1000000
 		for j := i + 1; j < len(availableToPair); j++ {
 			playerB := availableToPair[j]
-			if paired[playerB.Id] {
+			if paired[playerB.ID] {
 				continue
 			}
 			currentDiff := 0
 			currentDiff = utils.Abs(int(playerA.Rating) - int(playerB.Rating))
 			currentDiff = utils.Abs(int(playerA.Score)-int(playerB.Score)) * 2
-			currentDiff += int(playerA.Opponents[playerB.Id]) * 10
+			currentDiff += int(playerA.Opponents[playerB.ID]) * 10
 
 			if playerA.LastPlayedColor == playerB.LastPlayedColor {
 				currentDiff += 20
@@ -50,7 +50,7 @@ func (t *Tournament) PairPlayers() {
 			playerB := availableToPair[bestMatch]
 			reply := make(chan bool, 1)
 			t.ControllerChan <- PairingRequest{
-				TournamentId: t.Id,
+				TournamentID: t.ID,
 				PlayerA:      playerA,
 				PlayerB:      playerB,
 				Reply:        reply,
@@ -59,13 +59,13 @@ func (t *Tournament) PairPlayers() {
 			if !ok {
 				continue
 			}
-			paired[playerA.Id] = true
-			paired[playerB.Id] = true
+			paired[playerA.ID] = true
+			paired[playerB.ID] = true
 		}
 	}
 	var newWaitingPlayers []*Player
 	for _, player := range t.waitingPlayers {
-		if !paired[player.Id] {
+		if !paired[player.ID] {
 			newWaitingPlayers = append(newWaitingPlayers, player)
 		}
 	}
@@ -76,14 +76,14 @@ func (t *Tournament) end() {
 	players := make([]EndPlayer, 0, len(t.players))
 	for _, player := range t.players {
 		players = append(players, EndPlayer{
-			ID:     player.Id,
+			ID:     player.ID,
 			Score:  player.Score,
 			Scores: player.Scores,
 			Streak: player.Streak,
 		})
 	}
 	t.ControllerChan <- EndRequest{
-		TournamentId: t.Id,
+		TournamentID: t.ID,
 		Players:      players,
 	}
 	t.Done <- struct{}{}
