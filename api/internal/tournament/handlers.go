@@ -32,9 +32,8 @@ func (t *Tournament) PairPlayers() {
 			if paired[playerB.ID] {
 				continue
 			}
-			currentDiff := 0
-			currentDiff = utils.Abs(int(playerA.Rating) - int(playerB.Rating))
-			currentDiff = utils.Abs(int(playerA.Score)-int(playerB.Score)) * 2
+			currentDiff := utils.Abs(int(playerA.Rating) - int(playerB.Rating))
+			currentDiff += utils.Abs(int(playerA.Score)-int(playerB.Score)) * 2
 			currentDiff += int(playerA.Opponents[playerB.ID]) * 10
 
 			if playerA.LastPlayedColor == playerB.LastPlayedColor {
