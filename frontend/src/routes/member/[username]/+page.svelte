@@ -11,7 +11,7 @@
 	let pageNumber = $state(1);
 	let hasMore = $state(data.games ? data.games.length == 15 : false);
 	let loading = $state(false);
-	const items: any = $state(data.games ? data.games : []);
+	const items: any = $state(data.games ?? []);
 
 	const memberSince = new Date(data.profile.CreatedAt);
 
@@ -97,7 +97,7 @@
 				<a
 					aria-label="game link"
 					href={`/game/${item.ID}`}
-					class="z-2 absolute left-0 top-0 h-full w-full"
+					class="absolute top-0 left-0 z-2 h-full w-full"
 				></a>
 
 				<div class="flex items-center justify-between">
@@ -106,7 +106,7 @@
 						{getTimeControl(item.BaseTime, item.Increment)}</span
 					><span class="relative"
 						>{#if item.TournamentID}<a
-								class="z-3 absolute right-0 top-0 flex h-fit w-fit items-center gap-[5px]"
+								class="absolute top-0 right-0 z-3 flex h-fit w-fit items-center gap-[5px]"
 								href={`/tournament/${item.TournamentID}`}
 							>
 								<svg

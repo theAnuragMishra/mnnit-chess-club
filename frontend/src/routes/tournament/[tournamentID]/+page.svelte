@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { websocketStore } from '$lib/websocket';
-	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { getTimeLeft, getTimeControl } from '$lib/utils';
 	import Clock from '$lib/components/Clock.svelte';
@@ -17,7 +16,6 @@
 	}
 
 	const { data } = $props();
-	const tournamentID = page.params.tournamentID;
 
 	let loading = $state(false);
 	let players = $state(data.tournamentData.players ?? []);
@@ -41,7 +39,10 @@
 
 	const handleJoinLeave = async () => {
 		loading = true;
-		websocketStore.sendMessage({ type: 'join_leave', payload: { tournamentID } });
+		websocketStore.sendMessage({
+			type: 'join_leave',
+			payload: { tournamentID: page.params.tournamentID }
+		});
 	};
 
 	const handleJLResponse = (payload: any) => {
@@ -114,15 +115,18 @@
 		};
 	});
 
-	onMount(() => {
-		websocketStore.sendMessage({ type: 'room_change', payload: { room: tournamentID } });
+	$effect(() => {
+		websocketStore.sendMessage({
+			type: 'room_change',
+			payload: { room: page.params.tournamentID }
+		});
 		websocketStore.onMessage('jl_response', handleJLResponse);
 		websocketStore.onMessage('update_score', handleScoreUpdate);
-	});
-	onDestroy(() => {
-		websocketStore.sendMessage({ type: 'leave_room' });
-		websocketStore.offMessage('jl_response', handleJLResponse);
-		websocketStore.offMessage('update_score', handleScoreUpdate);
+		return () => {
+			websocketStore.sendMessage({ type: 'leave_room' });
+			websocketStore.offMessage('jl_response', handleJLResponse);
+			websocketStore.offMessage('update_score', handleScoreUpdate);
+		};
 	});
 </script>
 
