@@ -5,6 +5,9 @@
 	let g: Api | null = $state(null);
 </script>
 
+<svelte:head>
+	<title>Dumb Board</title>
+</svelte:head>
 <div class="flex">
 	<Chessboard boardConfig={{ viewOnly: true }} setGround={(x) => (g = x)} />
 	<div class="flex flex-col">

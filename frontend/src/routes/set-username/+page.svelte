@@ -32,6 +32,9 @@
 	};
 </script>
 
+<svelte:head>
+	<title>Set your mcc username</title>
+</svelte:head>
 <div class="mt-10 flex flex-col items-center justify-center gap-4 rounded-lg p-6">
 	<input
 		type="text"

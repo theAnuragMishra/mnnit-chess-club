@@ -260,6 +260,12 @@
 	});
 </script>
 
+<svelte:head>
+	<title
+		>{result === 0 ? 'Play' : 'Game Over'} vs
+		{whiteUp ? whiteUsername : blackUsername} - {baseTime / 60} + {increment}</title
+	>
+</svelte:head>
 <div class="flex w-full flex-col-reverse items-center justify-center gap-5 xl:flex-row">
 	<div class="flex w-[95%] flex-col gap-5 md:flex-row xl:w-[300px] xl:flex-col">
 		{#if tournamentID}

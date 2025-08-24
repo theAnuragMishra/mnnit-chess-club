@@ -6,6 +6,9 @@
 	if (data.user) goto('/');
 </script>
 
+<svelte:head>
+	<title>Login</title>
+</svelte:head>
 <div class="mt-30 flex h-full flex-col items-center justify-center gap-2">
 	<h1 class="text-2xl font-bold">Login</h1>
 	<button

@@ -3,6 +3,9 @@
 	const topSize = 40;
 </script>
 
+<svelte:head>
+	<title>MCC Top 10</title>
+</svelte:head>
 <div class="p-10 text-xl">
 	<h1 class="mb-3 text-center text-2xl">MCC's Top Rated Players</h1>
 	<hr class="mb-2" />

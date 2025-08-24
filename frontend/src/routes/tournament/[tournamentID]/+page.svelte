@@ -130,6 +130,9 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{data.tournamentData.name} - MCC</title>
+</svelte:head>
 <h1 class="flex items-center gap-[5px] text-3xl">
 	<svg
 		class="h-[50px]"

@@ -58,6 +58,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Profile - {page.params.username}</title>
+</svelte:head>
 <div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl text-gray-300">
 	<div class="mb-4">
 		<div class="text-3xl">{page.params.username}</div>

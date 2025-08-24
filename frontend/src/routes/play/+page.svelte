@@ -52,6 +52,9 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Play</title>
+</svelte:head>
 <div class="box">
 	{#each timeControls as timeControl, index}
 		<button

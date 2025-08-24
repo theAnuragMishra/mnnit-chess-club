@@ -2,6 +2,9 @@
 	const { data } = $props();
 </script>
 
+<svelte:head>
+	<title>Tournaments - MCC</title>
+</svelte:head>
 <div class="w-full p-2 md:p-10">
 	<h2 class="text-lg md:text-2xl">Upcoming:</h2>
 	<div class="titles">

@@ -7,6 +7,12 @@
 	let copied = $state(false);
 </script>
 
+<svelte:head>
+	<title
+		>Challenge - {data.gameData.TimeControl.baseTime / 60}+{data.gameData.TimeControl
+			.increment}</title
+	>
+</svelte:head>
 <div class="flex flex-col items-center justify-center gap-3 text-lg md:text-2xl">
 	<p class="text-3xl">
 		{data.gameData.TimeControl.baseTime / 60}+{data.gameData.TimeControl.increment}
