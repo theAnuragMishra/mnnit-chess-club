@@ -111,6 +111,9 @@ SELECT status FROM tournaments WHERE id = $1;
 -- name: UpdateTournamentStatus :exec
 UPDATE tournaments SET status = $1 WHERE id=$2;
 
+-- name: DeleteLiveTournaments :exec
+DELETE FROM tournaments WHERE status = 1;
+
 -- name: BatchUpdateTournamentPlayers :exec
 WITH players_data (
     id,

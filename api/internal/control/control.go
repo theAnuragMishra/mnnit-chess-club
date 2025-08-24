@@ -46,9 +46,11 @@ func NewController(queries *database.Queries) *Controller {
 	c.tournamentRecv = make(chan tournament.ControllerMsg, 256)
 
 	if err := queries.DeleteLiveGames(context.Background()); err != nil {
-		log.Println(err)
+		log.Println("Error deleting live games", err)
 	}
-
+	if err := queries.DeleteLiveTournaments(context.Background()); err != nil {
+		log.Println("Error deleting live tournaments, err")
+	}
 	go c.gameReceiveListener()
 	go c.tournamentReceiveListener()
 
