@@ -84,11 +84,11 @@
 			/></label
 		>
 
-		<div class="flex flex-col md:flex-row">
+		<div class="flex flex-col">
 			<span>Minutes per side: {baseTimes[baseIndex]}</span>
 			<input class="mx-[5px]" type="range" bind:value={baseIndex} min="0" max="37" />
 		</div>
-		<div class="flex flex-col md:flex-row">
+		<div class="flex flex-col">
 			<span>Increment: {increments[incrementIndex]}</span>
 			<input class="mx-[5px]" type="range" bind:value={incrementIndex} min="0" max="30" />
 		</div>

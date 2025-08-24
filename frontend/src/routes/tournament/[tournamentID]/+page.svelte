@@ -224,7 +224,7 @@
 				Standby {data.user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
-		<div class="grid grid-cols-[140px_auto_50px] content-start gap-[10px] text-xl">
+		<div class="grid grid-cols-[auto_auto] content-start gap-[10px] text-xl">
 			{#each sortedPlayers as player, i}
 				<span class="flex items-center gap-2">
 					<span class="flex w-[30px] items-center justify-center">
@@ -237,10 +237,11 @@
 						{/if}</span
 					><a href={`/member/${player.Username}`}>{player.Username}</a>
 					<i>{Math.floor(player.Rating)}</i>
-				</span><span class="flex items-center text-[16px] text-gray-300">
-					{#each player.Scores as s}
-						{s}
-					{/each}
+					<span class="flex items-center text-[16px] text-gray-300">
+						{#each player.Scores as s}
+							{s}
+						{/each}
+					</span>
 				</span><span class="inline-flex items-center justify-end gap-1 justify-self-end"
 					><svg
 						class={`h-[24px] w-[24px] ${player.Streak >= 2 ? '' : 'hidden'}`}
