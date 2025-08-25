@@ -2,6 +2,9 @@
 	import { invalidateAll } from '$app/navigation';
 	import { getBaseURL } from '$lib/utils';
 	import logo from '$lib/assets/mcc-logo.webp';
+	import signoutImg from '$lib/assets/icons/logout.svg';
+	import menuImg from '$lib/assets/icons/menu.svg';
+	import crossImg from '$lib/assets/icons/cross.svg';
 
 	let { data } = $props();
 
@@ -20,7 +23,7 @@
 	<div class="flex items-center justify-between px-4">
 		<div class="flex flex-shrink-0 items-center">
 			<a href="/">
-				<img src={logo} alt="mcc-logo" class="invert-100 h-10" />
+				<img src={logo} alt="mcc-logo" class="h-10 invert-100" />
 			</a>
 		</div>
 
@@ -42,19 +45,7 @@
 						class="cursor-pointer rounded-lg hover:bg-gray-800"
 						aria-label="sign out"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="h-[20px] w-[20px] md:h-[20px] md:w-[20px]"
-							><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline
-								points="16 17 21 12 16 7"
-							/><line x1="21" x2="9" y1="12" y2="12" /></svg
-						>
+						<img alt="signout" src={signoutImg} />
 					</button>
 				{/if}
 			</div>
@@ -64,34 +55,21 @@
 				onclick={() => (expanded = !expanded)}
 				aria-label="menu"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 6h16M4 12h16M4 18h16"
-					/>
-				</svg>
+				<img alt="menu" src={menuImg} />
 			</button>
 		</div>
 	</div>
 
 	{#if expanded}
 		<button
-			class="fixed inset-0 z-40 bg-black bg-opacity-50"
+			class="bg-opacity-50 fixed inset-0 z-40 bg-black"
 			onclick={() => (expanded = false)}
 			aria-label="x"
 		></button>
 	{/if}
 
 	<div
-		class={`fixed left-0 top-0 z-50 h-full w-64 transform bg-gray-800 transition-transform duration-200 ease-in-out ${
+		class={`fixed top-0 left-0 z-50 h-full w-64 transform bg-gray-800 transition-transform duration-200 ease-in-out ${
 			expanded ? 'translate-x-0' : '-translate-x-full'
 		}`}
 	>
@@ -101,20 +79,7 @@
 				onclick={() => (expanded = false)}
 				aria-label="close menu"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
-				</svg>
+				<img src={crossImg} alt="close menu" />
 			</button>
 
 			<a href="/play" class="block" onclick={() => (expanded = false)}>Play</a>
@@ -135,19 +100,7 @@
 					}}
 					class="flex cursor-pointer items-center justify-center gap-2 px-[0.5rem] py-[0.25rem]"
 				>
-					Logout <svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-[20px] w-[20px] md:h-[20px] md:w-[20px]"
-						><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline
-							points="16 17 21 12 16 7"
-						/><line x1="21" x2="9" y1="12" y2="12" /></svg
-					>
+					Logout <img src={signoutImg} alt="logout" />
 				</button>
 			{/if}
 		</div>

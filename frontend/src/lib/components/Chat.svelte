@@ -44,7 +44,7 @@
 	});
 </script>
 
-<div class="w-full rounded bg-[#1c1d1e] p-4 shadow-lg">
+<div class="flex-1 rounded bg-[#1c1d1e] p-4 shadow-lg">
 	<div
 		style={`height: ${hei}`}
 		bind:this={chatContainer}

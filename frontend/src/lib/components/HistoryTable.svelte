@@ -1,4 +1,8 @@
 <script lang="ts">
+	import firstImg from '$lib/assets/icons/first.svg';
+	import lastImg from '$lib/assets/icons/last.svg';
+	import nextImg from '$lib/assets/icons/next.svg';
+	import previousImg from '$lib/assets/icons/previous.svg';
 	const { setActiveIndex, activeIndex, moveHistory, highlightLastArrow } = $props();
 	const moveButtons: (HTMLButtonElement | null)[] = $state([]);
 	$effect(() => {
@@ -18,9 +22,7 @@
 						setActiveIndex(-1);
 					}}
 				>
-					<svg class="h-[16px] md:h-[24px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-						><path fill="currentColor" d="M2 14V2h2v5.5l5-5v5l5-5v11l-5-5v5l-5-5V14z" /></svg
-					>
+					<img src={firstImg} alt="go to first move" class="h-[16px] md:h-[24px]" />
 				</button>
 				<button
 					aria-label="go to previous move"
@@ -28,9 +30,7 @@
 					onclick={() => {
 						setActiveIndex(activeIndex - 1);
 					}}
-					><svg class="h-[16px] md:h-[24px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-						><path fill="currentColor" d="M4 14V2h2v5.5l5-5v11l-5-5V14z" /></svg
-					></button
+					><img src={previousImg} class="h-[16px] md:h-[24px]" alt="go to previous move" /></button
 				>
 			</div>
 			<div class="flex gap-[10px]">
@@ -39,10 +39,7 @@
 					class="flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 					onclick={() => {
 						setActiveIndex(activeIndex + 1);
-					}}
-					><svg class="h-[16px] md:h-[24px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-						><path fill="currentColor" d="M12 2v12h-2V8.5l-5 5v-11l5 5V2z" /></svg
-					></button
+					}}><img src={nextImg} alt="go to next move" class="h-[16px] md:h-[24px]" /></button
 				>
 				<button
 					aria-label="go to latest move"
@@ -51,9 +48,7 @@
 						setActiveIndex(moveHistory.length - 1);
 					}}
 				>
-					<svg class="h-[16px] md:h-[24px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-						><path fill="currentColor" d="M14 2v12h-2V8.5l-5 5v-5l-5 5v-11l5 5v-5l5 5V2z" /></svg
-					>
+					<img src={lastImg} alt="go to last move" class="h-[16px] md:h-[24px]" />
 				</button>
 			</div>
 		{/if}
