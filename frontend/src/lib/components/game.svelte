@@ -111,6 +111,7 @@
 								GameID: gameID
 							}
 						});
+						console.log('begin', performance.now());
 					}
 				}
 			}
@@ -135,6 +136,7 @@
 
 	const handleMoveResponse = (payload: any) => {
 		//console.log(payload);
+		console.log('finish', performance.now());
 		if (moveHistory) moveHistory = [...moveHistory, payload.Move];
 		else moveHistory = [payload.Move];
 		timeBlack = payload.TimeBlack;
@@ -154,6 +156,7 @@
 				]
 			});
 		}
+
 		//console.log(ground?.state.movable);
 		if (payload.Move.MoveNotation[1] == 'x') captureAudio?.play();
 		else moveAudio?.play();
