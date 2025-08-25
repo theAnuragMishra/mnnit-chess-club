@@ -54,7 +54,7 @@ func (t *Tournament) Inbox() chan Msg {
 
 func (t *Tournament) run() {
 	defer close(t.Done)
-	ticker := time.NewTicker(time.Second * 20)
+	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for {
 		select {
