@@ -21,7 +21,7 @@ var webSocketUpgrader = websocket.Upgrader{
 type Manager struct {
 	sync.RWMutex
 	clients   ClientList
-	Rooms     map[string]map[*Client]bool
+	rooms     map[string]map[*Client]bool
 	OnMessage func(event Event, client *Client) error
 }
 
@@ -29,7 +29,7 @@ func NewManager(onMessage func(event Event, client *Client) error) *Manager {
 	m := &Manager{
 		clients:   make(ClientList),
 		OnMessage: onMessage,
-		Rooms:     make(map[string]map[*Client]bool),
+		rooms:     make(map[string]map[*Client]bool),
 	}
 	return m
 }
@@ -83,10 +83,10 @@ func (m *Manager) RemoveClient(client *Client) {
 			}
 			close(client.egress)
 			client.egress = nil
-			delete(m.Rooms[client.Room], client)
+			delete(m.rooms[client.Room], client)
 			delete(m.clients[client.UserID], client)
-			if len(m.Rooms[client.Room]) == 0 {
-				delete(m.Rooms, client.Room)
+			if len(m.rooms[client.Room]) == 0 {
+				delete(m.rooms, client.Room)
 			}
 			if len(m.clients[client.UserID]) == 0 {
 				delete(m.clients, client.UserID)
@@ -105,9 +105,9 @@ func (m *Manager) RemoveUser(id int32) {
 			if err != nil {
 				return
 			}
-			delete(m.Rooms[client.Room], client)
-			if len(m.Rooms[client.Room]) == 0 {
-				delete(m.Rooms, client.Room)
+			delete(m.rooms[client.Room], client)
+			if len(m.rooms[client.Room]) == 0 {
+				delete(m.rooms, client.Room)
 			}
 		}
 	}
@@ -117,18 +117,18 @@ func (m *Manager) RemoveUser(id int32) {
 func (m *Manager) AddClientToRoom(room string, client *Client) {
 	m.Lock()
 	defer m.Unlock()
-	if m.Rooms[room] == nil {
-		m.Rooms[room] = make(map[*Client]bool)
+	if m.rooms[room] == nil {
+		m.rooms[room] = make(map[*Client]bool)
 	}
-	m.Rooms[room][client] = true
+	m.rooms[room][client] = true
 }
 
 func (m *Manager) DeleteClientFromRoom(room string, client *Client) {
 	m.Lock()
 	defer m.Unlock()
-	delete(m.Rooms[room], client)
-	if len(m.Rooms[room]) == 0 {
-		delete(m.Rooms, room)
+	delete(m.rooms[room], client)
+	if len(m.rooms[room]) == 0 {
+		delete(m.rooms, room)
 	}
 }
 

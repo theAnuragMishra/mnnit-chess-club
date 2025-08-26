@@ -100,7 +100,7 @@ func (c *Client) Send(event Event) {
 func (m *Manager) BroadcastToRoom(event Event, room string) {
 	m.RLock()
 	defer m.RUnlock()
-	for client := range m.Rooms[room] {
+	for client := range m.rooms[room] {
 		client.egress <- event
 	}
 }
@@ -108,7 +108,7 @@ func (m *Manager) BroadcastToRoom(event Event, room string) {
 func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, player2 int32) {
 	m.RLock()
 	defer m.RUnlock()
-	for client := range m.Rooms[room] {
+	for client := range m.rooms[room] {
 		if client.UserID != player2 && client.UserID != player1 {
 			client.egress <- event
 		}

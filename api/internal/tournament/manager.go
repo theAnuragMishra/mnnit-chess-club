@@ -4,30 +4,30 @@ import "sync"
 
 type Manager struct {
 	sync.RWMutex
-	Tournaments map[string]*Tournament
+	tournaments map[string]*Tournament
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		Tournaments: make(map[string]*Tournament),
+		tournaments: make(map[string]*Tournament),
 	}
 }
 
 func (m *Manager) AddTournament(t *Tournament) {
 	m.Lock()
-	m.Tournaments[t.ID] = t
+	m.tournaments[t.ID] = t
 	m.Unlock()
 }
 
 func (m *Manager) RemoveTournament(id string) {
 	m.Lock()
-	delete(m.Tournaments, id)
+	delete(m.tournaments, id)
 	m.Unlock()
 }
 
 func (m *Manager) GetTournament(id string) (*Tournament, bool) {
 	m.RLock()
-	t, exists := m.Tournaments[id]
+	t, exists := m.tournaments[id]
 	m.RUnlock()
 	return t, exists
 }
