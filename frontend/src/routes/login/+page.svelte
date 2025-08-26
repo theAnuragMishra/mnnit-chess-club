@@ -16,7 +16,7 @@
 		onclick={() => (window.location.href = `${getBaseURL()}/auth/login/google`)}
 		class="flex cursor-pointer items-center gap-2 rounded-md bg-black px-4 py-2 text-xl text-white"
 	>
-		Login with Google <img src={googleImg} alt="google logo" />
+		Login with Google <img class="w-[24px]" src={googleImg} alt="google logo" />
 	</button>
-	<p>More login providers may (or may not) be added.</p>
+	<p class="text-center">More login providers may (or may not) be added.</p>
 </div>
