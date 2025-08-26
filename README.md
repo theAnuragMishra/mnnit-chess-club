@@ -15,7 +15,7 @@
 
 ## Development
 
-A high level design of the architecture (well not very well-drawn) can be found [here](https://mnnitchessclub.com/dev).
+A high level design of the architecture (well, not very well-drawn) can be found [here](https://mnnitchessclub.com/dev).
 
 ### Stack
 
