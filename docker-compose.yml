@@ -37,8 +37,6 @@ services:
         - PUBLIC_WS_URL=${PUBLIC_WS_URL}
         - PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
     container_name: frontend
-    environment:
-      CADDY_HOST: ${CADDY_HOST}
     ports:
       - "80:80"
       - "443:443"

@@ -1,4 +1,4 @@
-{$CADDY_HOST} {
+mnnitchessclub.com, www.mnnitchessclub.com {
     encode
 
     handle_path /api/* {
