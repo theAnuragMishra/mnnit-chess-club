@@ -15,55 +15,51 @@ import (
 )
 
 func initGame(c *Controller, event socket.Event, client *socket.Client) error {
-	var timeControl game.TimeControl
-	if err := json.Unmarshal(event.Payload, &timeControl); err != nil {
+	var tc int
+	if err := json.Unmarshal(event.Payload, &tc); err != nil {
 		return err
 	}
-	if timeControl.BaseTime <= 0 || timeControl.BaseTime > 10800 || timeControl.Increment < 0 || timeControl.Increment > 180 {
-		return errors.New("invalid time control")
+	if tc < 0 || tc > 11 {
+		return nil
 	}
-
-	p, exists := c.GameManager.GetPendingUser(timeControl)
-	if !exists {
-		c.GameManager.AddPendingUser(timeControl, client.UserID)
-	} else {
-		c.GameManager.RemovePendingUser(timeControl)
-		if p == client.UserID {
-			return nil
-		}
-		rating1, err1 := c.Queries.GetUserRating(context.Background(), p)
-		rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
-		if err1 != nil || err2 != nil {
-			return errors.New("server error while fetching ratings")
-		}
-		id, err := c.generateUniqueGameID()
-		if err != nil {
-			return err
-		}
-		g := game.New(id, time.Duration(timeControl.BaseTime)*time.Second, time.Duration(timeControl.Increment)*time.Second, p, client.UserID, "", c.gameRecv)
-		c.GameManager.AddGame(g)
-		err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
-			ID:           id,
-			BaseTime:     timeControl.BaseTime,
-			Increment:    timeControl.Increment,
-			WhiteID:      &p,
-			BlackID:      &client.UserID,
-			RatingW:      int32(rating1),
-			RatingB:      int32(rating2),
-			TournamentID: nil,
-		})
-		if err != nil {
-			return err
-		}
-		payload := map[string]any{"ID": id, "Type": "game"}
-		rawPayload, err := json.Marshal(payload)
-		if err != nil {
-			return err
-		}
-		e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-		c.SocketManager.SendToUserClientsInARoom(e, "play", p)
-		c.SocketManager.SendToUserClientsInARoom(e, "play", client.UserID)
+	//t := time.Now()
+	opp, paired := c.Matcher.HandleRequest(client.UserID, tc)
+	//fmt.Println(time.Since(t))
+	if !paired {
+		return nil
 	}
+	rating1, err1 := c.Queries.GetUserRating(context.Background(), opp)
+	rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
+	if err1 != nil || err2 != nil {
+		return errors.New("server error while fetching ratings")
+	}
+	id, err := c.generateUniqueGameID()
+	if err != nil {
+		return err
+	}
+	g := game.New(id, time.Duration(game.TimeControls[tc].BaseTime)*time.Second, time.Duration(game.TimeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
+	c.GameManager.AddGame(g)
+	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+		ID:           id,
+		BaseTime:     game.TimeControls[tc].BaseTime,
+		Increment:    game.TimeControls[tc].Increment,
+		WhiteID:      &opp,
+		BlackID:      &client.UserID,
+		RatingW:      int32(rating1),
+		RatingB:      int32(rating2),
+		TournamentID: nil,
+	})
+	if err != nil {
+		return err
+	}
+	payload := map[string]any{"ID": id, "Type": "game"}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
+	c.SocketManager.SendToUserClientsInARoom(e, "play", opp)
+	c.SocketManager.SendToUserClientsInARoom(e, "play", client.UserID)
 	return nil
 }
 

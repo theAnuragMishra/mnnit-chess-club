@@ -7,14 +7,12 @@ import (
 type Manager struct {
 	sync.RWMutex
 	games             map[string]*Game
-	pendingUsers      map[TimeControl]int32
 	pendingChallenges map[string]Challenge
 	rematchCache      map[string]*RematchInfo
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		pendingUsers:      make(map[TimeControl]int32),
 		pendingChallenges: make(map[string]Challenge),
 		games:             make(map[string]*Game),
 		rematchCache:      make(map[string]*RematchInfo),
@@ -57,23 +55,6 @@ func (m *Manager) GetChallengeByID(id string) (Challenge, bool) {
 	c, exists := m.pendingChallenges[id]
 	m.RUnlock()
 	return c, exists
-}
-
-func (m *Manager) AddPendingUser(tc TimeControl, id int32) {
-	m.Lock()
-	m.pendingUsers[tc] = id
-	m.Unlock()
-}
-func (m *Manager) RemovePendingUser(tc TimeControl) {
-	m.Lock()
-	delete(m.pendingUsers, tc)
-	m.Unlock()
-}
-func (m *Manager) GetPendingUser(tc TimeControl) (int32, bool) {
-	m.RLock()
-	user, exists := m.pendingUsers[tc]
-	m.RUnlock()
-	return user, exists
 }
 
 func (m *Manager) AddRematch(id string, info *RematchInfo) {

@@ -7,12 +7,10 @@
 
 	if (!data.user) goto('/');
 
-	async function handleInitGame(
-		timeControl: { baseTime: number; increment: number },
-		index: number
-	) {
-		activeState[index] = !activeState[index];
-		websocketStore.sendMessage({ type: 'init_game', payload: { ...timeControl } });
+	async function handleInitGame(index: number) {
+		if (activeIndex === index) activeIndex = -1;
+		else activeIndex = index;
+		websocketStore.sendMessage({ type: 'init_game', payload: index });
 	}
 
 	const timeControls = [
@@ -40,7 +38,7 @@
 		60, 90, 120, 150, 180
 	];
 	//console.log(baseTimes.length, increments.length);
-	let activeState = $state(Array(12).fill(false));
+	let activeIndex = $state(-1);
 	let baseIndex = $state(6);
 	let incrementIndex = $state(0);
 
@@ -57,12 +55,9 @@
 </svelte:head>
 <div class="box">
 	{#each timeControls as timeControl, index}
-		<button
-			onclick={() => handleInitGame(timeControl, index)}
-			class="btn relative cursor-pointer bg-gray-800"
-			><span>{timeControl.baseTime / 60}+{timeControl.increment}</span>{#if activeState[index]}<span
-					class="loading-bar"
-				>
+		<button onclick={() => handleInitGame(index)} class="btn relative cursor-pointer bg-gray-800"
+			><span>{timeControl.baseTime / 60}+{timeControl.increment}</span
+			>{#if activeIndex === index}<span class="loading-bar">
 					<span class="moving-indicator"></span>
 				</span>{/if}</button
 		>
