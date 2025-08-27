@@ -54,7 +54,7 @@ func newMatcher() *matcher {
 	return m
 }
 
-func (m *matcher) handleRequest(client *socket.Client, tc int) (int32, bool) {
+func (m *matcher) handleRequest(client *socket.Client, tc int) *socket.Client {
 	m.Lock()
 	defer m.Unlock()
 	prev, ok := m.clientQueue[client]
@@ -62,7 +62,7 @@ func (m *matcher) handleRequest(client *socket.Client, tc int) (int32, bool) {
 		delete(m.clientQueue, client)
 		m.removeClient(client, prev)
 		if prev == tc {
-			return 0, false
+			return nil
 		}
 	}
 	q := m.queues[tc]
@@ -70,12 +70,12 @@ func (m *matcher) handleRequest(client *socket.Client, tc int) (int32, bool) {
 		if opp.UserID != client.UserID {
 			q.pendingClients = append(q.pendingClients[:i], q.pendingClients[i+1:]...)
 			delete(m.clientQueue, opp)
-			return opp.UserID, true
+			return opp
 		}
 	}
 	q.pendingClients = append(q.pendingClients, client)
 	m.clientQueue[client] = tc
-	return 0, false
+	return nil
 }
 
 func (m *matcher) removeClient(client *socket.Client, tc int) {
@@ -97,14 +97,14 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		return nil
 	}
 	//t := time.Now()
-	opp, paired := c.matcher.handleRequest(client, tc)
+	opp := c.matcher.handleRequest(client, tc)
 	//fmt.Println(time.Since(t))
-	if !paired {
+	if opp == nil {
 		return nil
 	}
-	rating1, err := c.queries.GetUserRating(context.Background(), opp)
+	rating1, err := c.queries.GetUserRating(context.Background(), opp.UserID)
 	if err != nil {
-		return fmt.Errorf("error getting rating for user %d: %w", opp, err)
+		return fmt.Errorf("error getting rating for user %d: %w", opp.UserID, err)
 	}
 	rating2, err := c.queries.GetUserRating(context.Background(), client.UserID)
 	if err != nil {
@@ -114,13 +114,13 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if err != nil {
 		return err
 	}
-	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
+	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp.UserID, client.UserID, "", c.gameRecv)
 	c.gameManager.AddGame(g)
 	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,
 		BaseTime:     timeControls[tc].BaseTime,
 		Increment:    timeControls[tc].Increment,
-		WhiteID:      &opp,
+		WhiteID:      &opp.UserID,
 		BlackID:      &client.UserID,
 		RatingW:      int32(rating1),
 		RatingB:      int32(rating2),
@@ -135,7 +135,7 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.socketManager.SendToUserClientsInARoom(e, "play", opp)
-	c.socketManager.SendToUserClientsInARoom(e, "play", client.UserID)
+	client.Send(e)
+	opp.Send(e)
 	return nil
 }
