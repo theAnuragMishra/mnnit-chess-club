@@ -186,7 +186,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		utils.RespondWithError(w, 500, "error getting players")
 		return
 	}
-	st, exists := c.tournamentManager.GetTournament(tournamentID)
+	st, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
 		msg := tournament.GetState{Reply: make(chan tournament.SnapShot, 1)}
 		st.Inbox() <- msg
@@ -358,7 +358,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, initialPlayers, c.tournamentRecv)
-		c.tournamentManager.AddTournament(t)
+		c.tournamentManager.addTournament(t)
 
 		//send refresh event to all the players on the tournament page
 		payload := map[string]any{"ID": tournamentInfo.ID, "Type": "tournament"}

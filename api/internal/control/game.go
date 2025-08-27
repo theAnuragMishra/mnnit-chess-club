@@ -127,7 +127,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 	if !exists {
 		return
 	}
-	t, ok := c.tournamentManager.GetTournament(info.TournamentID)
+	t, ok := c.tournamentManager.getTournament(info.TournamentID)
 	if ok && info.Result == 4 {
 		if len(info.Moves)%2 == 0 {
 			reason := "White Didn't Play"

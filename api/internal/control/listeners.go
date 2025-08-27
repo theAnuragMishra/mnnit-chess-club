@@ -23,7 +23,7 @@ func (c *Controller) tournamentReceiveListener() {
 		switch msg := m.(type) {
 		case tournament.PairingRequest:
 			go func() {
-				t, exists := c.tournamentManager.GetTournament(msg.TournamentID)
+				t, exists := c.tournamentManager.getTournament(msg.TournamentID)
 				if !exists {
 					return
 				}

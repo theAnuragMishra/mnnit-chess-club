@@ -5,11 +5,42 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 )
+
+type tournamentManager struct {
+	sync.RWMutex
+	tournaments map[string]*tournament.Tournament
+}
+
+func newTournamentManager() *tournamentManager {
+	return &tournamentManager{
+		tournaments: make(map[string]*tournament.Tournament),
+	}
+}
+
+func (m *tournamentManager) addTournament(t *tournament.Tournament) {
+	m.Lock()
+	m.tournaments[t.ID] = t
+	m.Unlock()
+}
+
+func (m *tournamentManager) removeTournament(id string) {
+	m.Lock()
+	delete(m.tournaments, id)
+	m.Unlock()
+}
+
+func (m *tournamentManager) getTournament(id string) (*tournament.Tournament, bool) {
+	m.RLock()
+	t, exists := m.tournaments[id]
+	m.RUnlock()
+	return t, exists
+}
 
 func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 	err := c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
@@ -40,7 +71,7 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 	c.socketManager.BroadcastToRoom(e, id)
-	c.tournamentManager.RemoveTournament(id)
+	c.tournamentManager.removeTournament(id)
 }
 
 func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
@@ -58,7 +89,7 @@ func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 		client.Send(e)
 		return errors.New("tournament ID can't be empty")
 	}
-	t, ok := c.tournamentManager.GetTournament(tidP.TournamentID)
+	t, ok := c.tournamentManager.getTournament(tidP.TournamentID)
 	if !ok {
 		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err

@@ -34,7 +34,7 @@ type Controller struct {
 	rematchManager    *rematchManager
 	challengeManager  *challengeManager
 	queries           *database.Queries
-	tournamentManager *tournament.Manager
+	tournamentManager *tournamentManager
 	gameRecv          chan game.EndNotification
 	tournamentRecv    chan tournament.ControllerMsg
 }
@@ -46,7 +46,7 @@ func NewController(queries *database.Queries) *Controller {
 	c.matcher = newMatcher()
 	c.rematchManager = newRematchManager()
 	c.challengeManager = newChallengeManager()
-	c.tournamentManager = tournament.NewManager()
+	c.tournamentManager = newTournamentManager()
 	c.queries = queries
 	c.gameRecv = make(chan game.EndNotification, 256)
 	c.tournamentRecv = make(chan tournament.ControllerMsg, 256)
