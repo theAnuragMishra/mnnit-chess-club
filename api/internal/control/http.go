@@ -137,7 +137,7 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameID := chi.URLParam(r, "gameID")
-	challenge, exists := c.gameManager.GetChallengeByID(gameID)
+	challenge, exists := c.challengeManager.GetChallengeByID(gameID)
 	if exists {
 		utils.RespondWithJSON(w, http.StatusOK, challenge)
 		return

@@ -31,6 +31,7 @@ type Controller struct {
 	socketManager     *socket.Manager
 	gameManager       *game.Manager
 	matcher           *matcher
+	challengeManager  *challengeManager
 	queries           *database.Queries
 	tournamentManager *tournament.Manager
 	gameRecv          chan game.EndNotification
@@ -42,6 +43,7 @@ func NewController(queries *database.Queries) *Controller {
 	c.socketManager = socket.NewManager(c.handleEvent, c.handleClientDisconnect)
 	c.gameManager = game.NewManager()
 	c.matcher = newMatcher()
+	c.challengeManager = newChallengeManager()
 	c.tournamentManager = tournament.NewManager()
 	c.queries = queries
 	c.gameRecv = make(chan game.EndNotification, 256)
