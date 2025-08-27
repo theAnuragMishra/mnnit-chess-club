@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"sync"
 
@@ -60,7 +61,7 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 			PlayersInput: inputBytes,
 		})
 		if err != nil {
-			log.Println(err)
+			log.Println("error batch updating tournament players", err)
 		}
 	}
 
@@ -103,11 +104,11 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 	status, err := c.queries.GetTournamentStatus(context.Background(), tournamentID)
 	if err != nil {
 		client.Send(e)
-		return err
+		return fmt.Errorf("error getting tournament status for tournament: %s : %w", tournamentID, err)
 	}
 	if status == 2 {
 		client.Send(e)
-		return errors.New("tournament ended")
+		return nil
 	}
 	_, err = c.queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
 		PlayerID:     client.UserID,
@@ -120,12 +121,12 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 		})
 		if err != nil {
 			client.Send(e)
-			return err
+			return fmt.Errorf("error inserting player to tournament:%s : %w", tournamentID, err)
 		}
 		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
 		if err != nil {
 			client.Send(e)
-			return err
+			return fmt.Errorf("error getting user: %d rating: %w", client.UserID, err)
 		}
 		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": 0, "Username": client.Username, "Rating": rating}})
 		if err != nil {
@@ -138,7 +139,7 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 		err := c.queries.DeleteTournamentPlayer(context.Background(), client.UserID)
 		if err != nil {
 			client.Send(e)
-			return err
+			return fmt.Errorf("error deleting player from tournament:%s : %w", tournamentID, err)
 		}
 		payload, err := json.Marshal(map[string]any{"id": client.UserID})
 		if err != nil {
@@ -178,7 +179,7 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 		})
 		if err != nil {
 			client.Send(e)
-			return err
+			return fmt.Errorf("error inserting player to tournament:%s : %w", t.ID, err)
 		}
 		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
 		if err != nil {

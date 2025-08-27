@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
@@ -23,7 +22,7 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
-		log.Println("error getting user by id", err)
+		//log.Println("error getting user by id", err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting user")
 		return
 	}

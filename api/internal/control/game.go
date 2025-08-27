@@ -158,10 +158,14 @@ func (c *Controller) endGame(info game.EndNotification) {
 			r = 0.5
 		}
 
-		p1info, err1 := c.queries.GetRatingInfo(context.Background(), info.WhiteID)
-		p2info, err2 := c.queries.GetRatingInfo(context.Background(), info.BlackID)
-		if err1 != nil || err2 != nil {
-			log.Println(err1, err2)
+		p1info, err := c.queries.GetRatingInfo(context.Background(), info.WhiteID)
+		if err != nil {
+			log.Println("error getting rating info for user ", info.WhiteID, err)
+			return
+		}
+		p2info, err := c.queries.GetRatingInfo(context.Background(), info.BlackID)
+		if err != nil {
+			log.Println("error getting rating info for user ", info.BlackID, err)
 			return
 		}
 		p1 := utils.Player{
@@ -175,20 +179,23 @@ func (c *Controller) endGame(info game.EndNotification) {
 			Volatility: p2info.Volatility,
 		}
 		up1, up2 := utils.UpdateMatch(p1, p2, r)
-		err1 = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
+		err = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 			Rating:     up1.Rating,
 			Rd:         up1.RD,
 			Volatility: up1.Volatility,
 			ID:         info.WhiteID,
 		})
-		err2 = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
+		if err != nil {
+			log.Println("error updating rating for", info.WhiteID, err)
+		}
+		err = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 			Rating:     up2.Rating,
 			Rd:         up2.RD,
 			Volatility: up2.Volatility,
 			ID:         info.BlackID,
 		})
-		if err1 != nil || err2 != nil {
-			log.Println("error updating rating", err1, err2)
+		if err != nil {
+			log.Println("error updating rating for", info.BlackID, err)
 		}
 
 		if ok {
@@ -219,7 +226,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 		EndTimeLeftBlack: info.TimeLeftBlack,
 	})
 	if err != nil {
-		log.Println(err)
+		log.Println("error ending game id", info.ID, err)
 		return
 	}
 	payload, err := json.Marshal(map[string]any{"Result": info.Result, "Reason": info.Reason, "changeW": cw, "changeB": cb, "timeWhite": info.TimeLeftWhite, "timeBlack": info.TimeLeftBlack})

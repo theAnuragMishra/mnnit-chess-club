@@ -3,7 +3,7 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -68,10 +68,13 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 	if err != nil {
 		return err
 	}
-	rating1, err1 := c.queries.GetUserRating(context.Background(), info.BlackID)
-	rating2, err2 := c.queries.GetUserRating(context.Background(), info.WhiteID)
-	if err1 != nil || err2 != nil {
-		return errors.New("server error while fetching ratings")
+	rating1, err := c.queries.GetUserRating(context.Background(), info.BlackID)
+	if err != nil {
+		return fmt.Errorf("error getting rating for user %d: %w", info.BlackID, err)
+	}
+	rating2, err := c.queries.GetUserRating(context.Background(), info.WhiteID)
+	if err != nil {
+		return fmt.Errorf("error getting rating for user %d: %w", info.WhiteID, err)
 	}
 	g := game.New(id, info.BaseTime, info.Increment, info.BlackID, info.WhiteID, "", c.gameRecv)
 	c.gameManager.AddGame(g)
@@ -86,7 +89,7 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 		TournamentID: nil,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating game: %w", err)
 	}
 
 	payload := map[string]any{"ID": id, "Type": "game"}

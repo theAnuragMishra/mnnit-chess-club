@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -84,11 +85,11 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	}
 	rating1, err := c.queries.GetUserRating(context.Background(), challenge.Creator)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting rating for user %d: %w", challenge.Creator, err)
 	}
 	rating2, err := c.queries.GetUserRating(context.Background(), client.UserID)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting rating for user %d: %w", client.UserID, err)
 	}
 	g := game.New(acceptChallengePayload.GameID, time.Duration(challenge.TimeControl.BaseTime)*time.Second, time.Duration(challenge.TimeControl.Increment)*time.Second, challenge.Creator, client.UserID, "", c.gameRecv)
 	c.gameManager.AddGame(g)
@@ -103,7 +104,7 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 		TournamentID: nil,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating game: %w", err)
 	}
 	payload := map[string]any{"ID": acceptChallengePayload.GameID, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)

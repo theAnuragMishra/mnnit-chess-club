@@ -3,7 +3,7 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -102,10 +102,13 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if !paired {
 		return nil
 	}
-	rating1, err1 := c.queries.GetUserRating(context.Background(), opp)
-	rating2, err2 := c.queries.GetUserRating(context.Background(), client.UserID)
-	if err1 != nil || err2 != nil {
-		return errors.New("server error while fetching ratings")
+	rating1, err := c.queries.GetUserRating(context.Background(), opp)
+	if err != nil {
+		return fmt.Errorf("error getting rating for user %d: %w", opp, err)
+	}
+	rating2, err := c.queries.GetUserRating(context.Background(), client.UserID)
+	if err != nil {
+		return fmt.Errorf("error getting rating for user %d: %w", client.UserID, err)
 	}
 	id, err := c.generateUniqueGameID()
 	if err != nil {
@@ -124,7 +127,7 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		TournamentID: nil,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating game: %w", err)
 	}
 	payload := map[string]any{"ID": id, "Type": "game"}
 	rawPayload, err := json.Marshal(payload)

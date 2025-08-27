@@ -37,8 +37,6 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 			}
 			http.SetCookie(w, cookie)
 
-			// also set csrf cookie
-
 			utils.RespondWithError(w, http.StatusUnauthorized, "Session expired")
 			return
 		}

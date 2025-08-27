@@ -67,6 +67,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		//fmt.Printf("%+v\n", err)
 
 		if err != nil {
+			log.Println("error creating user on google callback", err)
 			http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
 			return
 

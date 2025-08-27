@@ -42,7 +42,7 @@ func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) WriteLeaderBoard(w http.ResponseWriter, r *http.Request) {
 	lb, err := c.queries.GetTopN(context.Background(), 10)
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting top n", err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "error fetching leaderboard")
 	}
 	utils.RespondWithJSON(w, http.StatusOK, lb)
@@ -53,7 +53,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
-		log.Println(err)
+		//log.Println("error getting user by id", err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Internal server error")
 		return
 	}
@@ -76,7 +76,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		ID:       session.UserID,
 	})
 	if err != nil {
-		log.Println(err)
+		log.Println("error updating username for", session.UserID, err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Username already in use")
 		return
 	}
@@ -104,7 +104,7 @@ func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
 		Offset:   offSet,
 	})
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting player games for ", username, err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
@@ -121,7 +121,7 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	profile, err := c.queries.GetUserPublicInfo(r.Context(), &username)
 	if err != nil {
-		log.Println(err)
+		//log.Println("error getting public user info for", username, err)
 		utils.RespondWithError(w, http.StatusBadRequest, "user not found")
 		return
 	}
@@ -129,7 +129,7 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 	counts, err := c.queries.GetGameNumbers(r.Context(), &username)
 
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting game numbers for", username, err)
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"CreatedAt": profile.CreatedAt, "AvatarUrl": profile.AvatarUrl, "Rating": profile.Rating, "Rd": profile.Rd, "GameCount": counts.GameCount, "DrawCount": counts.DrawCount, "WinCount": counts.WinCount, "LossCount": counts.LossCount})
@@ -152,7 +152,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		_, canRematch := c.rematchManager.getRematchByID(gameID)
 		moves, err := c.queries.GetGameMoves(r.Context(), gameID)
 		if err != nil {
-			log.Println(err)
+			log.Println("error getting game moves for game", gameID, err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "error getting game moves")
 			return
 		}
@@ -182,7 +182,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 	}
 	dbPlayers, err := c.queries.GetTournamentPlayers(r.Context(), tournamentID)
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting players for tournament", tournamentID, err)
 		utils.RespondWithError(w, 500, "error getting players")
 		return
 	}
@@ -220,7 +220,6 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 	tournamentInfo, err := c.queries.GetTournamentInfo(r.Context(), tournamentID)
 
 	if err != nil {
-		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
 		return
 	}
@@ -240,7 +239,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Request) {
 	tournaments, err := c.queries.GetScheduledTournaments(r.Context())
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting scheduled tournaments", err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting scheduled tournaments")
 		return
 	}
@@ -250,7 +249,7 @@ func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Re
 func (c *Controller) WriteLiveTournaments(w http.ResponseWriter, r *http.Request) {
 	tournaments, err := c.queries.GetLiveTournaments(r.Context())
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting live tournaments", err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting live tournaments")
 		return
 	}
@@ -304,7 +303,7 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		log.Println(err)
+		log.Println("error creating tournament", err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error creating tournament")
 		return
 	}
@@ -323,14 +322,13 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	}
 	tournamentInfo, err := c.queries.GetTournamentInfo(r.Context(), tournamentID.TournamentID)
 	if err != nil {
-		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament info")
 		return
 	}
 
 	err = c.queries.UpdateTournamentStartTime(context.Background(), tournamentInfo.ID)
 	if err != nil {
-		log.Println("Error updating tournament start time", err)
+		log.Println("error updating tournament start time", err)
 	}
 
 	err = c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
@@ -339,13 +337,13 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		log.Println("Error updating tournament status", err)
+		log.Println("error updating tournament status", err)
 	}
 
 	players, err := c.queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
 
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting tournament players", err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament players")
 		return
 	}
