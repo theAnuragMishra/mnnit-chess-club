@@ -252,7 +252,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 	c.socketManager.BroadcastToRoom(e, info.ID)
 	g.Done() <- struct{}{}
 	c.gameManager.RemoveGame(info.ID)
-	c.gameManager.AddRematch(info.ID, &game.RematchInfo{
+	c.rematchManager.addRematch(info.ID, &rematchInfo{
 		WhiteID:   info.WhiteID,
 		BlackID:   info.BlackID,
 		BaseTime:  g.BaseTime,
@@ -264,58 +264,6 @@ func (c *Controller) endGame(info game.EndNotification) {
 		e = socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
 		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.BlackID)
 		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
-		c.gameManager.RemoveRematch(info.ID)
+		c.rematchManager.removeRematch(info.ID)
 	})
-}
-
-func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
-	info, exists := c.gameManager.GetRematchByID(client.Room)
-	if !exists {
-		return nil
-	}
-	if !info.Offer {
-		opp := info.WhiteID
-		if info.WhiteID == client.UserID {
-			opp = info.BlackID
-		}
-		e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage("[]")}
-		c.socketManager.SendToUserClientsInARoom(e, client.Room, opp)
-		info.Offer = true
-		return nil
-	}
-	c.gameManager.RemoveRematch(client.Room)
-	id, err := c.generateUniqueGameID()
-	if err != nil {
-		return err
-	}
-	rating1, err1 := c.queries.GetUserRating(context.Background(), info.BlackID)
-	rating2, err2 := c.queries.GetUserRating(context.Background(), info.WhiteID)
-	if err1 != nil || err2 != nil {
-		return errors.New("server error while fetching ratings")
-	}
-	g := game.New(id, info.BaseTime, info.Increment, info.BlackID, info.WhiteID, "", c.gameRecv)
-	c.gameManager.AddGame(g)
-	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
-		ID:           id,
-		BaseTime:     int32(info.BaseTime.Seconds()),
-		Increment:    int32(info.Increment.Seconds()),
-		WhiteID:      &info.BlackID,
-		BlackID:      &info.WhiteID,
-		RatingW:      int32(rating1),
-		RatingB:      int32(rating2),
-		TournamentID: nil,
-	})
-	if err != nil {
-		return err
-	}
-
-	payload := map[string]any{"ID": id, "Type": "game"}
-	rawPayload, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.BlackID)
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.WhiteID)
-	return nil
 }

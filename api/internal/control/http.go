@@ -149,7 +149,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	g, exists := c.gameManager.GetGameByID(gameID)
 	if !exists {
-		_, canRematch := c.gameManager.GetRematchByID(gameID)
+		_, canRematch := c.rematchManager.getRematchByID(gameID)
 		moves, err := c.queries.GetGameMoves(r.Context(), gameID)
 		if err != nil {
 			log.Println(err)

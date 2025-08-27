@@ -6,13 +6,6 @@ import (
 	"github.com/notnil/chess"
 )
 
-type RematchInfo struct {
-	WhiteID   int32
-	BlackID   int32
-	BaseTime  time.Duration
-	Increment time.Duration
-	Offer     bool
-}
 type TimeControl struct {
 	BaseTime  int32 `json:"baseTime"`
 	Increment int32 `json:"increment"`
