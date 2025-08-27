@@ -28,8 +28,8 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if !paired {
 		return nil
 	}
-	rating1, err1 := c.Queries.GetUserRating(context.Background(), opp)
-	rating2, err2 := c.Queries.GetUserRating(context.Background(), client.UserID)
+	rating1, err1 := c.queries.GetUserRating(context.Background(), opp)
+	rating2, err2 := c.queries.GetUserRating(context.Background(), client.UserID)
 	if err1 != nil || err2 != nil {
 		return errors.New("server error while fetching ratings")
 	}
@@ -38,8 +38,8 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
-	c.GameManager.AddGame(g)
-	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+	c.gameManager.AddGame(g)
+	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,
 		BaseTime:     timeControls[tc].BaseTime,
 		Increment:    timeControls[tc].Increment,
@@ -58,8 +58,8 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.SendToUserClientsInARoom(e, "play", opp)
-	c.SocketManager.SendToUserClientsInARoom(e, "play", client.UserID)
+	c.socketManager.SendToUserClientsInARoom(e, "play", opp)
+	c.socketManager.SendToUserClientsInARoom(e, "play", client.UserID)
 	return nil
 }
 
@@ -69,7 +69,7 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := move.GameID
-	g, exists := c.GameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.GetGameByID(gameID)
 	if !exists {
 		return errors.New("game not found")
 	}
@@ -94,7 +94,7 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "Move_Response",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.BroadcastToRoom(e, gameID)
+	c.socketManager.BroadcastToRoom(e, gameID)
 
 	return nil
 }
@@ -106,7 +106,7 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	gameID := draw.GameID
-	g, exists := c.GameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.GetGameByID(gameID)
 	if !exists {
 		return nil
 	}
@@ -118,7 +118,7 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Type:    "drawOffer",
 			Payload: json.RawMessage("[]"),
 		}
-		c.SocketManager.SendToUserClientsInARoom(e, client.Room, reply)
+		c.socketManager.SendToUserClientsInARoom(e, client.Room, reply)
 	}
 	return nil
 }
@@ -129,7 +129,7 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := resign.GameID
-	g, exists := c.GameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.GetGameByID(gameID)
 	if !exists {
 		return nil
 	}
@@ -141,11 +141,11 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func (c *Controller) endGame(info game.EndNotification) {
-	g, exists := c.GameManager.GetGameByID(info.ID)
+	g, exists := c.gameManager.GetGameByID(info.ID)
 	if !exists {
 		return
 	}
-	t, ok := c.TournamentManager.GetTournament(info.TournamentID)
+	t, ok := c.tournamentManager.GetTournament(info.TournamentID)
 	if ok && info.Result == 4 {
 		if len(info.Moves)%2 == 0 {
 			reason := "White Didn't Play"
@@ -176,8 +176,8 @@ func (c *Controller) endGame(info game.EndNotification) {
 			r = 0.5
 		}
 
-		p1info, err1 := c.Queries.GetRatingInfo(context.Background(), info.WhiteID)
-		p2info, err2 := c.Queries.GetRatingInfo(context.Background(), info.BlackID)
+		p1info, err1 := c.queries.GetRatingInfo(context.Background(), info.WhiteID)
+		p2info, err2 := c.queries.GetRatingInfo(context.Background(), info.BlackID)
 		if err1 != nil || err2 != nil {
 			log.Println(err1, err2)
 			return
@@ -193,13 +193,13 @@ func (c *Controller) endGame(info game.EndNotification) {
 			Volatility: p2info.Volatility,
 		}
 		up1, up2 := utils.UpdateMatch(p1, p2, r)
-		err1 = c.Queries.UpdateRating(context.Background(), database.UpdateRatingParams{
+		err1 = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 			Rating:     up1.Rating,
 			Rd:         up1.RD,
 			Volatility: up1.Volatility,
 			ID:         info.WhiteID,
 		})
-		err2 = c.Queries.UpdateRating(context.Background(), database.UpdateRatingParams{
+		err2 = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 			Rating:     up2.Rating,
 			Rd:         up2.RD,
 			Volatility: up2.Volatility,
@@ -226,7 +226,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 		cb = int32(up2.Rating - p2info.Rating)
 	}
 
-	err := c.Queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
+	err := c.queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           info.Result,
 		ResultReason:     info.Reason,
 		ID:               info.ID,
@@ -249,10 +249,10 @@ func (c *Controller) endGame(info game.EndNotification) {
 		Type:    "game_end",
 		Payload: json.RawMessage(payload),
 	}
-	c.SocketManager.BroadcastToRoom(e, info.ID)
+	c.socketManager.BroadcastToRoom(e, info.ID)
 	g.Done() <- struct{}{}
-	c.GameManager.RemoveGame(info.ID)
-	c.GameManager.AddRematch(info.ID, &game.RematchInfo{
+	c.gameManager.RemoveGame(info.ID)
+	c.gameManager.AddRematch(info.ID, &game.RematchInfo{
 		WhiteID:   info.WhiteID,
 		BlackID:   info.BlackID,
 		BaseTime:  g.BaseTime,
@@ -262,14 +262,14 @@ func (c *Controller) endGame(info game.EndNotification) {
 	c.batchInsertMoves(info.ID, info.Moves)
 	time.AfterFunc(time.Second*30, func() {
 		e = socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
-		c.SocketManager.SendToUserClientsInARoom(e, info.ID, info.BlackID)
-		c.SocketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
-		c.GameManager.RemoveRematch(info.ID)
+		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.BlackID)
+		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
+		c.gameManager.RemoveRematch(info.ID)
 	})
 }
 
 func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
-	info, exists := c.GameManager.GetRematchByID(client.Room)
+	info, exists := c.gameManager.GetRematchByID(client.Room)
 	if !exists {
 		return nil
 	}
@@ -279,23 +279,23 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 			opp = info.BlackID
 		}
 		e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage("[]")}
-		c.SocketManager.SendToUserClientsInARoom(e, client.Room, opp)
+		c.socketManager.SendToUserClientsInARoom(e, client.Room, opp)
 		info.Offer = true
 		return nil
 	}
-	c.GameManager.RemoveRematch(client.Room)
+	c.gameManager.RemoveRematch(client.Room)
 	id, err := c.generateUniqueGameID()
 	if err != nil {
 		return err
 	}
-	rating1, err1 := c.Queries.GetUserRating(context.Background(), info.BlackID)
-	rating2, err2 := c.Queries.GetUserRating(context.Background(), info.WhiteID)
+	rating1, err1 := c.queries.GetUserRating(context.Background(), info.BlackID)
+	rating2, err2 := c.queries.GetUserRating(context.Background(), info.WhiteID)
 	if err1 != nil || err2 != nil {
 		return errors.New("server error while fetching ratings")
 	}
 	g := game.New(id, info.BaseTime, info.Increment, info.BlackID, info.WhiteID, "", c.gameRecv)
-	c.GameManager.AddGame(g)
-	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+	c.gameManager.AddGame(g)
+	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,
 		BaseTime:     int32(info.BaseTime.Seconds()),
 		Increment:    int32(info.Increment.Seconds()),
@@ -315,7 +315,7 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 		return err
 	}
 	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.SendToUserClientsInARoom(e, client.Room, info.BlackID)
-	c.SocketManager.SendToUserClientsInARoom(e, client.Room, info.WhiteID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.BlackID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.WhiteID)
 	return nil
 }

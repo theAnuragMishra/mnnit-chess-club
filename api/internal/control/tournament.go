@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
-	err := c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
+	err := c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
 		Status: 2,
 		ID:     id,
 	})
@@ -24,7 +24,7 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 	if err != nil {
 		log.Println(err)
 	} else {
-		err = c.Queries.BatchUpdateTournamentPlayers(context.Background(), database.BatchUpdateTournamentPlayersParams{
+		err = c.queries.BatchUpdateTournamentPlayers(context.Background(), database.BatchUpdateTournamentPlayersParams{
 			TournamentID: id,
 			PlayersInput: inputBytes,
 		})
@@ -39,8 +39,8 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 		log.Println(err)
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
-	c.SocketManager.BroadcastToRoom(e, id)
-	c.TournamentManager.RemoveTournament(id)
+	c.socketManager.BroadcastToRoom(e, id)
+	c.tournamentManager.RemoveTournament(id)
 }
 
 func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
@@ -58,7 +58,7 @@ func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 		client.Send(e)
 		return errors.New("tournament ID can't be empty")
 	}
-	t, ok := c.TournamentManager.GetTournament(tidP.TournamentID)
+	t, ok := c.tournamentManager.GetTournament(tidP.TournamentID)
 	if !ok {
 		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err
@@ -69,7 +69,7 @@ func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 }
 
 func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
-	status, err := c.Queries.GetTournamentStatus(context.Background(), tournamentID)
+	status, err := c.queries.GetTournamentStatus(context.Background(), tournamentID)
 	if err != nil {
 		client.Send(e)
 		return err
@@ -78,12 +78,12 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 		client.Send(e)
 		return errors.New("tournament ended")
 	}
-	_, err = c.Queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
+	_, err = c.queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
 		PlayerID:     client.UserID,
 		TournamentID: tournamentID,
 	})
 	if err != nil {
-		err = c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
+		err = c.queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
 			PlayerID:     client.UserID,
 			TournamentID: tournamentID,
 		})
@@ -91,7 +91,7 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 			client.Send(e)
 			return err
 		}
-		rating, err := c.Queries.GetUserRating(context.Background(), client.UserID)
+		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
 		if err != nil {
 			client.Send(e)
 			return err
@@ -102,9 +102,9 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, tournamentID)
+		c.socketManager.BroadcastToRoom(e, tournamentID)
 	} else {
-		err := c.Queries.DeleteTournamentPlayer(context.Background(), client.UserID)
+		err := c.queries.DeleteTournamentPlayer(context.Background(), client.UserID)
 		if err != nil {
 			client.Send(e)
 			return err
@@ -114,7 +114,7 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, tournamentID)
+		c.socketManager.BroadcastToRoom(e, tournamentID)
 	}
 	return nil
 }
@@ -139,9 +139,9 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, t.ID)
+		c.socketManager.BroadcastToRoom(e, t.ID)
 	} else {
-		err := c.Queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
+		err := c.queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
 			PlayerID:     client.UserID,
 			TournamentID: t.ID,
 		})
@@ -149,7 +149,7 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			client.Send(e)
 			return err
 		}
-		rating, err := c.Queries.GetUserRating(context.Background(), client.UserID)
+		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
 		if err != nil {
 			client.Send(e)
 			return err
@@ -167,7 +167,7 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			return err
 		}
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.SocketManager.BroadcastToRoom(e, t.ID)
+		c.socketManager.BroadcastToRoom(e, t.ID)
 	}
 	return nil
 }

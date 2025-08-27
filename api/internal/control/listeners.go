@@ -23,7 +23,7 @@ func (c *Controller) tournamentReceiveListener() {
 		switch msg := m.(type) {
 		case tournament.PairingRequest:
 			go func() {
-				t, exists := c.TournamentManager.GetTournament(msg.TournamentID)
+				t, exists := c.tournamentManager.GetTournament(msg.TournamentID)
 				if !exists {
 					return
 				}
@@ -34,8 +34,8 @@ func (c *Controller) tournamentReceiveListener() {
 					return
 				}
 				g := game.New(id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, msg.PlayerA.ID, msg.PlayerB.ID, t.ID, c.gameRecv)
-				c.GameManager.AddGame(g)
-				err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
+				c.gameManager.AddGame(g)
+				err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 					ID:           id,
 					BaseTime:     t.TimeControl.BaseTime,
 					Increment:    t.TimeControl.Increment,
@@ -58,8 +58,8 @@ func (c *Controller) tournamentReceiveListener() {
 				}
 				e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
 
-				c.SocketManager.SendToUserClientsInARoom(e, t.ID, msg.PlayerA.ID)
-				c.SocketManager.SendToUserClientsInARoom(e, t.ID, msg.PlayerB.ID)
+				c.socketManager.SendToUserClientsInARoom(e, t.ID, msg.PlayerA.ID)
+				c.socketManager.SendToUserClientsInARoom(e, t.ID, msg.PlayerB.ID)
 			}()
 		case tournament.EndRequest:
 			go c.endTournament(msg.TournamentID, msg.Players)
@@ -67,7 +67,7 @@ func (c *Controller) tournamentReceiveListener() {
 			go func() {
 				availableToPair := make([]*tournament.Player, 0, len(msg.Players))
 				for _, player := range msg.Players {
-					if player.IsActive && c.SocketManager.IsUserInARoom(msg.TournamentID, player.ID) {
+					if player.IsActive && c.socketManager.IsUserInARoom(msg.TournamentID, player.ID) {
 						availableToPair = append(availableToPair, player)
 					}
 				}

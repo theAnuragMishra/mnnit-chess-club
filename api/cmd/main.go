@@ -13,7 +13,6 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/control"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/routes"
 )
 
 func main() {
@@ -54,7 +53,7 @@ func setupAPI() {
 
 	controller := control.NewController(queries)
 
-	router := routes.NewChiRouter(authHandler, controller)
+	router := control.NewChiRouter(authHandler, controller)
 	srv := &http.Server{
 		Handler: router,
 		Addr:    ":" + portString,

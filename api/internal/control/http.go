@@ -20,7 +20,7 @@ import (
 func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
-	c.SocketManager.DisconnectAllClientsOfASession(session.UserID, session.ID)
+	c.socketManager.DisconnectAllClientsOfASession(session.UserID, session.ID)
 	cookie := &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
@@ -32,7 +32,7 @@ func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, cookie)
 
-	err := c.Queries.DeleteSession(r.Context(), session.ID)
+	err := c.queries.DeleteSession(r.Context(), session.ID)
 	if err != nil {
 		log.Printf("error deleting session: %v", err)
 		return
@@ -40,7 +40,7 @@ func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) WriteLeaderBoard(w http.ResponseWriter, r *http.Request) {
-	lb, err := c.Queries.GetTopN(context.Background(), 10)
+	lb, err := c.queries.GetTopN(context.Background(), 10)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "error fetching leaderboard")
@@ -51,7 +51,7 @@ func (c *Controller) WriteLeaderBoard(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
-	user, err := c.Queries.GetUserByUserID(r.Context(), session.UserID)
+	user, err := c.queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Internal server error")
@@ -71,7 +71,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.Queries.UpdateUsername(r.Context(), database.UpdateUsernameParams{
+	err = c.queries.UpdateUsername(r.Context(), database.UpdateUsernameParams{
 		Username: &usernamePayload.Username,
 		ID:       session.UserID,
 	})
@@ -98,7 +98,7 @@ func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
 		offSet = 0
 	}
 
-	games, err := c.Queries.GetPlayerGames(r.Context(), database.GetPlayerGamesParams{
+	games, err := c.queries.GetPlayerGames(r.Context(), database.GetPlayerGamesParams{
 		Username: &username,
 		Limit:    15,
 		Offset:   offSet,
@@ -119,14 +119,14 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "invalid username")
 		return
 	}
-	profile, err := c.Queries.GetUserPublicInfo(r.Context(), &username)
+	profile, err := c.queries.GetUserPublicInfo(r.Context(), &username)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "user not found")
 		return
 	}
 
-	counts, err := c.Queries.GetGameNumbers(r.Context(), &username)
+	counts, err := c.queries.GetGameNumbers(r.Context(), &username)
 
 	if err != nil {
 		log.Println(err)
@@ -137,20 +137,20 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameID := chi.URLParam(r, "gameID")
-	challenge, exists := c.GameManager.GetChallengeByID(gameID)
+	challenge, exists := c.gameManager.GetChallengeByID(gameID)
 	if exists {
 		utils.RespondWithJSON(w, http.StatusOK, challenge)
 		return
 	}
-	foundGame, err := c.Queries.GetGameInfo(r.Context(), gameID)
+	foundGame, err := c.queries.GetGameInfo(r.Context(), gameID)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 		return
 	}
-	g, exists := c.GameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.GetGameByID(gameID)
 	if !exists {
-		_, canRematch := c.GameManager.GetRematchByID(gameID)
-		moves, err := c.Queries.GetGameMoves(r.Context(), gameID)
+		_, canRematch := c.gameManager.GetRematchByID(gameID)
+		moves, err := c.queries.GetGameMoves(r.Context(), gameID)
 		if err != nil {
 			log.Println(err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "error getting game moves")
@@ -180,13 +180,13 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
 		return
 	}
-	dbPlayers, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID)
+	dbPlayers, err := c.queries.GetTournamentPlayers(r.Context(), tournamentID)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, 500, "error getting players")
 		return
 	}
-	st, exists := c.TournamentManager.GetTournament(tournamentID)
+	st, exists := c.tournamentManager.GetTournament(tournamentID)
 	if exists {
 		msg := tournament.GetState{Reply: make(chan tournament.SnapShot, 1)}
 		st.Inbox() <- msg
@@ -217,7 +217,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
-	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID)
+	tournamentInfo, err := c.queries.GetTournamentInfo(r.Context(), tournamentID)
 
 	if err != nil {
 		log.Println(err)
@@ -238,7 +238,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Request) {
-	tournaments, err := c.Queries.GetScheduledTournaments(r.Context())
+	tournaments, err := c.queries.GetScheduledTournaments(r.Context())
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting scheduled tournaments")
@@ -248,7 +248,7 @@ func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Re
 }
 
 func (c *Controller) WriteLiveTournaments(w http.ResponseWriter, r *http.Request) {
-	tournaments, err := c.Queries.GetLiveTournaments(r.Context())
+	tournaments, err := c.queries.GetLiveTournaments(r.Context())
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting live tournaments")
@@ -293,7 +293,7 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.Queries.CreateTournament(r.Context(), database.CreateTournamentParams{
+	err = c.queries.CreateTournament(r.Context(), database.CreateTournamentParams{
 		ID:        id,
 		Name:      tournamentPayload.Name,
 		StartTime: tournamentPayload.StartTime,
@@ -321,19 +321,19 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
 		return
 	}
-	tournamentInfo, err := c.Queries.GetTournamentInfo(r.Context(), tournamentID.TournamentID)
+	tournamentInfo, err := c.queries.GetTournamentInfo(r.Context(), tournamentID.TournamentID)
 	if err != nil {
 		log.Println(err)
 		utils.RespondWithError(w, http.StatusBadRequest, "Error getting tournament info")
 		return
 	}
 
-	err = c.Queries.UpdateTournamentStartTime(context.Background(), tournamentInfo.ID)
+	err = c.queries.UpdateTournamentStartTime(context.Background(), tournamentInfo.ID)
 	if err != nil {
 		log.Println("Error updating tournament start time", err)
 	}
 
-	err = c.Queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
+	err = c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
 		Status: 1,
 		ID:     tournamentInfo.ID,
 	})
@@ -342,7 +342,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error updating tournament status", err)
 	}
 
-	players, err := c.Queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
+	players, err := c.queries.GetTournamentPlayers(r.Context(), tournamentID.TournamentID)
 
 	if err != nil {
 		log.Println(err)
@@ -353,12 +353,12 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		initialPlayers := make(map[int32]*tournament.Player)
 		for _, player := range players {
-			p := tournament.NewPlayer(player.ID, player.Rating, c.SocketManager.IsUserInARoom(tournamentInfo.ID, player.ID))
+			p := tournament.NewPlayer(player.ID, player.Rating, c.socketManager.IsUserInARoom(tournamentInfo.ID, player.ID))
 			initialPlayers[player.ID] = p
 		}
 
 		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, initialPlayers, c.tournamentRecv)
-		c.TournamentManager.AddTournament(t)
+		c.tournamentManager.AddTournament(t)
 
 		//send refresh event to all the players on the tournament page
 		payload := map[string]any{"ID": tournamentInfo.ID, "Type": "tournament"}
@@ -367,7 +367,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 		e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
-		c.SocketManager.BroadcastToRoom(e, tournamentInfo.ID)
+		c.socketManager.BroadcastToRoom(e, tournamentInfo.ID)
 	}()
 	utils.RespondWithJSON(w, http.StatusOK, "")
 }

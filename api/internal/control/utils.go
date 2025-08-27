@@ -26,7 +26,7 @@ func (c *Controller) sendScoreUpdateEvent(p tournament.UpdatedPlayerSnapShots, r
 		Payload: json.RawMessage(payload),
 	}
 
-	c.SocketManager.BroadcastToRoom(e, room)
+	c.socketManager.BroadcastToRoom(e, room)
 }
 
 func (c *Controller) batchInsertMoves(id string, m []game.Move) {
@@ -42,7 +42,7 @@ func (c *Controller) batchInsertMoves(id string, m []game.Move) {
 			TimeLeft:     move.TimeLeft,
 		}
 	}
-	_, err := c.Queries.InsertMoves(context.Background(), moves)
+	_, err := c.queries.InsertMoves(context.Background(), moves)
 	if err != nil {
 		log.Println("error inserting moves", err)
 	}
@@ -58,8 +58,8 @@ func (c *Controller) generateUniqueGameID() (string, error) {
 			log.Println("error generating id:", err)
 			return "", err
 		}
-		_, err1 := c.Queries.GetGameByID(context.Background(), id)
-		_, err2 := c.Queries.GetTournamentByID(context.Background(), id)
+		_, err1 := c.queries.GetGameByID(context.Background(), id)
+		_, err2 := c.queries.GetTournamentByID(context.Background(), id)
 
 		if err1 == nil || err2 == nil {
 			log.Println("game or tournament found with id", err)
@@ -79,8 +79,8 @@ func (c *Controller) generateUniqueTournamentID() (string, error) {
 			log.Println("error generating id:", err)
 			return "", err
 		}
-		_, err1 := c.Queries.GetTournamentByID(context.Background(), id)
-		_, err2 := c.Queries.GetGameByID(context.Background(), id)
+		_, err1 := c.queries.GetTournamentByID(context.Background(), id)
+		_, err2 := c.queries.GetGameByID(context.Background(), id)
 
 		if err1 == nil || err2 == nil {
 			log.Println("game or tournament found with id", err)
