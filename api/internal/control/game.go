@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
@@ -14,53 +15,34 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
-func initGame(c *Controller, event socket.Event, client *socket.Client) error {
-	var tc int
-	if err := json.Unmarshal(event.Payload, &tc); err != nil {
-		return err
+type gameManager struct {
+	sync.RWMutex
+	games map[string]*game.Game
+}
+
+func newGameManager() *gameManager {
+	return &gameManager{
+		games: make(map[string]*game.Game),
 	}
-	if tc < 0 || tc > 11 {
-		return nil
-	}
-	//t := time.Now()
-	opp, paired := c.matcher.handleRequest(client, tc)
-	//fmt.Println(time.Since(t))
-	if !paired {
-		return nil
-	}
-	rating1, err1 := c.queries.GetUserRating(context.Background(), opp)
-	rating2, err2 := c.queries.GetUserRating(context.Background(), client.UserID)
-	if err1 != nil || err2 != nil {
-		return errors.New("server error while fetching ratings")
-	}
-	id, err := c.generateUniqueGameID()
-	if err != nil {
-		return err
-	}
-	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
-	c.gameManager.AddGame(g)
-	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
-		ID:           id,
-		BaseTime:     timeControls[tc].BaseTime,
-		Increment:    timeControls[tc].Increment,
-		WhiteID:      &opp,
-		BlackID:      &client.UserID,
-		RatingW:      int32(rating1),
-		RatingB:      int32(rating2),
-		TournamentID: nil,
-	})
-	if err != nil {
-		return err
-	}
-	payload := map[string]any{"ID": id, "Type": "game"}
-	rawPayload, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.socketManager.SendToUserClientsInARoom(e, "play", opp)
-	c.socketManager.SendToUserClientsInARoom(e, "play", client.UserID)
-	return nil
+}
+
+func (m *gameManager) AddGame(g *game.Game) {
+	m.Lock()
+	m.games[g.ID] = g
+	m.Unlock()
+}
+
+func (m *gameManager) RemoveGame(id string) {
+	m.Lock()
+	delete(m.games, id)
+	m.Unlock()
+}
+
+func (m *gameManager) GetGameByID(id string) (*game.Game, bool) {
+	m.RLock()
+	g, exists := m.games[id]
+	m.RUnlock()
+	return g, exists
 }
 
 func move(c *Controller, event socket.Event, client *socket.Client) error {

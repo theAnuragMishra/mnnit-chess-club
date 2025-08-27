@@ -29,7 +29,7 @@ var handlers = map[string]EventHandler{
 
 type Controller struct {
 	socketManager     *socket.Manager
-	gameManager       *game.Manager
+	gameManager       *gameManager
 	matcher           *matcher
 	rematchManager    *rematchManager
 	challengeManager  *challengeManager
@@ -42,7 +42,7 @@ type Controller struct {
 func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
 	c.socketManager = socket.NewManager(c.handleEvent, c.handleClientDisconnect)
-	c.gameManager = game.NewManager()
+	c.gameManager = newGameManager()
 	c.matcher = newMatcher()
 	c.rematchManager = newRematchManager()
 	c.challengeManager = newChallengeManager()

@@ -1,8 +1,13 @@
 package control
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"sync"
+	"time"
 
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
@@ -81,4 +86,53 @@ func (m *matcher) removeClient(client *socket.Client, tc int) {
 			return
 		}
 	}
+}
+
+func initGame(c *Controller, event socket.Event, client *socket.Client) error {
+	var tc int
+	if err := json.Unmarshal(event.Payload, &tc); err != nil {
+		return err
+	}
+	if tc < 0 || tc > 11 {
+		return nil
+	}
+	//t := time.Now()
+	opp, paired := c.matcher.handleRequest(client, tc)
+	//fmt.Println(time.Since(t))
+	if !paired {
+		return nil
+	}
+	rating1, err1 := c.queries.GetUserRating(context.Background(), opp)
+	rating2, err2 := c.queries.GetUserRating(context.Background(), client.UserID)
+	if err1 != nil || err2 != nil {
+		return errors.New("server error while fetching ratings")
+	}
+	id, err := c.generateUniqueGameID()
+	if err != nil {
+		return err
+	}
+	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
+	c.gameManager.AddGame(g)
+	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
+		ID:           id,
+		BaseTime:     timeControls[tc].BaseTime,
+		Increment:    timeControls[tc].Increment,
+		WhiteID:      &opp,
+		BlackID:      &client.UserID,
+		RatingW:      int32(rating1),
+		RatingB:      int32(rating2),
+		TournamentID: nil,
+	})
+	if err != nil {
+		return err
+	}
+	payload := map[string]any{"ID": id, "Type": "game"}
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
+	c.socketManager.SendToUserClientsInARoom(e, "play", opp)
+	c.socketManager.SendToUserClientsInARoom(e, "play", client.UserID)
+	return nil
 }
