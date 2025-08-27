@@ -31,7 +31,7 @@ func (h *Handler) ValidateSession(ctx context.Context, token string) (database.G
 	if time.Now().After(session.ExpiresAt) {
 		err := h.queries.DeleteSession(ctx, token)
 		if err != nil {
-			log.Println(err)
+			log.Println("error deleting session", err)
 		}
 		return session, errors.New("session expired")
 	}

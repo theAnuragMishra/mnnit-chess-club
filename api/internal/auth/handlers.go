@@ -23,7 +23,7 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.queries.GetUserByUserID(r.Context(), session.UserID)
 	if err != nil {
-		log.Println(err)
+		log.Println("error getting user by id", err)
 		utils.RespondWithError(w, http.StatusInternalServerError, "Error getting user")
 		return
 	}
