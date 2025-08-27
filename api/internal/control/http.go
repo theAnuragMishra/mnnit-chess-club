@@ -20,7 +20,7 @@ import (
 func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
-	c.SocketManager.RemoveUser(session.UserID)
+	c.SocketManager.DisconnectAllClientsOfASession(session.UserID, session.ID)
 	cookie := &http.Cookie{
 		Name:     "session_token",
 		Value:    "",

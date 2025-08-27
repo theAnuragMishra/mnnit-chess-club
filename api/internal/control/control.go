@@ -39,7 +39,7 @@ type Controller struct {
 
 func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
-	c.SocketManager = socket.NewManager(c.handleEvent)
+	c.SocketManager = socket.NewManager(c.handleEvent, c.handleClientDisconnect)
 	c.GameManager = game.NewManager()
 	c.Matcher = game.NewMatcher()
 	c.TournamentManager = tournament.NewManager()
@@ -68,4 +68,8 @@ func (c *Controller) handleEvent(event socket.Event, client *socket.Client) erro
 	} else {
 		return errors.New("there is no event of this type")
 	}
+}
+
+func (c *Controller) handleClientDisconnect(client *socket.Client) {
+
 }

@@ -16,10 +16,11 @@ type Client struct {
 	connection *websocket.Conn
 	UserID     int32
 	// manager is the manager used to manage the client
-	manager  *Manager
-	egress   chan Event
-	Room     string
-	Username string
+	manager   *Manager
+	egress    chan Event
+	Room      string
+	Username  string
+	sessionID string
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
@@ -36,7 +37,10 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 func (c *Client) readMessages() {
 	defer func() {
 		//log.Println("client disconnected ", c)
+		c.manager.OnClientDisconnect(c)
+		c.manager.Lock()
 		c.manager.RemoveClient(c)
+		c.manager.Unlock()
 	}()
 	for {
 		_, payload, err := c.connection.ReadMessage()
@@ -65,10 +69,10 @@ func (c *Client) readMessages() {
 }
 
 func (c *Client) writeMessages() {
-	defer func() {
-		//log.Println("Closing write connection for client:", c.UserID)
-		c.manager.RemoveClient(c)
-	}()
+	//defer func() {
+	//	log.Println("Closing write connection for client:", c.UserID)
+	//	c.manager.RemoveClient(c)
+	//}()
 	for {
 		select {
 		case message, ok := <-c.egress:

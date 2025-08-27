@@ -20,16 +20,18 @@ var webSocketUpgrader = websocket.Upgrader{
 
 type Manager struct {
 	sync.RWMutex
-	clients   ClientList
-	rooms     map[string]map[*Client]bool
-	OnMessage func(event Event, client *Client) error
+	clients            ClientList
+	rooms              map[string]map[*Client]bool
+	OnMessage          func(event Event, client *Client) error
+	OnClientDisconnect func(client *Client)
 }
 
-func NewManager(onMessage func(event Event, client *Client) error) *Manager {
+func NewManager(onMessage func(event Event, client *Client) error, onClientDisconnect func(client *Client)) *Manager {
 	m := &Manager{
-		clients:   make(ClientList),
-		OnMessage: onMessage,
-		rooms:     make(map[string]map[*Client]bool),
+		clients:            make(ClientList),
+		OnMessage:          onMessage,
+		rooms:              make(map[string]map[*Client]bool),
+		OnClientDisconnect: onClientDisconnect,
 	}
 	return m
 }
@@ -49,6 +51,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := NewClient(conn, m, session.UserID, *session.Username)
+	client.sessionID = session.ID
 	m.addClient(client)
 
 	// for _, client := range m.clients {
@@ -71,9 +74,6 @@ func (m *Manager) addClient(client *Client) {
 }
 
 func (m *Manager) RemoveClient(client *Client) {
-	m.Lock()
-	defer m.Unlock()
-
 	if clients, ok := m.clients[client.UserID]; ok {
 		if _, ok := clients[client]; ok {
 			err := client.connection.Close()
@@ -95,23 +95,17 @@ func (m *Manager) RemoveClient(client *Client) {
 	}
 }
 
-func (m *Manager) RemoveUser(id int32) {
+func (m *Manager) DisconnectAllClientsOfASession(id int32, sessionID string) {
 	m.Lock()
 	defer m.Unlock()
 
 	if clients, ok := m.clients[id]; ok {
 		for client := range clients {
-			err := client.connection.Close()
-			if err != nil {
-				return
-			}
-			delete(m.rooms[client.Room], client)
-			if len(m.rooms[client.Room]) == 0 {
-				delete(m.rooms, client.Room)
+			if client.sessionID == sessionID {
+				m.RemoveClient(client)
 			}
 		}
 	}
-	delete(m.clients, id)
 }
 
 func (m *Manager) AddClientToRoom(room string, client *Client) {
