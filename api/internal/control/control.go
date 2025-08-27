@@ -30,7 +30,7 @@ var handlers = map[string]EventHandler{
 type Controller struct {
 	SocketManager     *socket.Manager
 	GameManager       *game.Manager
-	Matcher           *game.Matcher
+	matcher           *matcher
 	Queries           *database.Queries
 	TournamentManager *tournament.Manager
 	gameRecv          chan game.EndNotification
@@ -41,7 +41,7 @@ func NewController(queries *database.Queries) *Controller {
 	c := Controller{}
 	c.SocketManager = socket.NewManager(c.handleEvent, c.handleClientDisconnect)
 	c.GameManager = game.NewManager()
-	c.Matcher = game.NewMatcher()
+	c.matcher = newMatcher()
 	c.TournamentManager = tournament.NewManager()
 	c.Queries = queries
 	c.gameRecv = make(chan game.EndNotification, 256)
@@ -71,5 +71,7 @@ func (c *Controller) handleEvent(event socket.Event, client *socket.Client) erro
 }
 
 func (c *Controller) handleClientDisconnect(client *socket.Client) {
-
+	for i := range 12 {
+		c.matcher.removeClient(client, i)
+	}
 }

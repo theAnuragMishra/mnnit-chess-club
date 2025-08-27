@@ -23,7 +23,7 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 		return nil
 	}
 	//t := time.Now()
-	opp, paired := c.Matcher.HandleRequest(client.UserID, tc)
+	opp, paired := c.matcher.handleRequest(client, tc)
 	//fmt.Println(time.Since(t))
 	if !paired {
 		return nil
@@ -37,12 +37,12 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if err != nil {
 		return err
 	}
-	g := game.New(id, time.Duration(game.TimeControls[tc].BaseTime)*time.Second, time.Duration(game.TimeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
+	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp, client.UserID, "", c.gameRecv)
 	c.GameManager.AddGame(g)
 	err = c.Queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,
-		BaseTime:     game.TimeControls[tc].BaseTime,
-		Increment:    game.TimeControls[tc].Increment,
+		BaseTime:     timeControls[tc].BaseTime,
+		Increment:    timeControls[tc].Increment,
 		WhiteID:      &opp,
 		BlackID:      &client.UserID,
 		RatingW:      int32(rating1),
