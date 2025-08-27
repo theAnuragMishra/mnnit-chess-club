@@ -75,6 +75,8 @@ func (c *Controller) handleEvent(event socket.Event, client *socket.Client) erro
 }
 
 func (c *Controller) handleClientDisconnect(client *socket.Client) {
+	c.matcher.Lock()
+	defer c.matcher.Unlock()
 	for i := range 12 {
 		c.matcher.removeClient(client, i)
 	}
