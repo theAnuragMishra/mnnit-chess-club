@@ -40,13 +40,15 @@ func (g *Game) setUpAbort() {
 }
 
 func (g *Game) snapshot() SnapShot {
-	timePassed := time.Since(g.st.LastMoveTime)
-	if g.st.Board.Position().Turn() == chess.White {
-		g.st.TimeWhite = max(g.st.TimeWhite-timePassed, 0)
-	} else {
-		g.st.TimeBlack = max(g.st.TimeBlack-timePassed, 0)
+	if len(g.st.Moves) >= 2 {
+		timePassed := time.Since(g.st.LastMoveTime)
+		if g.st.Board.Position().Turn() == chess.White {
+			g.st.TimeWhite = max(g.st.TimeWhite-timePassed, 0)
+		} else {
+			g.st.TimeBlack = max(g.st.TimeBlack-timePassed, 0)
+		}
+		g.st.LastMoveTime = time.Now()
 	}
-	g.st.LastMoveTime = time.Now()
 	out := SnapShot{
 		Result:        g.st.Result,
 		TimeWhite:     g.st.TimeWhite.Milliseconds(),

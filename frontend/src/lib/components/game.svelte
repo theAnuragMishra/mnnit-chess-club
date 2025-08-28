@@ -40,13 +40,13 @@
 	let changeBlack = $state(d.game.ChangeB ?? 0);
 	let result = $state(d.game.Result);
 	let reason = $state(d.game.ResultReason);
-	let moveHistory = $state(d.moves);
+	let moveHistory = $state(d.moves ?? []);
 	let activeIndex = $state(d.moves ? d.moves.length - 1 : -1);
 	let chessLatest = $derived(
-		moveHistory ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
+		moveHistory.length > 0 ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
 	);
 	let chessForView = $derived(
-		moveHistory && activeIndex !== -1 ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
+		activeIndex !== -1 ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
 	const isPlayer =
 		data.user.username === d.game.WhiteUsername || data.user.username === d.game.BlackUsername;
@@ -60,7 +60,7 @@
 			fen: chessForView.fen(),
 			lastMove:
 				activeIndex === -1 ? [] : [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest],
-			viewOnly: moveHistory && activeIndex !== moveHistory.length - 1,
+			viewOnly: activeIndex !== moveHistory.length - 1,
 			check: chessForView.isCheck()
 		});
 	};
@@ -139,8 +139,7 @@
 	const handleMoveResponse = (payload: any) => {
 		//console.log(payload);
 		console.log('finish', performance.now());
-		if (moveHistory) moveHistory = [...moveHistory, payload.Move];
-		else moveHistory = [payload.Move];
+		moveHistory = [...moveHistory, payload.Move];
 		timeBlack = payload.TimeBlack;
 		timeWhite = payload.TimeWhite;
 		ground?.set({
@@ -166,8 +165,8 @@
 	};
 
 	//timer setup
-	const abortLength = baseTime >= 20 ? 20 : baseTime >= 10 ? 10 : baseTime;
-	const lowAbortTime = baseTime >= 20 ? 10 : baseTime >= 10 ? 5 : 2;
+	const abortLength = baseTime >= 20 ? 20000 : baseTime >= 10 ? 10000 : baseTime * 1000;
+	const lowAbortTime = baseTime >= 20 ? 10000 : baseTime >= 10 ? 5000 : 2000;
 	const lowTime =
 		(baseTime >= 1800
 			? 120
@@ -202,6 +201,8 @@
 						: moveHistory[activeIndex - 1].TimeLeft
 			: timeWhite
 	);
+	let abortTimeWhite = $state(abortLength);
+	let abortTimeBlack = $state(abortLength);
 	let animationFrame: number | null;
 	let startTime: DOMHighResTimeStamp | null;
 	let lowTimePlayed = $state(false);
@@ -213,23 +214,33 @@
 			const tick = (currentTime: number) => {
 				if (!startTime) return;
 				const elapsed = currentTime - startTime;
-				const newTime = (trn == 'w' ? timeWhite : timeBlack) - elapsed;
+				if (moveHistory.length >= 2) {
+					const newTime = (trn == 'w' ? timeWhite : timeBlack) - elapsed;
 
-				if (newTime <= 0) {
-					if (trn == 'w') wtime = 0;
-					else btime = 0;
-					return;
-				}
-				if (trn == 'w') wtime = newTime;
-				else btime = newTime;
-
-				if ((whiteUp && trn == 'b') || (!whiteUp && trn == 'w')) {
-					if (!lowTimePlayed && newTime <= lowTime) {
-						lowTimePlayed = true;
-						lowTimeAudio?.play();
+					if (newTime <= 0) {
+						if (trn == 'w') wtime = 0;
+						else btime = 0;
+						return;
 					}
-				}
+					if (trn == 'w') wtime = newTime;
+					else btime = newTime;
 
+					if ((whiteUp && trn == 'b') || (!whiteUp && trn == 'w')) {
+						if (!lowTimePlayed && newTime <= lowTime) {
+							lowTimePlayed = true;
+							lowTimeAudio?.play();
+						}
+					}
+				} else {
+					const newTime = abortLength - elapsed;
+					if (newTime <= 0) {
+						if (trn == 'w') abortTimeWhite = 0;
+						else abortTimeBlack = 0;
+						return;
+					}
+					if (trn == 'w') abortTimeWhite = newTime;
+					else abortTimeBlack = newTime;
+				}
 				animationFrame = requestAnimationFrame(tick);
 			};
 
@@ -294,24 +305,16 @@
 	</div>
 	<div class="acontainer w-full xl:w-3/4">
 		<div class="abortt">
-			{#if result === 0 && (whiteUp ? !moveHistory || moveHistory.length == 0 : moveHistory && moveHistory.length == 1)}
-				<AbortTimer
-					{lowAbortTime}
-					time={abortLength - (baseTime - Math.floor((whiteUp ? wtime : btime) / 1000))}
-					tb="t"
-				/>
+			{#if result === 0 && (whiteUp ? moveHistory.length == 0 : moveHistory.length == 1)}
+				<AbortTimer {lowAbortTime} time={whiteUp ? abortTimeWhite : abortTimeBlack} tb="t" />
 			{/if}
 		</div>
 		<div class="board flex w-full flex-col justify-center">
 			<Chessboard {setGround} {boardConfig} />
 		</div>
 		<div class="abortb">
-			{#if result === 0 && (whiteUp ? moveHistory && moveHistory.length == 1 : !moveHistory || moveHistory.length == 0)}
-				<AbortTimer
-					{lowAbortTime}
-					time={abortLength - (baseTime - Math.floor((whiteUp ? btime : wtime) / 1000))}
-					tb="b"
-				/>
+			{#if result === 0 && (whiteUp ? moveHistory.length == 1 : moveHistory.length == 0)}
+				<AbortTimer {lowAbortTime} time={whiteUp ? abortTimeBlack : abortTimeWhite} tb="b" />
 			{/if}
 		</div>
 		<div
@@ -331,7 +334,7 @@
 			<Clock
 				{lowTime}
 				time={whiteUp ? wtime : btime}
-				active={result !== 0
+				active={result !== 0 || moveHistory.length < 2
 					? false
 					: whiteUp
 						? chessLatest.turn() === 'w'
@@ -359,7 +362,7 @@
 		</div>
 		<div class="draw-resign h-fit w-full">
 			{#if isPlayer && result === 0}
-				<DrawResign isDisabled={!moveHistory || moveHistory.length < 2} {gameID} />
+				<DrawResign isDisabled={moveHistory.length < 2} {gameID} />
 			{/if}
 		</div>
 		<div class="back_to_tournament w-full text-center">
@@ -402,7 +405,7 @@
 			<Clock
 				{lowTime}
 				time={whiteUp ? btime : wtime}
-				active={result !== 0
+				active={result !== 0 || moveHistory.length < 2
 					? false
 					: whiteUp
 						? chessLatest.turn() === 'b'

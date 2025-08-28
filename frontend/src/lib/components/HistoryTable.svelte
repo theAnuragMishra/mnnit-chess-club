@@ -13,7 +13,7 @@
 
 <div class="w-full bg-gray-800 text-sm md:w-[300px] md:text-lg">
 	<div class="flex w-full items-center justify-between bg-[#232327] px-5 md:px-2">
-		{#if moveHistory}
+		{#if moveHistory.length > 0}
 			<div class="flex gap-[10px]">
 				<button
 					aria-label="go to first move"

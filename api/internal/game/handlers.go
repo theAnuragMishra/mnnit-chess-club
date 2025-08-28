@@ -17,17 +17,18 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 	if g.st.Board.Position().Turn() == chess.Black && c != g.BlackID {
 		return MoveResp{}
 	}
-	moveTime := time.Since(g.st.LastMoveTime)
 
-	if g.st.Board.Position().Turn() == chess.White {
-		g.st.TimeWhite -= moveTime
-		g.st.TimeWhite += g.Increment
-	} else {
-		g.st.TimeBlack -= moveTime
-		g.st.TimeBlack += g.Increment
+	if len(g.st.Moves) >= 2 {
+		moveTime := time.Since(g.st.LastMoveTime)
+
+		if g.st.Board.Position().Turn() == chess.White {
+			g.st.TimeWhite -= moveTime
+			g.st.TimeWhite += g.Increment
+		} else {
+			g.st.TimeBlack -= moveTime
+			g.st.TimeBlack += g.Increment
+		}
 	}
-
-	g.st.LastMoveTime = time.Now()
 
 	if err := g.st.Board.MoveStr(move.MoveStr); err != nil {
 		// log.Println(err)
@@ -98,6 +99,7 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 			}
 		}
 	}
+	g.st.LastMoveTime = time.Now()
 	return MoveResp{
 		Move:      moveToSend,
 		TimeBlack: g.st.TimeBlack.Milliseconds(),
