@@ -1,6 +1,6 @@
 package tournament
 
-func (t *Tournament) snapshotPlayers() map[int32]Player {
+func (t *Tournament) UpdateSnapShot() {
 	m := make(map[int32]Player, len(t.players))
 	for k, v := range t.players {
 		scores := make([]int, len(v.Scores))
@@ -16,7 +16,7 @@ func (t *Tournament) snapshotPlayers() map[int32]Player {
 			LastPlayedColor: v.LastPlayedColor,
 		}
 	}
-	return m
+	t.PlayersSnapShot.Store(m)
 }
 
 func (t *Tournament) playerSnapshot(id int32) PlayerSnapShot {

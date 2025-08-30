@@ -2,27 +2,29 @@ package tournament
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 )
 
 type Tournament struct {
-	ID             string
-	Name           string
-	players        map[int32]*Player
-	StartTime      time.Time
-	Duration       int32
-	TimeControl    game.TimeControl
-	CreatedBy      int32
-	Creator        string
-	waitingPlayers []*Player
-	Done           chan struct{}
-	inbox          chan Msg
-	ControllerChan chan ControllerMsg
-	BerserkAllowed bool
-	Status         int
-	WG             sync.WaitGroup
+	ID              string
+	Name            string
+	players         map[int32]*Player
+	StartTime       time.Time
+	Duration        int32
+	TimeControl     game.TimeControl
+	CreatedBy       int32
+	Creator         string
+	waitingPlayers  []*Player
+	Done            chan struct{}
+	inbox           chan Msg
+	ControllerChan  chan ControllerMsg
+	BerserkAllowed  bool
+	Status          int
+	WG              sync.WaitGroup
+	PlayersSnapShot atomic.Value
 }
 
 func New(id, name string, duration int32, creator string, createdBy, baseTime, increment int32, initialPlayers map[int32]*Player, c chan ControllerMsg, berserkAllowed bool) *Tournament {
@@ -74,10 +76,6 @@ func (t *Tournament) run() {
 				continue
 			}
 			switch msg := m.(type) {
-			case GetPlayers:
-				if msg.Reply != nil {
-					msg.Reply <- t.snapshotPlayers()
-				}
 			case CheckIfPlayerExists:
 				_, ok := t.players[msg.ID]
 				if msg.Reply != nil {

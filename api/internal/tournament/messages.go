@@ -6,12 +6,6 @@ type Msg interface {
 	isMessage()
 }
 
-type GetPlayers struct {
-	Reply chan map[int32]Player
-}
-
-func (GetPlayers) isMessage() {}
-
 type CheckIfPlayerExists struct {
 	ID    int32
 	Reply chan bool

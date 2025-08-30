@@ -152,4 +152,5 @@ func (t *Tournament) handleUpdatePlayers(msg UpdatePlayers) {
 			Player2: pl2,
 		},
 	}
+	t.UpdateSnapShot()
 }

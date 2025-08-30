@@ -193,9 +193,7 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 	}
 	st, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
-		msg := tournament.GetPlayers{Reply: make(chan map[int32]tournament.Player, 1)}
-		st.Inbox() <- msg
-		snapshot := <-msg.Reply
+		snapshot := st.PlayersSnapShot.Load().(map[int32]tournament.Player)
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
