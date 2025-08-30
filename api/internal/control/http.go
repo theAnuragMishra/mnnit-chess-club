@@ -216,7 +216,7 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 			"increment":      st.TimeControl.Increment,
 			"createdBy":      st.CreatedBy,
 			"creator":        st.Creator,
-			"status":         1,
+			"status":         st.Status,
 			"berserkAllowed": st.BerserkAllowed,
 		})
 		return
