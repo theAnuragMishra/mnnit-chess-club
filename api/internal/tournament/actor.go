@@ -2,29 +2,27 @@ package tournament
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 )
 
 type Tournament struct {
-	ID              string
-	Name            string
-	players         map[int32]*Player
-	StartTime       time.Time
-	Duration        int32
-	TimeControl     game.TimeControl
-	CreatedBy       int32
-	Creator         string
-	waitingPlayers  []*Player
-	Done            chan struct{}
-	inbox           chan Msg
-	ControllerChan  chan ControllerMsg
-	BerserkAllowed  bool
-	Status          int
-	WG              sync.WaitGroup
-	PlayersSnapShot atomic.Value
+	ID             string
+	Name           string
+	players        map[int32]*Player
+	StartTime      time.Time
+	Duration       int32
+	TimeControl    game.TimeControl
+	CreatedBy      int32
+	Creator        string
+	waitingPlayers []*Player
+	Done           chan struct{}
+	inbox          chan Msg
+	ControllerChan chan ControllerMsg
+	BerserkAllowed bool
+	Status         int
+	WG             sync.WaitGroup
 }
 
 func New(id, name string, duration int32, creator string, createdBy, baseTime, increment int32, initialPlayers map[int32]*Player, c chan ControllerMsg, berserkAllowed bool) *Tournament {
@@ -51,7 +49,6 @@ func New(id, name string, duration int32, creator string, createdBy, baseTime, i
 	for _, v := range initialPlayers {
 		t.waitingPlayers = append(t.waitingPlayers, v)
 	}
-	t.UpdateSnapShot()
 	time.AfterFunc(time.Duration(duration)*time.Second, func() { t.inbox <- EndTournament{} })
 	go t.run()
 	return t
@@ -73,10 +70,14 @@ func (t *Tournament) run() {
 			}
 			t.PairPlayers()
 		case m := <-t.inbox:
-			if t.Status != 1 {
+			if _, ok := m.(GetPlayers); !ok && t.Status != 1 {
 				continue
 			}
 			switch msg := m.(type) {
+			case GetPlayers:
+				if msg.Reply != nil {
+					msg.Reply <- t.snapshotPlayers()
+				}
 			case CheckIfPlayerExists:
 				_, ok := t.players[msg.ID]
 				if msg.Reply != nil {
