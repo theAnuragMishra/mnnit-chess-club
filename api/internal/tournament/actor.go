@@ -14,6 +14,7 @@ type Tournament struct {
 	StartTime      time.Time
 	Duration       int32
 	TimeControl    game.TimeControl
+	PairingTicker  *time.Ticker
 	CreatedBy      int32
 	Creator        string
 	waitingPlayers []*Player
@@ -61,13 +62,10 @@ func (t *Tournament) Inbox() chan Msg {
 func (t *Tournament) run() {
 	defer close(t.Done)
 	ticker := time.NewTicker(time.Second * 10)
-	defer ticker.Stop()
+	t.PairingTicker = ticker
 	for {
 		select {
 		case <-ticker.C:
-			if t.Status != 1 {
-				continue
-			}
 			t.PairPlayers()
 		case m := <-t.inbox:
 			if _, ok := m.(GetPlayers); !ok && t.Status != 1 {

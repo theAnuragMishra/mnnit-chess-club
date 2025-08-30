@@ -74,6 +74,7 @@ func (t *Tournament) PairPlayers() {
 
 func (t *Tournament) end() {
 	t.Status = 2
+	t.PairingTicker.Stop()
 	players := make([]EndPlayer, 0, len(t.players))
 	for _, player := range t.players {
 		players = append(players, EndPlayer{
