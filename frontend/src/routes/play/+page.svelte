@@ -4,8 +4,6 @@
 
 	const { data } = $props();
 
-	if (!data.user) goto('/');
-
 	async function handleInitGame(index: number) {
 		if (activeIndex === index) activeIndex = -1;
 		else activeIndex = index;

@@ -1,10 +1,5 @@
 <script>
-	import { goto } from '$app/navigation';
 	import { getBaseURL } from '$lib/utils';
-
-	let { data } = $props();
-
-	if (!data.user || data.user.username) goto('/');
 
 	let username = $state('');
 	let loading = $state(false);

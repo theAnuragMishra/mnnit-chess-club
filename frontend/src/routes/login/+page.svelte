@@ -1,10 +1,6 @@
 <script>
-	import { goto } from '$app/navigation';
 	import { getBaseURL } from '$lib/utils.js';
 	import googleImg from '$lib/assets/icons/google.svg';
-
-	const { data } = $props();
-	if (data.user) goto('/');
 </script>
 
 <svelte:head>
