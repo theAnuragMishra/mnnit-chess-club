@@ -134,8 +134,7 @@
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
 		timeBlack = payload.timeBlack;
-		ground?.cancelPremove();
-		ground?.selectSquare(null);
+		ground?.stop();
 		ground?.set({
 			viewOnly: true
 		});
