@@ -200,12 +200,13 @@ func (c *Controller) endGame(info game.EndNotification) {
 
 		if ok {
 			msg := tournament.UpdatePlayers{
-				Result:  info.Result,
-				Player1: info.WhiteID,
-				Player2: info.BlackID,
-				Rating1: up1.Rating,
-				Rating2: up2.Rating,
-				Reply:   make(chan tournament.UpdatedPlayerSnapShots, 1),
+				Result:           info.Result,
+				Player1:          info.WhiteID,
+				Player2:          info.BlackID,
+				Rating1:          up1.Rating,
+				Rating2:          up2.Rating,
+				ExtraPointPlayer: info.ExtraPointPlayer,
+				Reply:            make(chan tournament.UpdatedPlayerSnapShots, 1),
 			}
 			t.Inbox() <- msg
 			reply := <-msg.Reply
@@ -216,14 +217,16 @@ func (c *Controller) endGame(info game.EndNotification) {
 	}
 
 	err := c.queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-		Result:           info.Result,
+		Result:           int32(info.Result),
 		ResultReason:     info.Reason,
 		ID:               info.ID,
-		GameLength:       int16(len(info.Moves)),
+		GameLength:       int32(len(info.Moves)),
 		ChangeW:          &cw,
 		ChangeB:          &cb,
 		EndTimeLeftWhite: info.TimeLeftWhite,
 		EndTimeLeftBlack: info.TimeLeftBlack,
+		BerserkBlack:     info.BerserkBlack,
+		BerserkWhite:     info.BerserkWhite,
 	})
 	if err != nil {
 		log.Println("error ending game id", info.ID, err)
@@ -255,4 +258,46 @@ func (c *Controller) endGame(info game.EndNotification) {
 		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
 		c.rematchManager.removeRematch(info.ID)
 	})
+}
+
+func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
+	g, ok := c.gameManager.GetGameByID(client.Room)
+	if !ok {
+		return nil
+	}
+	t, exists := c.tournamentManager.getTournament(g.TournamentID)
+	if !exists || !t.BerserkAllowed {
+		return nil
+	}
+
+	var payload map[string]any
+
+	if client.UserID == g.WhiteID {
+		msg := game.BerserkMsg{WB: 0, Reply: make(chan bool, 1)}
+		g.Inbox() <- msg
+		success := <-msg.Reply
+		if !success {
+			return nil
+		}
+		payload = map[string]any{"wb": 0}
+	} else {
+		msg := game.BerserkMsg{WB: 1, Reply: make(chan bool, 1)}
+		g.Inbox() <- msg
+		success := <-msg.Reply
+		if !success {
+			return nil
+		}
+		payload = map[string]any{"wb": 1}
+	}
+
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	e := socket.Event{
+		Type:    "berserk",
+		Payload: json.RawMessage(rawPayload),
+	}
+	c.socketManager.BroadcastToRoom(e, client.Room)
+	return nil
 }

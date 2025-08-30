@@ -14,12 +14,13 @@
 	import AbortTimer from '$lib/components/AbortTimer.svelte';
 	import type { Config } from '@lichess-org/chessground/config';
 	import Rematch from './Rematch.svelte';
-	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio } from '$lib/audios';
+	import { notifyAudio, moveAudio, captureAudio, lowTimeAudio, berserkAudio } from '$lib/audios';
 	import { getCapturedAndMaterial } from '$lib/chessUtils';
 
 	import CapturedPieces from './CapturedPieces.svelte';
 	import trophyImg from '$lib/assets/icons/trophy.svg';
 	import playImg from '$lib/assets/icons/play.svg';
+	import berserkImg from '$lib/assets/icons/kill.svg';
 
 	let { data } = $props();
 	//console.log(data);
@@ -40,8 +41,8 @@
 	let changeBlack = $state(d.game.ChangeB ?? 0);
 	let result = $state(d.game.Result);
 	let reason = $state(d.game.ResultReason);
-	let moveHistory = $state(d.moves ?? []);
-	let activeIndex = $state(d.moves ? d.moves.length - 1 : -1);
+	let moveHistory = $state(d.moves);
+	let activeIndex = $state(d.moves.length - 1);
 	let chessLatest = $derived(
 		moveHistory.length > 0 ? new Chess(moveHistory[moveHistory.length - 1].MoveFen) : new Chess()
 	);
@@ -72,17 +73,22 @@
 
 	//board config
 	const boardConfig: Config = {
-		fen: d.moves ? d.moves[d.moves.length - 1].MoveFen : undefined,
+		fen: d.moves.length > 0 ? d.moves[d.moves.length - 1].MoveFen : undefined,
 		orientation: whiteUp ? 'black' : 'white',
 		draggable: { enabled: true },
-		turnColor: d.moves ? (d.moves.length % 2 == 0 ? 'white' : 'black') : 'white',
+		turnColor: d.moves.length % 2 == 0 ? 'white' : 'black',
 		viewOnly: !isPlayer || d.game.Result !== 0,
-		lastMove: d.moves ? [d.moves[d.moves.length - 1].Orig, d.moves[d.moves.length - 1].Dest] : [],
-		check: d.moves ? new Chess(d.moves[d.moves.length - 1].MoveFen).isCheck() : false,
+		lastMove:
+			d.moves.length > 0
+				? [d.moves[d.moves.length - 1].Orig, d.moves[d.moves.length - 1].Dest]
+				: [],
+		check: d.moves.length > 0 ? new Chess(d.moves[d.moves.length - 1].MoveFen).isCheck() : false,
 		movable: {
 			free: false,
 			color: whiteUp ? 'black' : 'white',
-			dests: getValidMoves(d.moves ? new Chess(d.moves[d.moves.length - 1].MoveFen) : new Chess()),
+			dests: getValidMoves(
+				d.moves.length > 0 ? new Chess(d.moves[d.moves.length - 1].MoveFen) : new Chess()
+			),
 			showDests: true,
 			events: {
 				after: (orig, dest) => {
@@ -164,6 +170,19 @@
 		ground?.playPremove();
 	};
 
+	let berserkWhite = $state(d.game.BerserkWhite);
+	let berserkBlack = $state(d.game.BerserkBlack);
+	const handleBerserk = (payload: any) => {
+		if (payload.wb == 0) {
+			timeWhite /= 2;
+			berserkWhite = true;
+		} else if (payload.wb == 1) {
+			timeBlack /= 2;
+			berserkBlack = true;
+		}
+		berserkAudio.play();
+	};
+
 	//timer setup
 	const abortLength = baseTime >= 20 ? 20000 : baseTime >= 10 ? 10000 : baseTime * 1000;
 	const lowAbortTime = baseTime >= 20 ? 10000 : baseTime >= 10 ? 5000 : 2000;
@@ -182,7 +201,7 @@
 	let btime = $derived(
 		result !== 0
 			? activeIndex == -1 || activeIndex == 0
-				? baseTime * 1000
+				? (baseTime * 1000) / (berserkBlack ? 2 : 1)
 				: activeIndex == moveHistory.length - 1
 					? timeBlack
 					: activeIndex % 2 == 0
@@ -193,7 +212,7 @@
 	let wtime = $derived(
 		result !== 0
 			? activeIndex == -1
-				? baseTime * 1000
+				? (baseTime * 1000) / (berserkWhite ? 2 : 1)
 				: activeIndex == moveHistory.length - 1
 					? timeWhite
 					: activeIndex % 2 == 0
@@ -269,6 +288,7 @@
 	onMount(() => {
 		websocketStore.onMessage('game_end', handleGameEnd);
 		websocketStore.onMessage('Move_Response', handleMoveResponse);
+		websocketStore.onMessage('berserk', handleBerserk);
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('Move_Response', handleMoveResponse);
@@ -330,7 +350,7 @@
 						: ''}
 			</span>
 		</div>
-		<div class="clockt h-fit">
+		<div class="clockt flex h-fit items-center gap-2">
 			<Clock
 				{lowTime}
 				time={whiteUp ? wtime : btime}
@@ -340,6 +360,9 @@
 						? chessLatest.turn() === 'w'
 						: chessLatest.turn() === 'b'}
 			/>
+			{#if whiteUp ? berserkWhite : berserkBlack}
+				<img src={berserkImg} alt="berserk icon" class="h-[32px]" />
+			{/if}
 		</div>
 		<div class="rematch flex w-full justify-center">
 			{#if result !== 0 && isPlayer && !tournamentID}
@@ -362,7 +385,15 @@
 		</div>
 		<div class="draw-resign h-fit w-full">
 			{#if isPlayer && result === 0}
-				<DrawResign isDisabled={moveHistory.length < 2} {gameID} />
+				<DrawResign
+					isDisabled={moveHistory.length < 2}
+					{gameID}
+					showBerserkButton={result === 0 &&
+						d.berserkAllowed &&
+						(whiteUp
+							? !berserkBlack && moveHistory.length == 0
+							: !berserkWhite && moveHistory.length <= 1)}
+				/>
 			{/if}
 		</div>
 		<div class="back_to_tournament w-full text-center">
@@ -401,7 +432,7 @@
 				></span
 			>
 		</div>
-		<div class="clockb h-fit">
+		<div class="clockb flex h-fit items-center gap-2">
 			<Clock
 				{lowTime}
 				time={whiteUp ? btime : wtime}
@@ -411,6 +442,9 @@
 						? chessLatest.turn() === 'b'
 						: chessLatest.turn() === 'w'}
 			/>
+			{#if whiteUp ? berserkBlack : berserkWhite}
+				<img src={berserkImg} alt="berserk icon" class="h-[32px]" />
+			{/if}
 		</div>
 		<div
 			class="piecesb flex h-[15px] items-center text-[10px] text-gray-400 md:h-[35px] md:w-[300px] md:flex-wrap md:text-[20px]"
@@ -470,10 +504,12 @@
 	.clockt {
 		grid-area: clockt;
 		justify-self: end;
+		flex-direction: row-reverse;
 	}
 	.clockb {
 		grid-area: clockb;
 		justify-self: end;
+		flex-direction: row-reverse;
 	}
 	.history {
 		grid-area: history;
@@ -537,9 +573,11 @@
 		.clockt {
 			justify-self: auto;
 			/* margin-top: auto; */
+			flex-direction: row;
 		}
 		.clockb {
 			justify-self: auto;
+			flex-direction: row;
 			/* margin-bottom: auto; */
 		}
 		.history {

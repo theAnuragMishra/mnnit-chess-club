@@ -20,7 +20,7 @@ WITH players_data (
     SELECT
         (data->>'id')::int,
         (data->>'score')::int,
-        (SELECT array_agg(value::smallint)
+        (SELECT array_agg(value::int)
          FROM jsonb_array_elements(data->'scores') AS score_elements(value)),
         (data->>'streak')::int
     FROM jsonb_array_elements($2::jsonb) AS data
@@ -83,17 +83,18 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) error {
 }
 
 const createTournament = `-- name: CreateTournament :exec
-INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by, berserk_allowed) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type CreateTournamentParams struct {
-	ID        string
-	Name      string
-	StartTime time.Time
-	Duration  int32
-	BaseTime  int32
-	Increment int32
-	CreatedBy *int32
+	ID             string
+	Name           string
+	StartTime      time.Time
+	Duration       int32
+	BaseTime       int32
+	Increment      int32
+	CreatedBy      *int32
+	BerserkAllowed bool
 }
 
 func (q *Queries) CreateTournament(ctx context.Context, arg CreateTournamentParams) error {
@@ -105,6 +106,7 @@ func (q *Queries) CreateTournament(ctx context.Context, arg CreateTournamentPara
 		arg.BaseTime,
 		arg.Increment,
 		arg.CreatedBy,
+		arg.BerserkAllowed,
 	)
 	return err
 }
@@ -138,18 +140,20 @@ func (q *Queries) DeleteTournamentPlayer(ctx context.Context, playerID int32) er
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7
-WHERE id = $8
+SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7, berserk_white = $8, berserk_black = $9
+WHERE id = $10
 `
 
 type EndGameWithResultParams struct {
-	Result           int16
+	Result           int32
 	ResultReason     *string
 	ChangeW          *int32
 	ChangeB          *int32
-	GameLength       int16
+	GameLength       int32
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
+	BerserkWhite     bool
+	BerserkBlack     bool
 	ID               string
 }
 
@@ -162,6 +166,8 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 		arg.GameLength,
 		arg.EndTimeLeftWhite,
 		arg.EndTimeLeftBlack,
+		arg.BerserkWhite,
+		arg.BerserkBlack,
 		arg.ID,
 	)
 	return err
@@ -179,7 +185,7 @@ func (q *Queries) GetGameByID(ctx context.Context, id string) (string, error) {
 
 const getGameInfo = `-- name: GetGameInfo :one
 SELECT
-    games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b,
+    games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.result_reason, games.rating_w, games.rating_b, games.change_w, games.change_b, games.berserk_white, games.berserk_black,
     u1.username as white_username,
     u2.username as black_username,
     t.name as tournament_name
@@ -197,8 +203,8 @@ type GetGameInfoRow struct {
 	TournamentID     *string
 	WhiteID          *int32
 	BlackID          *int32
-	GameLength       int16
-	Result           int16
+	GameLength       int32
+	Result           int32
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
@@ -207,6 +213,8 @@ type GetGameInfoRow struct {
 	RatingB          int32
 	ChangeW          *int32
 	ChangeB          *int32
+	BerserkWhite     bool
+	BerserkBlack     bool
 	WhiteUsername    *string
 	BlackUsername    *string
 	TournamentName   *string
@@ -232,6 +240,8 @@ func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, e
 		&i.RatingB,
 		&i.ChangeW,
 		&i.ChangeB,
+		&i.BerserkWhite,
+		&i.BerserkBlack,
 		&i.WhiteUsername,
 		&i.BlackUsername,
 		&i.TournamentName,
@@ -261,7 +271,7 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID string) ([]GetGameMov
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetGameMovesRow
+	items := []GetGameMovesRow{}
 	for rows.Next() {
 		var i GetGameMovesRow
 		if err := rows.Scan(
@@ -313,7 +323,7 @@ func (q *Queries) GetGameNumbers(ctx context.Context, username *string) (GetGame
 }
 
 const getLiveGames = `-- name: GetLiveGames :many
-SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b FROM games WHERE result = 0
+SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, result_reason, rating_w, rating_b, change_w, change_b, berserk_white, berserk_black FROM games WHERE result = 0
 `
 
 func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
@@ -322,7 +332,7 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Game
+	items := []Game{}
 	for rows.Next() {
 		var i Game
 		if err := rows.Scan(
@@ -342,6 +352,8 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 			&i.RatingB,
 			&i.ChangeW,
 			&i.ChangeB,
+			&i.BerserkWhite,
+			&i.BerserkBlack,
 		); err != nil {
 			return nil, err
 		}
@@ -354,7 +366,7 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 }
 
 const getLiveTournaments = `-- name: GetLiveTournaments :many
-SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 1 ORDER BY start_time
+SELECT id, name, start_time, duration, base_time, increment, status, berserk_allowed, created_by FROM tournaments WHERE status = 1 ORDER BY start_time
 `
 
 func (q *Queries) GetLiveTournaments(ctx context.Context) ([]Tournament, error) {
@@ -363,7 +375,7 @@ func (q *Queries) GetLiveTournaments(ctx context.Context) ([]Tournament, error) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Tournament
+	items := []Tournament{}
 	for rows.Next() {
 		var i Tournament
 		if err := rows.Scan(
@@ -374,6 +386,7 @@ func (q *Queries) GetLiveTournaments(ctx context.Context) ([]Tournament, error) 
 			&i.BaseTime,
 			&i.Increment,
 			&i.Status,
+			&i.BerserkAllowed,
 			&i.CreatedBy,
 		); err != nil {
 			return nil, err
@@ -387,7 +400,7 @@ func (q *Queries) GetLiveTournaments(ctx context.Context) ([]Tournament, error) 
 }
 
 const getPlayerGames = `-- name: GetPlayerGames :many
-SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
+SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b, games.berserk_white, games.berserk_black
 FROM games
 JOIN users u1 ON games.white_id = u1.id
 JOIN users u2 ON games.black_id = u2.id
@@ -411,14 +424,16 @@ type GetPlayerGamesRow struct {
 	Increment      int32
 	WhiteUsername  *string
 	BlackUsername  *string
-	Result         int16
-	GameLength     int16
+	Result         int32
+	GameLength     int32
 	ResultReason   *string
 	CreatedAt      time.Time
 	RatingW        int32
 	RatingB        int32
 	ChangeW        *int32
 	ChangeB        *int32
+	BerserkWhite   bool
+	BerserkBlack   bool
 }
 
 func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) ([]GetPlayerGamesRow, error) {
@@ -427,7 +442,7 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetPlayerGamesRow
+	items := []GetPlayerGamesRow{}
 	for rows.Next() {
 		var i GetPlayerGamesRow
 		if err := rows.Scan(
@@ -446,6 +461,8 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 			&i.RatingB,
 			&i.ChangeW,
 			&i.ChangeB,
+			&i.BerserkWhite,
+			&i.BerserkBlack,
 		); err != nil {
 			return nil, err
 		}
@@ -458,7 +475,7 @@ func (q *Queries) GetPlayerGames(ctx context.Context, arg GetPlayerGamesParams) 
 }
 
 const getScheduledTournaments = `-- name: GetScheduledTournaments :many
-SELECT id, name, start_time, duration, base_time, increment, status, created_by FROM tournaments WHERE status = 0 ORDER BY start_time
+SELECT id, name, start_time, duration, base_time, increment, status, berserk_allowed, created_by FROM tournaments WHERE status = 0 ORDER BY start_time
 `
 
 func (q *Queries) GetScheduledTournaments(ctx context.Context) ([]Tournament, error) {
@@ -467,7 +484,7 @@ func (q *Queries) GetScheduledTournaments(ctx context.Context) ([]Tournament, er
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Tournament
+	items := []Tournament{}
 	for rows.Next() {
 		var i Tournament
 		if err := rows.Scan(
@@ -478,6 +495,7 @@ func (q *Queries) GetScheduledTournaments(ctx context.Context) ([]Tournament, er
 			&i.BaseTime,
 			&i.Increment,
 			&i.Status,
+			&i.BerserkAllowed,
 			&i.CreatedBy,
 		); err != nil {
 			return nil, err
@@ -508,7 +526,7 @@ func (q *Queries) GetTopN(ctx context.Context, limit int32) ([]GetTopNRow, error
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTopNRow
+	items := []GetTopNRow{}
 	for rows.Next() {
 		var i GetTopNRow
 		if err := rows.Scan(
@@ -538,19 +556,20 @@ func (q *Queries) GetTournamentByID(ctx context.Context, id string) (string, err
 }
 
 const getTournamentInfo = `-- name: GetTournamentInfo :one
-SELECT t.id, t.name, t.start_time, t.duration, t.base_time, t.increment, t.status, t.created_by, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1
+SELECT t.id, t.name, t.start_time, t.duration, t.base_time, t.increment, t.status, t.berserk_allowed, t.created_by, u.username FROM tournaments t JOIN users u ON t.created_by = u.id WHERE t.id = $1
 `
 
 type GetTournamentInfoRow struct {
-	ID        string
-	Name      string
-	StartTime time.Time
-	Duration  int32
-	BaseTime  int32
-	Increment int32
-	Status    int16
-	CreatedBy *int32
-	Username  *string
+	ID             string
+	Name           string
+	StartTime      time.Time
+	Duration       int32
+	BaseTime       int32
+	Increment      int32
+	Status         int32
+	BerserkAllowed bool
+	CreatedBy      *int32
+	Username       *string
 }
 
 func (q *Queries) GetTournamentInfo(ctx context.Context, id string) (GetTournamentInfoRow, error) {
@@ -564,6 +583,7 @@ func (q *Queries) GetTournamentInfo(ctx context.Context, id string) (GetTourname
 		&i.BaseTime,
 		&i.Increment,
 		&i.Status,
+		&i.BerserkAllowed,
 		&i.CreatedBy,
 		&i.Username,
 	)
@@ -596,7 +616,7 @@ type GetTournamentPlayersRow struct {
 	ID       int32
 	Username *string
 	Rating   float64
-	Scores   []int16
+	Scores   []int32
 }
 
 func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string) ([]GetTournamentPlayersRow, error) {
@@ -605,7 +625,7 @@ func (q *Queries) GetTournamentPlayers(ctx context.Context, tournamentID string)
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTournamentPlayersRow
+	items := []GetTournamentPlayersRow{}
 	for rows.Next() {
 		var i GetTournamentPlayersRow
 		if err := rows.Scan(
@@ -630,9 +650,9 @@ const getTournamentStatus = `-- name: GetTournamentStatus :one
 SELECT status FROM tournaments WHERE id = $1
 `
 
-func (q *Queries) GetTournamentStatus(ctx context.Context, id string) (int16, error) {
+func (q *Queries) GetTournamentStatus(ctx context.Context, id string) (int32, error) {
 	row := q.db.QueryRow(ctx, getTournamentStatus, id)
-	var status int16
+	var status int32
 	err := row.Scan(&status)
 	return status, err
 }
@@ -675,7 +695,7 @@ UPDATE tournaments SET status = $1 WHERE id=$2
 `
 
 type UpdateTournamentStatusParams struct {
-	Status int16
+	Status int32
 	ID     string
 }
 

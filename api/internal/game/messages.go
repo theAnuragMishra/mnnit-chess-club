@@ -54,4 +54,11 @@ type ResignMsg struct {
 
 func (ResignMsg) isMessage() {}
 
+type BerserkMsg struct {
+	WB    int
+	Reply chan bool
+}
+
+func (BerserkMsg) isMessage() {}
+
 // messages going out

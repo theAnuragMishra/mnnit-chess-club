@@ -17,6 +17,8 @@ type Game struct {
 	BlackID           int32
 	TournamentID      string
 	ControllerChannel chan EndNotification
+	BerserkWhite      bool
+	BerserkBlack      bool
 }
 
 func New(id string, baseTime time.Duration, increment time.Duration, player1 int32, player2 int32, tournamentID string, c chan EndNotification) *Game {
@@ -75,7 +77,8 @@ func (g *Game) run() {
 				}
 			case ResignMsg:
 				g.handleResign(msg.Player)
-
+			case BerserkMsg:
+				g.handleBerserk(msg)
 			}
 		case <-g.done:
 			return

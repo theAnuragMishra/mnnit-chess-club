@@ -23,10 +23,14 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 
 		if g.st.Board.Position().Turn() == chess.White {
 			g.st.TimeWhite -= moveTime
-			g.st.TimeWhite += g.Increment
+			if !g.BerserkWhite {
+				g.st.TimeWhite += g.Increment
+			}
 		} else {
 			g.st.TimeBlack -= moveTime
-			g.st.TimeBlack += g.Increment
+			if !g.BerserkBlack {
+				g.st.TimeBlack += g.Increment
+			}
 		}
 	}
 
@@ -58,7 +62,7 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 
 	g.st.Moves = append(g.st.Moves, moveToSend)
 
-	var res int16
+	var res int
 	result := g.st.Board.Outcome()
 	reason := g.st.Board.Method().String()
 	if result != "*" {
@@ -107,7 +111,7 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 	}
 }
 
-func (g *Game) end(result int16, reason string) {
+func (g *Game) end(result int, reason string) {
 	g.st.Result = result
 	if g.st.AbortTimer != nil {
 		g.st.AbortTimer.Stop()
@@ -117,16 +121,27 @@ func (g *Game) end(result int16, reason string) {
 	}
 	timeLeftWhite := int32(g.st.TimeWhite.Milliseconds())
 	timeLeftBlack := int32(g.st.TimeBlack.Milliseconds())
+
+	var extraPointPlayer int32
+	if g.st.Result == 1 && g.BerserkWhite {
+		extraPointPlayer = g.WhiteID
+	} else if g.st.Result == 2 && g.BerserkBlack {
+		extraPointPlayer = g.BlackID
+	}
+
 	notification := EndNotification{
-		Result:        result,
-		Reason:        &reason,
-		ID:            g.ID,
-		TimeLeftWhite: &timeLeftWhite,
-		TimeLeftBlack: &timeLeftBlack,
-		WhiteID:       g.WhiteID,
-		BlackID:       g.BlackID,
-		Moves:         g.st.Moves,
-		TournamentID:  g.TournamentID,
+		Result:           result,
+		Reason:           &reason,
+		ID:               g.ID,
+		TimeLeftWhite:    &timeLeftWhite,
+		TimeLeftBlack:    &timeLeftBlack,
+		WhiteID:          g.WhiteID,
+		BlackID:          g.BlackID,
+		Moves:            g.st.Moves,
+		TournamentID:     g.TournamentID,
+		BerserkBlack:     g.BerserkBlack,
+		BerserkWhite:     g.BerserkWhite,
+		ExtraPointPlayer: extraPointPlayer,
 	}
 
 	g.ControllerChannel <- notification
@@ -175,7 +190,7 @@ func (g *Game) handleResign(c int32) {
 		return
 	}
 
-	var result int16
+	var result int
 	var reason string
 	if g.WhiteID == c {
 		result = 2
@@ -207,7 +222,7 @@ func (g *Game) handleTimeout() {
 	if g.st.Result != 0 {
 		return
 	}
-	var result int16
+	var result int
 	var reason string
 	if g.st.Board.Position().Turn() == chess.White {
 		g.st.TimeWhite = 0
@@ -219,4 +234,32 @@ func (g *Game) handleTimeout() {
 		reason = "Black Timeout"
 	}
 	g.end(result, reason)
+}
+
+func (g *Game) handleBerserk(msg BerserkMsg) {
+	if msg.WB == 0 {
+		if !g.BerserkWhite && len(g.st.Moves) == 0 {
+			g.st.TimeWhite /= 2
+			g.BerserkWhite = true
+			if msg.Reply != nil {
+				msg.Reply <- true
+			}
+		} else {
+			if msg.Reply != nil {
+				msg.Reply <- false
+			}
+		}
+	} else {
+		if !g.BerserkBlack && len(g.st.Moves) <= 1 {
+			g.st.TimeBlack /= 2
+			g.BerserkBlack = true
+			if msg.Reply != nil {
+				msg.Reply <- true
+			}
+		} else {
+			if msg.Reply != nil {
+				msg.Reply <- false
+			}
+		}
+	}
 }

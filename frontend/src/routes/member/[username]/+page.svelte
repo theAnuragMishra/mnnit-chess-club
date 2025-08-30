@@ -12,7 +12,7 @@
 	let pageNumber = $state(1);
 	let hasMore = $state(data.games ? data.games.length == 15 : false);
 	let loading = $state(false);
-	const items: any = $state(data.games ?? []);
+	const items: any = $state(data.games);
 
 	const memberSince = new Date(data.profile.CreatedAt);
 

@@ -3,8 +3,9 @@
 	import { onDestroy, onMount } from 'svelte';
 	import resignImg from '$lib/assets/icons/flag.svg';
 	import crossImg from '$lib/assets/icons/cross.svg';
+	import berserkImg from '$lib/assets/icons/kill.svg';
 
-	const { gameID, isDisabled } = $props();
+	const { gameID, isDisabled, showBerserkButton } = $props();
 	let offer = $state(false);
 	let resignSelected = $state(false);
 
@@ -36,6 +37,12 @@
 
 	const handleCancelDraw = (payload: any) => {
 		offer = false;
+	};
+
+	const sendBerserk = () => {
+		websocketStore.sendMessage({
+			type: 'berserk'
+		});
 	};
 
 	onMount(() => {
@@ -71,5 +78,10 @@
 			onclick={() => (resignSelected = false)}
 			><img src={crossImg} alt="cancel resignation" class="h-[24px]" /></button
 		>
+	{/if}
+	{#if showBerserkButton}
+		<button onclick={sendBerserk} class="cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:py-2">
+			<img src={berserkImg} alt="berserk button" class="h-[32px]" />
+		</button>
 	{/if}
 </div>

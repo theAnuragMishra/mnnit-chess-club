@@ -88,56 +88,65 @@ func (t *Tournament) end() {
 	t.Done <- struct{}{}
 }
 
-func (t *Tournament) handleUpdatePlayers(id1, id2 int32, result int16, r1, r2 float64) {
-	p1 := t.players[id1]
-	p2 := t.players[id2]
-	p1.Opponents[id2] += 1
-	p2.Opponents[id1] += 1
+func (t *Tournament) handleUpdatePlayers(msg UpdatePlayers) {
+	p1 := t.players[msg.Player1]
+	p2 := t.players[msg.Player2]
+	p1.Opponents[msg.Player2] += 1
+	p2.Opponents[msg.Player1] += 1
 	p1.LastPlayedColor = chess.White
 	p2.LastPlayedColor = chess.Black
-	p1.Rating = r1
-	p2.Rating = r2
+	p1.Rating = msg.Rating1
+	p2.Rating = msg.Rating2
 
-	if result == 1 {
-		p2.Streak = 0
-		p2.Scores = append(p2.Scores, 0)
+	p1Gets := 0
+	p2Gets := 0
+
+	if msg.Result == 1 {
+		p1Gets += 2
 		if p1.Streak >= 2 {
-			p1.Score += 4
-			p1.Scores = append(p1.Scores, 4)
-		} else {
-			p1.Score += 2
-			p1.Scores = append(p1.Scores, 2)
+			p1Gets += 2
 		}
 		p1.Streak += 1
-	} else if result == 2 {
-		p1.Streak = 0
-		p1.Scores = append(p1.Scores, 0)
+		p2.Streak = 0
+	} else if msg.Result == 2 {
+		p2Gets += 2
 		if p2.Streak >= 2 {
-			p2.Score += 4
-			p2.Scores = append(p2.Scores, 4)
-		} else {
-			p2.Score += 2
-			p2.Scores = append(p2.Scores, 2)
+			p2Gets += 2
 		}
 		p2.Streak += 1
+		p1.Streak = 0
 	} else {
+		p1Gets += 1
+		p2Gets += 1
 		if p1.Streak >= 2 {
-			p1.Score += 2
-			p1.Scores = append(p1.Scores, 2)
-		} else {
-			p1.Score += 1
-			p1.Scores = append(p1.Scores, 1)
+			p1Gets += 1
 		}
 		if p2.Streak >= 2 {
-			p2.Score += 2
-			p2.Scores = append(p2.Scores, 2)
-		} else {
-			p2.Score += 1
-			p2.Scores = append(p2.Scores, 1)
+			p2Gets += 1
 		}
 		p1.Streak = 0
 		p2.Streak = 0
 	}
+
+	if msg.ExtraPointPlayer == p1.ID {
+		p1Gets += 1
+	} else if msg.ExtraPointPlayer == p2.ID {
+		p2Gets += 1
+	}
+
+	p1.Score += p1Gets
+	p2.Score += p2Gets
+	p1.Scores = append(p1.Scores, p1Gets)
+	p2.Scores = append(p2.Scores, p2Gets)
+
 	t.waitingPlayers = append(t.waitingPlayers, p2)
 	t.waitingPlayers = append(t.waitingPlayers, p1)
+	if msg.Reply != nil {
+		pl1 := t.playerSnapshot(msg.Player1)
+		pl2 := t.playerSnapshot(msg.Player2)
+		msg.Reply <- UpdatedPlayerSnapShots{
+			Player1: pl1,
+			Player2: pl2,
+		}
+	}
 }

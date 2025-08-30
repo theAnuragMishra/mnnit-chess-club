@@ -49,11 +49,11 @@ ORDER BY move_number;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7
-WHERE id = $8;
+SET result = $1, result_reason = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7, berserk_white = $8, berserk_black = $9
+WHERE id = $10;
 
 -- name: GetPlayerGames :many
-SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b
+SELECT t.name as tournament_name, t.id as tournament_id, games.id, games.base_time, games.increment, u1.username as white_username, u2.username as black_username, games.result, games.game_length, games.result_reason, games.created_at, games.rating_w, games.rating_b, games.change_w, games.change_b, games.berserk_white, games.berserk_black
 FROM games
 JOIN users u1 ON games.white_id = u1.id
 JOIN users u2 ON games.black_id = u2.id
@@ -76,7 +76,7 @@ WHERE users.username = $1;
 DELETE FROM games WHERE result = 0;
 
 -- name: CreateTournament :exec
-INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7);
+INSERT INTO tournaments (id, name, start_time, duration, base_time, increment, created_by, berserk_allowed) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: GetTournamentByID :one
 SELECT id FROM tournaments WHERE id = $1;
@@ -124,7 +124,7 @@ WITH players_data (
     SELECT
         (data->>'id')::int,
         (data->>'score')::int,
-        (SELECT array_agg(value::smallint)
+        (SELECT array_agg(value::int)
          FROM jsonb_array_elements(data->'scores') AS score_elements(value)),
         (data->>'streak')::int
     FROM jsonb_array_elements(@players_input::jsonb) AS data

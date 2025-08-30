@@ -45,7 +45,7 @@ type GetSessionRow struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	Username  *string
-	Role      int16
+	Role      int32
 }
 
 func (q *Queries) GetSession(ctx context.Context, id string) (GetSessionRow, error) {

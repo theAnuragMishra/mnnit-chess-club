@@ -189,7 +189,7 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 		msg := tournament.AddPlayer{
 			ID:     client.UserID,
 			Rating: rating,
-			Reply:  make(chan *tournament.Player, 1),
+			Reply:  make(chan tournament.Player, 1),
 		}
 		t.Inbox() <- msg
 		player := <-msg.Reply

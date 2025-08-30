@@ -49,12 +49,14 @@ func (g *Game) snapshot() SnapShot {
 		}
 		g.st.LastMoveTime = time.Now()
 	}
+	moves := make([]Move, len(g.st.Moves))
+	copy(moves, g.st.Moves)
 	out := SnapShot{
 		Result:        g.st.Result,
 		TimeWhite:     g.st.TimeWhite.Milliseconds(),
 		TimeBlack:     g.st.TimeBlack.Milliseconds(),
 		DrawOfferedBy: g.st.DrawOfferedBy,
-		Moves:         g.st.Moves,
+		Moves:         moves,
 		RematchOffer:  g.st.RematchOffer,
 	}
 	return out

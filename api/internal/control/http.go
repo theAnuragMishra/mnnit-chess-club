@@ -167,10 +167,15 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// server game response
+		t, ok := c.tournamentManager.getTournament(g.TournamentID)
+		berserkAllowed := false
+		if ok && t.BerserkAllowed {
+			berserkAllowed = true
+		}
 		msg := game.GetState{Reply: make(chan game.SnapShot, 1)}
 		g.Inbox() <- msg
 		snapshot := <-msg.Reply
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": snapshot.Moves, "game": foundGame, "timeWhite": snapshot.TimeWhite, "timeBlack": snapshot.TimeBlack, "canRematch": true})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": snapshot.Moves, "game": foundGame, "timeWhite": snapshot.TimeWhite, "timeBlack": snapshot.TimeBlack, "canRematch": true, "berserkAllowed": berserkAllowed})
 	}
 }
 
@@ -188,32 +193,33 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 	}
 	st, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
-		msg := tournament.GetState{Reply: make(chan tournament.SnapShot, 1)}
+		msg := tournament.GetPlayers{Reply: make(chan map[int32]tournament.Player, 1)}
 		st.Inbox() <- msg
 		snapshot := <-msg.Reply
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
-				"Score":    snapshot.Players[player.ID].Score,
+				"Score":    snapshot[player.ID].Score,
 				"ID":       player.ID,
-				"IsActive": snapshot.Players[player.ID].IsActive,
+				"IsActive": snapshot[player.ID].IsActive,
 				"Username": player.Username,
 				"Rating":   player.Rating,
-				"Streak":   snapshot.Players[player.ID].Streak,
-				"Scores":   snapshot.Players[player.ID].Scores,
+				"Streak":   snapshot[player.ID].Streak,
+				"Scores":   snapshot[player.ID].Scores,
 			}
 		}
 		//log.Println(players)
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-			"name":      snapshot.Name,
-			"players":   players,
-			"startTime": snapshot.StartTime,
-			"duration":  snapshot.Duration,
-			"baseTime":  snapshot.TimeControl.BaseTime,
-			"increment": snapshot.TimeControl.Increment,
-			"createdBy": snapshot.CreatedBy,
-			"creator":   snapshot.Creator,
-			"status":    1,
+			"name":           st.Name,
+			"players":        players,
+			"startTime":      st.StartTime,
+			"duration":       st.Duration,
+			"baseTime":       st.TimeControl.BaseTime,
+			"increment":      st.TimeControl.Increment,
+			"createdBy":      st.CreatedBy,
+			"creator":        st.Creator,
+			"status":         1,
+			"berserkAllowed": st.BerserkAllowed,
 		})
 		return
 	}
@@ -224,15 +230,16 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-		"name":      tournamentInfo.Name,
-		"players":   dbPlayers,
-		"startTime": tournamentInfo.StartTime,
-		"duration":  tournamentInfo.Duration,
-		"baseTime":  tournamentInfo.BaseTime,
-		"increment": tournamentInfo.Increment,
-		"createdBy": tournamentInfo.CreatedBy,
-		"creator":   tournamentInfo.Username,
-		"status":    tournamentInfo.Status,
+		"name":           tournamentInfo.Name,
+		"players":        dbPlayers,
+		"startTime":      tournamentInfo.StartTime,
+		"duration":       tournamentInfo.Duration,
+		"baseTime":       tournamentInfo.BaseTime,
+		"increment":      tournamentInfo.Increment,
+		"createdBy":      tournamentInfo.CreatedBy,
+		"creator":        tournamentInfo.Username,
+		"status":         tournamentInfo.Status,
+		"berserkAllowed": tournamentInfo.BerserkAllowed,
 	})
 }
 
@@ -293,13 +300,14 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = c.queries.CreateTournament(r.Context(), database.CreateTournamentParams{
-		ID:        id,
-		Name:      tournamentPayload.Name,
-		StartTime: tournamentPayload.StartTime,
-		Duration:  tournamentPayload.Duration,
-		BaseTime:  tournamentPayload.BaseTime,
-		Increment: tournamentPayload.Increment,
-		CreatedBy: &session.UserID,
+		ID:             id,
+		Name:           tournamentPayload.Name,
+		StartTime:      tournamentPayload.StartTime,
+		Duration:       tournamentPayload.Duration,
+		BaseTime:       tournamentPayload.BaseTime,
+		Increment:      tournamentPayload.Increment,
+		CreatedBy:      &session.UserID,
+		BerserkAllowed: tournamentPayload.BerserkAllowed,
 	})
 
 	if err != nil {
@@ -355,7 +363,7 @@ func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
 			initialPlayers[player.ID] = p
 		}
 
-		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, initialPlayers, c.tournamentRecv)
+		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, initialPlayers, c.tournamentRecv, tournamentInfo.BerserkAllowed)
 		c.tournamentManager.addTournament(t)
 
 		//send refresh event to all the players on the tournament page

@@ -6,11 +6,11 @@ type Msg interface {
 	isMessage()
 }
 
-type GetState struct {
-	Reply chan SnapShot
+type GetPlayers struct {
+	Reply chan map[int32]Player
 }
 
-func (GetState) isMessage() {}
+func (GetPlayers) isMessage() {}
 
 type CheckIfPlayerExists struct {
 	ID    int32
@@ -29,7 +29,7 @@ func (TogglePlayerActiveMsg) isMessage() {}
 type AddPlayer struct {
 	ID     int32
 	Rating float64
-	Reply  chan *Player
+	Reply  chan Player
 }
 
 func (AddPlayer) isMessage() {}
@@ -42,12 +42,13 @@ type UpdatePlayerStatus struct {
 func (UpdatePlayerStatus) isMessage() {}
 
 type UpdatePlayers struct {
-	Result  int16
-	Player1 int32
-	Player2 int32
-	Rating1 float64
-	Rating2 float64
-	Reply   chan UpdatedPlayerSnapShots
+	Result           int
+	Player1          int32
+	Player2          int32
+	Rating1          float64
+	Rating2          float64
+	ExtraPointPlayer int32
+	Reply            chan UpdatedPlayerSnapShots
 }
 
 func (UpdatePlayers) isMessage() {}

@@ -6,7 +6,8 @@ CREATE TABLE tournaments (
     duration INT NOT NULL,
     base_time INT NOT NULL,
     increment INT NOT NULL,
-    status SMALLINT CHECK(status IN (0,1,2))  NOT NULL DEFAULT 0,
+    status INT CHECK(status IN (0,1,2)) NOT NULL DEFAULT 0,
+    berserk_allowed BOOLEAN NOT NULL DEFAULT FALSE,
     created_by INT REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -15,7 +16,7 @@ CREATE TABLE tournament_players (
     player_id INT NOT NULL REFERENCES users(id) ON DELETE SET NULL,
     tournament_id VARCHAR(20) NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
     score INT DEFAULT 0,
-    scores SMALLINT[],
+    scores INT[],
     streak INT DEFAULT 0,
     UNIQUE (player_id, tournament_id)
 );
@@ -27,8 +28,8 @@ CREATE TABLE games (
     tournament_id VARCHAR(20) REFERENCES tournaments(id) ON DELETE SET NULL,
     white_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     black_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    game_length SMALLINT NOT NULL DEFAULT 0,
-    result SMALLINT CHECK(result IN (0,1,2,3,4)) NOT NULL DEFAULT 0,
+    game_length INT NOT NULL DEFAULT 0,
+    result INT CHECK(result IN (0,1,2,3,4)) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time_left_white INT,
     end_time_left_black INT,
@@ -36,7 +37,9 @@ CREATE TABLE games (
     rating_w INT NOT NULL,
     rating_b INT NOT NULL,
     change_w INT,
-    change_b INT
+    change_b INT,
+    berserk_white BOOLEAN NOT NULL DEFAULT FALSE,
+    berserk_black BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE moves (

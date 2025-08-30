@@ -15,8 +15,8 @@ type Game struct {
 	TournamentID     *string
 	WhiteID          *int32
 	BlackID          *int32
-	GameLength       int16
-	Result           int16
+	GameLength       int32
+	Result           int32
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
@@ -25,6 +25,8 @@ type Game struct {
 	RatingB          int32
 	ChangeW          *int32
 	ChangeB          *int32
+	BerserkWhite     bool
+	BerserkBlack     bool
 }
 
 type Move struct {
@@ -46,14 +48,15 @@ type Session struct {
 }
 
 type Tournament struct {
-	ID        string
-	Name      string
-	StartTime time.Time
-	Duration  int32
-	BaseTime  int32
-	Increment int32
-	Status    int16
-	CreatedBy *int32
+	ID             string
+	Name           string
+	StartTime      time.Time
+	Duration       int32
+	BaseTime       int32
+	Increment      int32
+	Status         int32
+	BerserkAllowed bool
+	CreatedBy      *int32
 }
 
 type TournamentPlayer struct {
@@ -61,7 +64,7 @@ type TournamentPlayer struct {
 	PlayerID     int32
 	TournamentID string
 	Score        *int32
-	Scores       []int16
+	Scores       []int32
 	Streak       *int32
 }
 
@@ -70,7 +73,7 @@ type User struct {
 	Email      string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	Role       int16
+	Role       int32
 	Username   *string
 	AvatarUrl  *string
 	GoogleID   string

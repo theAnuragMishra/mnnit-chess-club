@@ -25,7 +25,7 @@ type Move struct {
 }
 
 type SnapShot struct {
-	Result        int16
+	Result        int
 	TimeWhite     int64
 	TimeBlack     int64
 	DrawOfferedBy int32
@@ -34,7 +34,7 @@ type SnapShot struct {
 }
 
 type State struct {
-	Result        int16
+	Result        int
 	Board         *chess.Game
 	TimeWhite     time.Duration
 	TimeBlack     time.Duration
@@ -46,13 +46,16 @@ type State struct {
 	ClockTimer    *time.Timer
 }
 type EndNotification struct {
-	Result        int16
-	Reason        *string
-	ID            string
-	TimeLeftWhite *int32
-	TimeLeftBlack *int32
-	WhiteID       int32
-	BlackID       int32
-	Moves         []Move
-	TournamentID  string
+	Result           int
+	Reason           *string
+	ID               string
+	TimeLeftWhite    *int32
+	TimeLeftBlack    *int32
+	WhiteID          int32
+	BlackID          int32
+	Moves            []Move
+	TournamentID     string
+	BerserkWhite     bool
+	BerserkBlack     bool
+	ExtraPointPlayer int32
 }

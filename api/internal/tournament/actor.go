@@ -19,9 +19,10 @@ type Tournament struct {
 	Done           chan struct{}
 	inbox          chan Msg
 	ControllerChan chan ControllerMsg
+	BerserkAllowed bool
 }
 
-func New(id, name string, duration int32, creator string, createdBy, baseTime, increment int32, initialPlayers map[int32]*Player, c chan ControllerMsg) *Tournament {
+func New(id, name string, duration int32, creator string, createdBy, baseTime, increment int32, initialPlayers map[int32]*Player, c chan ControllerMsg, berserkAllowed bool) *Tournament {
 	timeControl := game.TimeControl{
 		BaseTime:  baseTime,
 		Increment: increment,
@@ -39,6 +40,7 @@ func New(id, name string, duration int32, creator string, createdBy, baseTime, i
 		Done:           make(chan struct{}),
 		ControllerChan: c,
 		inbox:          make(chan Msg, 256),
+		BerserkAllowed: berserkAllowed,
 	}
 	for _, v := range initialPlayers {
 		t.waitingPlayers = append(t.waitingPlayers, v)
@@ -62,9 +64,9 @@ func (t *Tournament) run() {
 			t.PairPlayers()
 		case m := <-t.inbox:
 			switch msg := m.(type) {
-			case GetState:
+			case GetPlayers:
 				if msg.Reply != nil {
-					msg.Reply <- t.snapshot()
+					msg.Reply <- t.snapshotPlayers()
 				}
 			case CheckIfPlayerExists:
 				_, ok := t.players[msg.ID]
@@ -82,21 +84,13 @@ func (t *Tournament) run() {
 				t.players[msg.ID] = p
 				t.waitingPlayers = append(t.waitingPlayers, p)
 				if msg.Reply != nil {
-					msg.Reply <- p
+					msg.Reply <- *p
 				}
 			case UpdatePlayerStatus:
 				p := t.players[msg.ID]
 				p.IsActive = msg.Status
 			case UpdatePlayers:
-				t.handleUpdatePlayers(msg.Player1, msg.Player2, msg.Result, msg.Rating1, msg.Rating2)
-				if msg.Reply != nil {
-					p1 := t.playerSnapshot(msg.Player1)
-					p2 := t.playerSnapshot(msg.Player2)
-					msg.Reply <- UpdatedPlayerSnapShots{
-						Player1: p1,
-						Player2: p2,
-					}
-				}
+				t.handleUpdatePlayers(msg)
 			}
 		case <-t.Done:
 			return

@@ -1,16 +1,22 @@
 package tournament
 
-func (t *Tournament) snapshot() SnapShot {
-	return SnapShot{
-		ID:          t.ID,
-		Name:        t.Name,
-		Players:     t.players,
-		StartTime:   t.StartTime,
-		Duration:    t.Duration,
-		TimeControl: t.TimeControl,
-		CreatedBy:   t.CreatedBy,
-		Creator:     t.Creator,
+func (t *Tournament) snapshotPlayers() map[int32]Player {
+	m := make(map[int32]Player, len(t.players))
+	for k, v := range t.players {
+		scores := make([]int, len(v.Scores))
+		copy(scores, v.Scores)
+		m[k] = Player{
+			ID:              v.ID,
+			IsActive:        v.IsActive,
+			Score:           v.Score,
+			Scores:          v.Scores,
+			Rating:          v.Rating,
+			Streak:          v.Streak,
+			Opponents:       v.Opponents,
+			LastPlayedColor: v.LastPlayedColor,
+		}
 	}
+	return m
 }
 
 func (t *Tournament) playerSnapshot(id int32) PlayerSnapShot {

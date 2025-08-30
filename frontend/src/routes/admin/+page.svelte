@@ -9,6 +9,7 @@
 	let date: string | undefined = $state();
 	let time: string | undefined = $state();
 	let startTime = $derived(dateTimeToDate(date, time));
+	let allowBerserk = $state('f');
 
 	let startLoading = $state(false);
 	let createLoading = $state(false);
@@ -35,7 +36,8 @@
 				baseTime: baseTimes[baseIndex] * 60,
 				increment: increments[incrementIndex],
 				duration: Math.ceil(duration! * 60 * 60),
-				startTime: startTime.toISOString()
+				startTime: startTime.toISOString(),
+				berserkAllowed: allowBerserk === 't'
 			}),
 			credentials: 'include'
 		});
@@ -92,7 +94,10 @@
 			<span>Increment: {increments[incrementIndex]}</span>
 			<input class="mx-[5px]" type="range" bind:value={incrementIndex} min="0" max="30" />
 		</div>
-
+		<div>
+			<input type="radio" name="allber" value="f" bind:group={allowBerserk} /> No
+			<input type="radio" name="allber" value="t" bind:group={allowBerserk} /> Yes
+		</div>
 		<label>Start Date: <input type="date" bind:value={date} class="bg-gray-200 text-black" /></label
 		>
 		<label>Start Time: <input type="time" bind:value={time} class="bg-gray-200 text-black" /></label
@@ -123,8 +128,6 @@
 		{#if data.tournaments === undefined}<p class="text-xl">
 				Error fetching tournaments. Refresh or try again after some time.
 			</p>
-		{:else if data.tournaments === null}
-			<p class="text-xl">No scheduled tournaments</p>
 		{:else}
 			<p class="text-xl">Upcoming tournaments:</p>
 			<p class="mb-[5px] flex justify-around text-xl">

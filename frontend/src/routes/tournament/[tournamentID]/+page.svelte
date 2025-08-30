@@ -8,6 +8,7 @@
 	import trophyImg from '$lib/assets/icons/trophy.svg';
 	import pauseImg from '$lib/assets/icons/pause.svg';
 	import fireImg from '$lib/assets/icons/fire.svg';
+	import berserkImg from '$lib/assets/icons/kill.svg';
 	interface Player {
 		ID: number;
 		IsActive: boolean;
@@ -20,12 +21,12 @@
 	const { data } = $props();
 
 	let loading = $state(false);
-	let players = $state(data.tournamentData.players ?? []);
+	let players = $state(data.tournamentData.players);
 	// $effect(() => {
 	// 	players.forEach((player: Player) => console.log(player));
 	// });
 	$effect(() => {
-		players = data.tournamentData.players ?? [];
+		players = data.tournamentData.players;
 	});
 	let sortedPlayers = $derived(players.toSorted((a: any, b: any) => b.Score - a.Score));
 
@@ -161,6 +162,11 @@
 					data.tournamentData.increment
 				)} &bull; {data.tournamentData.duration / 60}m
 			</p>
+			{#if data.tournamentData.berserkAllowed}
+				<p class="flex items-center gap-[5px]">
+					<img class="h-[16px]" src={berserkImg} alt="berserk allowed" />Berserk Allowed
+				</p>
+			{/if}
 			<p>By <a href={`/member/${data.tournamentData.creator}`}>{data.tournamentData.creator}</a></p>
 			{#if data.tournamentData.status !== 2}
 				<div>
@@ -211,7 +217,7 @@
 			{#each sortedPlayers as player, i}
 				<div>
 					<div class="inline-flex items-center gap-[5px]">
-						<span class="inline-flex items-center justify-center">
+						<span class="inline-flex h-[24px] w-[24px] items-center justify-center">
 							{#if player.IsActive === false}
 								<img src={pauseImg} alt="played paused" />
 							{:else}

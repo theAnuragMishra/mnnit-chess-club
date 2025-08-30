@@ -25,6 +25,7 @@ var handlers = map[string]EventHandler{
 	"accept_challenge": acceptChallenge,
 	"join_leave":       handleJoinLeave,
 	"rematch":          rematch,
+	"berserk":          berserk,
 }
 
 type Controller struct {
