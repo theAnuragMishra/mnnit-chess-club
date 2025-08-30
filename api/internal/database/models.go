@@ -20,7 +20,7 @@ type Game struct {
 	CreatedAt        time.Time
 	EndTimeLeftWhite *int32
 	EndTimeLeftBlack *int32
-	ResultReason     *string
+	Method           int32
 	RatingW          int32
 	RatingB          int32
 	ChangeW          *int32

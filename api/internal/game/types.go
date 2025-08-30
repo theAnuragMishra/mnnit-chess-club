@@ -47,7 +47,7 @@ type State struct {
 }
 type EndNotification struct {
 	Result           int
-	Reason           *string
+	Method           int
 	ID               string
 	TimeLeftWhite    *int32
 	TimeLeftBlack    *int32

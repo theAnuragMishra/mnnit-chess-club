@@ -130,16 +130,14 @@ func (c *Controller) endGame(info game.EndNotification) {
 	t, ok := c.tournamentManager.getTournament(info.TournamentID)
 	if ok && info.Result == 4 {
 		if len(info.Moves)%2 == 0 {
-			reason := "White Didn't Play"
-			info.Reason = &reason
+			info.Method = 16
 			info.Result = 2
 			t.Inbox() <- tournament.UpdatePlayerStatus{
 				ID:     info.WhiteID,
 				Status: false,
 			}
 		} else {
-			reason := "Black Didn't Play"
-			info.Reason = &reason
+			info.Method = 17
 			info.Result = 1
 			t.Inbox() <- tournament.UpdatePlayerStatus{
 				ID:     info.BlackID,
@@ -218,7 +216,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 
 	err := c.queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
 		Result:           int32(info.Result),
-		ResultReason:     info.Reason,
+		Method:           int32(info.Method),
 		ID:               info.ID,
 		GameLength:       int32(len(info.Moves)),
 		ChangeW:          &cw,
@@ -232,7 +230,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 		log.Println("error ending game id", info.ID, err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"Result": info.Result, "Reason": info.Reason, "changeW": cw, "changeB": cb, "timeWhite": info.TimeLeftWhite, "timeBlack": info.TimeLeftBlack})
+	payload, err := json.Marshal(map[string]any{"Result": info.Result, "Method": info.Method, "changeW": cw, "changeB": cb, "timeWhite": info.TimeLeftWhite, "timeBlack": info.TimeLeftBlack})
 	if err != nil {
 		log.Println(err)
 		return

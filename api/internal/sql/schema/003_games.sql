@@ -33,7 +33,7 @@ CREATE TABLE games (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time_left_white INT,
     end_time_left_black INT,
-    result_reason VARCHAR(100),
+    method INT NOT NULL DEFAULT 0,
     rating_w INT NOT NULL,
     rating_b INT NOT NULL,
     change_w INT,

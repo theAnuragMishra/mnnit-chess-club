@@ -40,7 +40,7 @@
 	let changeWhite = $state(d.game.ChangeW ?? 0);
 	let changeBlack = $state(d.game.ChangeB ?? 0);
 	let result = $state(d.game.Result);
-	let reason = $state(d.game.ResultReason);
+	let method = $state(d.game.Method);
 	let moveHistory = $state(d.moves);
 	let activeIndex = $state(d.moves.length - 1);
 	let chessLatest = $derived(
@@ -129,7 +129,7 @@
 
 	const handleGameEnd = (payload: any) => {
 		result = payload.Result;
-		reason = payload.Reason;
+		method = payload.Method;
 		changeBlack = payload.changeB;
 		changeWhite = payload.changeW;
 		timeWhite = payload.timeWhite;
@@ -319,7 +319,7 @@
 			{createdAt}
 			{baseTime}
 			{increment}
-			{reason}
+			{method}
 		/>
 		<Chat hei="256px" />
 	</div>

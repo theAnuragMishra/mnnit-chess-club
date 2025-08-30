@@ -1,11 +1,11 @@
 <script>
-	import { formatPostgresTimestamp, formatResultAndReason, getTimeControl } from '$lib/utils';
+	import { formatPostgresTimestamp, formatResultAndMethod, getTimeControl } from '$lib/utils';
 
-	const { whiteUsername, blackUsername, result, baseTime, increment, createdAt, reason } = $props();
+	const { whiteUsername, blackUsername, result, baseTime, increment, createdAt, method } = $props();
 	// console.log(createdAt);
 	const createdAtString = formatPostgresTimestamp(createdAt);
 	const format = getTimeControl(baseTime, increment);
-	// $effect(() => console.log(result, reason));
+	// $effect(() => console.log(result, method));
 </script>
 
 <div class="flex h-30 flex-col justify-around gap-1 rounded bg-[#1c1d1e] p-4 shadow-lg md:h-40">
@@ -30,7 +30,7 @@
 	{#if result !== 0}
 		<div class="h-[1px] w-full bg-gray-500 opacity-50"></div>
 		<div class=" flex items-center justify-center">
-			{formatResultAndReason(result, reason)}
+			{formatResultAndMethod(result, method)}
 		</div>
 	{/if}
 </div>

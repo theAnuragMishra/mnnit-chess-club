@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import {
 		formatPostgresTimestamp,
-		formatResultAndReason,
+		formatResultAndMethod,
 		getBaseURL,
 		getTimeControl
 	} from '$lib/utils.js';
@@ -138,7 +138,7 @@
 				</div>
 				<div class={`text-[14px] ${color} w-full text-center`}>
 					{#if item.Result !== 0}
-						{formatResultAndReason(item.Result, item.ResultReason)}
+						{formatResultAndMethod(item.Result, item.Method)}
 					{:else}
 						Playing right now
 					{/if}

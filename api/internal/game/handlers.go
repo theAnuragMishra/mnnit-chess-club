@@ -62,19 +62,19 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 
 	g.st.Moves = append(g.st.Moves, moveToSend)
 
-	var res int
-	result := g.st.Board.Outcome()
-	reason := g.st.Board.Method().String()
-	if result != "*" {
-		if result == "1-0" {
-			res = 1
-		} else if result == "0-1" {
-			res = 2
+	var result int
+	res := g.st.Board.Outcome()
+	method := int(g.st.Board.Method())
+	if res != "*" {
+		if res == "1-0" {
+			result = 1
+		} else if res == "0-1" {
+			result = 2
 		} else {
-			res = 3
+			result = 3
 		}
 
-		g.end(res, reason)
+		g.end(result, method)
 
 	} else {
 		if g.st.AbortTimer != nil {
@@ -111,7 +111,7 @@ func (g *Game) handleMove(c int32, move MoveInfo) MoveResp {
 	}
 }
 
-func (g *Game) end(result int, reason string) {
+func (g *Game) end(result int, method int) {
 	g.st.Result = result
 	if g.st.AbortTimer != nil {
 		g.st.AbortTimer.Stop()
@@ -131,7 +131,7 @@ func (g *Game) end(result int, reason string) {
 
 	notification := EndNotification{
 		Result:           result,
-		Reason:           &reason,
+		Method:           method,
 		ID:               g.ID,
 		TimeLeftWhite:    &timeLeftWhite,
 		TimeLeftBlack:    &timeLeftBlack,
@@ -164,7 +164,6 @@ func (g *Game) handleDraw(c int32) int32 {
 		}
 		return other
 	} else {
-		reason := "Draw by mutual agreement"
 		timeTaken := time.Since(g.st.LastMoveTime)
 
 		if g.st.Board.Position().Turn() == chess.White {
@@ -172,7 +171,7 @@ func (g *Game) handleDraw(c int32) int32 {
 		} else {
 			g.st.TimeBlack -= timeTaken
 		}
-		g.end(3, reason)
+		g.end(3, 10)
 		return 0
 	}
 }
@@ -191,13 +190,13 @@ func (g *Game) handleResign(c int32) {
 	}
 
 	var result int
-	var reason string
+	var method int
 	if g.WhiteID == c {
 		result = 2
-		reason = "White Resigned"
+		method = 11
 	} else {
 		result = 1
-		reason = "Black Resigned"
+		method = 12
 	}
 
 	timeTaken := time.Since(g.st.LastMoveTime)
@@ -208,14 +207,14 @@ func (g *Game) handleResign(c int32) {
 		g.st.TimeBlack -= timeTaken
 	}
 
-	g.end(result, reason)
+	g.end(result, method)
 }
 
 func (g *Game) handleAbort() {
 	if g.st.Result != 0 {
 		return
 	}
-	g.end(4, "Game Aborted")
+	g.end(4, 13)
 }
 
 func (g *Game) handleTimeout() {
@@ -223,17 +222,17 @@ func (g *Game) handleTimeout() {
 		return
 	}
 	var result int
-	var reason string
+	var method int
 	if g.st.Board.Position().Turn() == chess.White {
 		g.st.TimeWhite = 0
 		result = 2
-		reason = "White Timeout"
+		method = 14
 	} else {
 		g.st.TimeBlack = 0
 		result = 1
-		reason = "Black Timeout"
+		method = 15
 	}
-	g.end(result, reason)
+	g.end(result, method)
 }
 
 func (g *Game) handleBerserk(msg BerserkMsg) {

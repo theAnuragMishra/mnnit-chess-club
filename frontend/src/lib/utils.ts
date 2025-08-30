@@ -65,18 +65,29 @@ export function formatPostgresTimestamp(dateObj: Date): string {
 	return dateObj.toLocaleDateString('en-GB', options).replace(',', '');
 }
 
-export function formatResultAndReason(result: number, reason: string) {
-	if (result === 4) return 'Game Aborted';
-	if (result === 3) {
-		if (reason === 'ThreefoldRepetition') return 'Draw by threefold repetition';
-		if (reason === 'FivefoldRepetition') return 'Draw by fivefold repetition';
-		if (reason === 'FiftyMoveRule') return 'Draw by 50 move rule';
-		if (reason === 'SeventyFiveMoveRule') return 'Draw by 75 move rule';
-		if (reason === 'Stalemate') return 'Draw by stalemate';
-		if (reason === 'InsufficientMaterial') return 'Insufficient material | Draw';
-		return reason;
-	}
-	return `${reason} | ${result === 1 ? 'White' : 'Black'} Wins`;
+const methods: { [index: number]: string } = {
+	0: 'Game is live',
+	1: 'Checkmate',
+	2: 'Resignation',
+	3: 'DrawOffer',
+	4: 'Draw by stalemate',
+	5: 'Draw by threefold repetition',
+	6: 'Draw by fivefold repetition',
+	7: 'Draw by 50 move rule',
+	8: 'Draw by 75 move rule',
+	9: 'Insufficient material | Draw',
+	10: 'Draw by mutual agreement',
+	11: 'White resigned',
+	12: 'Black resigned',
+	13: 'Game Aborted',
+	14: 'White timeout',
+	15: 'Black timeout',
+	16: "White didn't play",
+	17: "Black didn't play"
+};
+
+export function formatResultAndMethod(result: number, method: number) {
+	return `${methods[method]}${result === 1 ? ' | White wins' : result === 2 ? ' | Black wins' : ''}`;
 }
 
 export function getTimeControl(baseTime: number, increment: number) {
