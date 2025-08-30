@@ -24,19 +24,19 @@ func newChallengeManager() *challengeManager {
 	}
 }
 
-func (m *challengeManager) AddChallenge(id string, c game.Challenge) {
+func (m *challengeManager) addChallenge(id string, c game.Challenge) {
 	m.Lock()
 	m.pendingChallenges[id] = c
 	m.Unlock()
 }
 
-func (m *challengeManager) RemoveChallenge(id string) {
+func (m *challengeManager) removeChallenge(id string) {
 	m.Lock()
 	delete(m.pendingChallenges, id)
 	m.Unlock()
 }
 
-func (m *challengeManager) GetChallengeByID(id string) (game.Challenge, bool) {
+func (m *challengeManager) getChallengeByID(id string) (game.Challenge, bool) {
 	m.RLock()
 	c, exists := m.pendingChallenges[id]
 	m.RUnlock()
@@ -56,7 +56,7 @@ func createChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err != nil {
 		return err
 	}
-	c.challengeManager.AddChallenge(id, game.Challenge{
+	c.challengeManager.addChallenge(id, game.Challenge{
 		TimeControl:     timeControl,
 		Creator:         client.UserID,
 		CreatorUsername: client.Username,
@@ -76,7 +76,7 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err := json.Unmarshal(event.Payload, &acceptChallengePayload); err != nil {
 		return err
 	}
-	challenge, exists := c.challengeManager.GetChallengeByID(acceptChallengePayload.GameID)
+	challenge, exists := c.challengeManager.getChallengeByID(acceptChallengePayload.GameID)
 	if !exists {
 		return nil
 	}
@@ -92,7 +92,7 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 		return fmt.Errorf("error getting rating for user %d: %w", client.UserID, err)
 	}
 	g := game.New(acceptChallengePayload.GameID, time.Duration(challenge.TimeControl.BaseTime)*time.Second, time.Duration(challenge.TimeControl.Increment)*time.Second, challenge.Creator, client.UserID, "", c.gameRecv)
-	c.gameManager.AddGame(g)
+	c.gameManager.addGame(g)
 	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           g.ID,
 		BaseTime:     challenge.TimeControl.BaseTime,
@@ -113,6 +113,6 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 	c.socketManager.BroadcastToRoom(e, acceptChallengePayload.GameID)
-	c.challengeManager.RemoveChallenge(acceptChallengePayload.GameID)
+	c.challengeManager.removeChallenge(acceptChallengePayload.GameID)
 	return nil
 }

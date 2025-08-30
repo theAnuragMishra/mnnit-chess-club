@@ -17,7 +17,7 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
-func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) handleLogout(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	c.socketManager.DisconnectAllClientsOfASession(session.UserID, session.ID)
@@ -39,7 +39,7 @@ func (c *Controller) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Controller) WriteLeaderBoard(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeLeaderBoard(w http.ResponseWriter, r *http.Request) {
 	lb, err := c.queries.GetTopN(context.Background(), 10)
 	if err != nil {
 		log.Println("error getting top n", err)
@@ -48,7 +48,7 @@ func (c *Controller) WriteLeaderBoard(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, lb)
 }
 
-func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) updateUsername(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	user, err := c.queries.GetUserByUserID(r.Context(), session.UserID)
@@ -83,7 +83,7 @@ func (c *Controller) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, "Username updated")
 }
 
-func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeGames(w http.ResponseWriter, r *http.Request) {
 	// log.Println("request received")
 	username := chi.URLParam(r, "username")
 	page := r.URL.Query().Get("page")
@@ -112,7 +112,7 @@ func (c *Controller) WriteGames(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, games)
 }
 
-func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeProfileInfo(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 
 	if username == "" {
@@ -135,9 +135,9 @@ func (c *Controller) WriteProfileInfo(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"CreatedAt": profile.CreatedAt, "AvatarUrl": profile.AvatarUrl, "Rating": profile.Rating, "Rd": profile.Rd, "GameCount": counts.GameCount, "DrawCount": counts.DrawCount, "WinCount": counts.WinCount, "LossCount": counts.LossCount})
 }
 
-func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 	gameID := chi.URLParam(r, "gameID")
-	challenge, exists := c.challengeManager.GetChallengeByID(gameID)
+	challenge, exists := c.challengeManager.getChallengeByID(gameID)
 	if exists {
 		utils.RespondWithJSON(w, http.StatusOK, challenge)
 		return
@@ -147,7 +147,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid game ID")
 		return
 	}
-	g, exists := c.gameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
 		_, canRematch := c.rematchManager.getRematchByID(gameID)
 		moves, err := c.queries.GetGameMoves(r.Context(), gameID)
@@ -179,7 +179,7 @@ func (c *Controller) WriteGameInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request) {
 	tournamentID := chi.URLParam(r, "tournamentID")
 	if tournamentID == "" {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
@@ -243,7 +243,7 @@ func (c *Controller) WriteTournamentInfo(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeScheduledTournaments(w http.ResponseWriter, r *http.Request) {
 	tournaments, err := c.queries.GetScheduledTournaments(r.Context())
 	if err != nil {
 		log.Println("error getting scheduled tournaments", err)
@@ -253,7 +253,7 @@ func (c *Controller) WriteScheduledTournaments(w http.ResponseWriter, r *http.Re
 	utils.RespondWithJSON(w, http.StatusOK, tournaments)
 }
 
-func (c *Controller) WriteLiveTournaments(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) writeLiveTournaments(w http.ResponseWriter, r *http.Request) {
 	tournaments, err := c.queries.GetLiveTournaments(r.Context())
 	if err != nil {
 		log.Println("error getting live tournaments", err)
@@ -263,7 +263,7 @@ func (c *Controller) WriteLiveTournaments(w http.ResponseWriter, r *http.Request
 	utils.RespondWithJSON(w, http.StatusOK, tournaments)
 }
 
-func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) createTournament(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.MiddlewareSentSession).(database.GetSessionRow)
 
 	var tournamentPayload TournamentPayload
@@ -318,7 +318,7 @@ func (c *Controller) CreateTournament(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"id": id})
 }
 
-func (c *Controller) StartTournament(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) startTournament(w http.ResponseWriter, r *http.Request) {
 	var tournamentID TournamentIDPayload
 	if json.NewDecoder(r.Body).Decode(&tournamentID) != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")

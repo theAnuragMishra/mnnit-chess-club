@@ -27,42 +27,42 @@ func NewChiRouter(authHandler *auth.Handler, controller *Controller) *chi.Mux {
 	adminRouter.Use(authHandler.AuthMiddleware)
 	adminRouter.Use(authHandler.AdminCheckMiddleware)
 	router.Mount("/admin", adminRouter)
-	adminRouter.Post("/create-tournament", controller.CreateTournament)
-	adminRouter.Post("/start-tournament", controller.StartTournament)
+	adminRouter.Post("/create-tournament", controller.createTournament)
+	adminRouter.Post("/start-tournament", controller.startTournament)
 
 	// authenticated routes
 	router.Group(func(router chi.Router) {
 		router.Use(authHandler.AuthMiddleware)
-		router.Post("/logout", controller.HandleLogout)
+		router.Post("/logout", controller.handleLogout)
 		router.Get("/me", authHandler.HandleMe)
-		router.Post("/set-username", controller.UpdateUsername)
+		router.Post("/set-username", controller.updateUsername)
 		router.HandleFunc("/ws", controller.socketManager.ServeWS)
 	})
 
 	// routes that don't need authentication
-	router.Get("/profile/{username}", controller.WriteProfileInfo)
-	router.Get("/games/{username}", controller.WriteGames)
+	router.Get("/profile/{username}", controller.writeProfileInfo)
+	router.Get("/games/{username}", controller.writeGames)
 	router.Get("/auth/login/google", auth.GoogleLogin)
 	router.Get("/auth/callback/google", authHandler.GoogleCallback)
 	router.Post("/meow", func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		log.Println(username)
 	})
-	router.Get("/get-leaderboard", controller.WriteLeaderBoard)
+	router.Get("/get-leaderboard", controller.writeLeaderBoard)
 	// game subroute
 
 	gameRouter := chi.NewRouter()
 	gameRouter.Use(authHandler.AuthMiddleware)
-	gameRouter.Get("/{gameID}", controller.WriteGameInfo)
+	gameRouter.Get("/{gameID}", controller.writeGameInfo)
 	router.Mount("/game", gameRouter)
 
 	// tournament subroute
 	tournamentRouter := chi.NewRouter()
 	tournamentRouter.Use(authHandler.AuthMiddleware)
 	router.Mount("/tournament", tournamentRouter)
-	tournamentRouter.Get("/{tournamentID}", controller.WriteTournamentInfo)
-	tournamentRouter.Get("/scheduled", controller.WriteScheduledTournaments)
-	tournamentRouter.Get("/live", controller.WriteLiveTournaments)
+	tournamentRouter.Get("/{tournamentID}", controller.writeTournamentInfo)
+	tournamentRouter.Get("/scheduled", controller.writeScheduledTournaments)
+	tournamentRouter.Get("/live", controller.writeLiveTournaments)
 
 	return router
 }

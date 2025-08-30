@@ -26,19 +26,19 @@ func newGameManager() *gameManager {
 	}
 }
 
-func (m *gameManager) AddGame(g *game.Game) {
+func (m *gameManager) addGame(g *game.Game) {
 	m.Lock()
 	m.games[g.ID] = g
 	m.Unlock()
 }
 
-func (m *gameManager) RemoveGame(id string) {
+func (m *gameManager) removeGame(id string) {
 	m.Lock()
 	delete(m.games, id)
 	m.Unlock()
 }
 
-func (m *gameManager) GetGameByID(id string) (*game.Game, bool) {
+func (m *gameManager) getGameByID(id string) (*game.Game, bool) {
 	m.RLock()
 	g, exists := m.games[id]
 	m.RUnlock()
@@ -51,7 +51,7 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := move.GameID
-	g, exists := c.gameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
 		return errors.New("game not found")
 	}
@@ -88,7 +88,7 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 
 	gameID := draw.GameID
-	g, exists := c.gameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
 		return nil
 	}
@@ -111,7 +111,7 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 		return err
 	}
 	gameID := resign.GameID
-	g, exists := c.gameManager.GetGameByID(gameID)
+	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
 		return nil
 	}
@@ -123,7 +123,7 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 }
 
 func (c *Controller) endGame(info game.EndNotification) {
-	g, exists := c.gameManager.GetGameByID(info.ID)
+	g, exists := c.gameManager.getGameByID(info.ID)
 	if !exists {
 		return
 	}
@@ -243,7 +243,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 	}
 	c.socketManager.BroadcastToRoom(e, info.ID)
 	g.Done() <- struct{}{}
-	c.gameManager.RemoveGame(info.ID)
+	c.gameManager.removeGame(info.ID)
 	c.rematchManager.addRematch(info.ID, &rematchInfo{
 		WhiteID:   info.WhiteID,
 		BlackID:   info.BlackID,
@@ -261,7 +261,7 @@ func (c *Controller) endGame(info game.EndNotification) {
 }
 
 func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
-	g, ok := c.gameManager.GetGameByID(client.Room)
+	g, ok := c.gameManager.getGameByID(client.Room)
 	if !ok {
 		return nil
 	}

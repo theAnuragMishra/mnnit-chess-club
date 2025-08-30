@@ -22,7 +22,7 @@ func chat(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "chat",
 		Payload: json.RawMessage(payload),
 	}
-	g, exists := c.gameManager.GetGameByID(client.Room)
+	g, exists := c.gameManager.getGameByID(client.Room)
 	if !exists {
 		// handle game ended message
 		c.socketManager.BroadcastToRoom(e, client.Room)

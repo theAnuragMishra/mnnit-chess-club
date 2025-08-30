@@ -34,7 +34,7 @@ func (c *Controller) tournamentReceiveListener() {
 					return
 				}
 				g := game.New(id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, msg.PlayerA.ID, msg.PlayerB.ID, t.ID, c.gameRecv)
-				c.gameManager.AddGame(g)
+				c.gameManager.addGame(g)
 				err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 					ID:           id,
 					BaseTime:     t.TimeControl.BaseTime,
