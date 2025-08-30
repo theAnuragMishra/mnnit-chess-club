@@ -51,6 +51,7 @@ func New(id, name string, duration int32, creator string, createdBy, baseTime, i
 	for _, v := range initialPlayers {
 		t.waitingPlayers = append(t.waitingPlayers, v)
 	}
+	t.UpdateSnapShot()
 	time.AfterFunc(time.Duration(duration)*time.Second, func() { t.inbox <- EndTournament{} })
 	go t.run()
 	return t
