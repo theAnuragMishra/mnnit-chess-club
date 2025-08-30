@@ -32,6 +32,10 @@ func (m *tournamentManager) addTournament(t *tournament.Tournament) {
 
 func (m *tournamentManager) removeTournament(id string) {
 	m.Lock()
+	t, ok := m.tournaments[id]
+	if ok {
+		t.Done <- struct{}{}
+	}
 	delete(m.tournaments, id)
 	m.Unlock()
 }

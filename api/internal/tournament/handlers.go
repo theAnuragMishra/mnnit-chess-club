@@ -85,7 +85,6 @@ func (t *Tournament) end() {
 		TournamentID: t.ID,
 		Players:      players,
 	}
-	t.Done <- struct{}{}
 }
 
 func (t *Tournament) handleUpdatePlayers(msg UpdatePlayers) {
