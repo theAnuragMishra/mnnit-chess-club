@@ -391,8 +391,8 @@
 					showBerserkButton={result === 0 &&
 						d.berserkAllowed &&
 						(whiteUp
-							? !berserkBlack && moveHistory.length == 0
-							: !berserkWhite && moveHistory.length <= 1)}
+							? !berserkBlack && moveHistory.length <= 1
+							: !berserkWhite && moveHistory.length == 0)}
 				/>
 			{/if}
 		</div>
