@@ -167,6 +167,8 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// server game response
+		g.WG.Add(1)
+		defer g.WG.Done()
 		t, ok := c.tournamentManager.getTournament(g.TournamentID)
 		berserkAllowed := false
 		if ok && t.BerserkAllowed {
