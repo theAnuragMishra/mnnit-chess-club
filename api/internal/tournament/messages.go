@@ -48,10 +48,13 @@ type UpdatePlayers struct {
 	Rating1          float64
 	Rating2          float64
 	ExtraPointPlayer int32
-	Reply            chan UpdatedPlayerSnapShots
 }
 
 func (UpdatePlayers) isMessage() {}
+
+type EndTournament struct{}
+
+func (EndTournament) isMessage() {}
 
 // messages going out
 
@@ -82,3 +85,10 @@ type GetPairable struct {
 }
 
 func (GetPairable) isControllerMessage() {}
+
+type BroadCastUpdatedPlayers struct {
+	TournamentID string
+	Players      UpdatedPlayerSnapShots
+}
+
+func (BroadCastUpdatedPlayers) isControllerMessage() {}

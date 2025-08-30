@@ -204,11 +204,9 @@ func (c *Controller) endGame(info game.EndNotification) {
 				Rating1:          up1.Rating,
 				Rating2:          up2.Rating,
 				ExtraPointPlayer: info.ExtraPointPlayer,
-				Reply:            make(chan tournament.UpdatedPlayerSnapShots, 1),
 			}
 			t.Inbox() <- msg
-			reply := <-msg.Reply
-			c.sendScoreUpdateEvent(reply, info.TournamentID)
+			t.WG.Done()
 		}
 		cw = int32(up1.Rating - p1info.Rating)
 		cb = int32(up2.Rating - p2info.Rating)

@@ -1,6 +1,7 @@
 package tournament
 
 import (
+	"sync"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -20,6 +21,8 @@ type Tournament struct {
 	inbox          chan Msg
 	ControllerChan chan ControllerMsg
 	BerserkAllowed bool
+	Status         int
+	WG             sync.WaitGroup
 }
 
 func New(id, name string, duration int32, creator string, createdBy, baseTime, increment int32, initialPlayers map[int32]*Player, c chan ControllerMsg, berserkAllowed bool) *Tournament {
@@ -41,11 +44,12 @@ func New(id, name string, duration int32, creator string, createdBy, baseTime, i
 		ControllerChan: c,
 		inbox:          make(chan Msg, 256),
 		BerserkAllowed: berserkAllowed,
+		Status:         1,
 	}
 	for _, v := range initialPlayers {
 		t.waitingPlayers = append(t.waitingPlayers, v)
 	}
-	time.AfterFunc(time.Duration(duration)*time.Second, func() { t.end() })
+	time.AfterFunc(time.Duration(duration)*time.Second, func() { t.inbox <- EndTournament{} })
 	go t.run()
 	return t
 }
@@ -61,8 +65,14 @@ func (t *Tournament) run() {
 	for {
 		select {
 		case <-ticker.C:
+			if t.Status != 1 {
+				continue
+			}
 			t.PairPlayers()
 		case m := <-t.inbox:
+			if t.Status != 1 {
+				continue
+			}
 			switch msg := m.(type) {
 			case GetPlayers:
 				if msg.Reply != nil {
@@ -91,6 +101,8 @@ func (t *Tournament) run() {
 				p.IsActive = msg.Status
 			case UpdatePlayers:
 				t.handleUpdatePlayers(msg)
+			case EndTournament:
+				t.end()
 			}
 		case <-t.Done:
 			return

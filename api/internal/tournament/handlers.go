@@ -60,6 +60,7 @@ func (t *Tournament) PairPlayers() {
 			}
 			paired[playerA.ID] = true
 			paired[playerB.ID] = true
+			t.WG.Add(1)
 		}
 	}
 	var newWaitingPlayers []*Player
@@ -72,6 +73,7 @@ func (t *Tournament) PairPlayers() {
 }
 
 func (t *Tournament) end() {
+	t.Status = 2
 	players := make([]EndPlayer, 0, len(t.players))
 	for _, player := range t.players {
 		players = append(players, EndPlayer{
@@ -140,12 +142,14 @@ func (t *Tournament) handleUpdatePlayers(msg UpdatePlayers) {
 
 	t.waitingPlayers = append(t.waitingPlayers, p2)
 	t.waitingPlayers = append(t.waitingPlayers, p1)
-	if msg.Reply != nil {
-		pl1 := t.playerSnapshot(msg.Player1)
-		pl2 := t.playerSnapshot(msg.Player2)
-		msg.Reply <- UpdatedPlayerSnapShots{
+
+	pl1 := t.playerSnapshot(msg.Player1)
+	pl2 := t.playerSnapshot(msg.Player2)
+	t.ControllerChan <- BroadCastUpdatedPlayers{
+		TournamentID: t.ID,
+		Players: UpdatedPlayerSnapShots{
 			Player1: pl1,
 			Player2: pl2,
-		}
+		},
 	}
 }

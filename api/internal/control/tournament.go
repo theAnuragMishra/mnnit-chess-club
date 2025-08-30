@@ -32,10 +32,6 @@ func (m *tournamentManager) addTournament(t *tournament.Tournament) {
 
 func (m *tournamentManager) removeTournament(id string) {
 	m.Lock()
-	t, ok := m.tournaments[id]
-	if ok {
-		t.Done <- struct{}{}
-	}
 	delete(m.tournaments, id)
 	m.Unlock()
 }
@@ -76,7 +72,12 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 	c.socketManager.BroadcastToRoom(e, id)
-	c.tournamentManager.removeTournament(id)
+	t, ok := c.tournamentManager.getTournament(id)
+	if ok {
+		t.WG.Wait()
+		c.tournamentManager.removeTournament(id)
+		t.Done <- struct{}{}
+	}
 }
 
 func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
@@ -98,10 +99,11 @@ func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 	if !ok {
 		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err
-	} else {
+	} else if t.Status == 1 {
 		err = handleJoinLeaveDuringTournament(c, e, client, t)
 		return err
 	}
+	return nil
 }
 
 func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {

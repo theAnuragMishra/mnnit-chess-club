@@ -75,6 +75,8 @@ func (c *Controller) tournamentReceiveListener() {
 					msg.Reply <- availableToPair
 				}
 			}()
+		case tournament.BroadCastUpdatedPlayers:
+			go c.sendScoreUpdateEvent(msg.Players, msg.TournamentID)
 		}
 	}
 }
