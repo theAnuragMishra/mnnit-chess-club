@@ -1,6 +1,7 @@
 package game
 
 import (
+	"sync"
 	"time"
 
 	"github.com/notnil/chess"
@@ -19,6 +20,7 @@ type Game struct {
 	ControllerChannel chan EndNotification
 	BerserkWhite      bool
 	BerserkBlack      bool
+	WG                sync.WaitGroup
 }
 
 func New(id string, baseTime time.Duration, increment time.Duration, player1 int32, player2 int32, tournamentID string, c chan EndNotification) *Game {

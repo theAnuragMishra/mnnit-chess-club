@@ -52,6 +52,8 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	gameID := move.GameID
 	g, exists := c.gameManager.getGameByID(gameID)
+	g.WG.Add(1)
+	defer g.WG.Done()
 	if !exists {
 		return errors.New("game not found")
 	}
@@ -77,7 +79,6 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 		Payload: json.RawMessage(payload),
 	}
 	c.socketManager.BroadcastToRoom(e, gameID)
-
 	return nil
 }
 
@@ -92,6 +93,8 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 	if !exists {
 		return nil
 	}
+	g.WG.Add(1)
+	defer g.WG.Done()
 	msg := game.DrawMsg{Player: client.UserID, Reply: make(chan int32, 1)}
 	g.Inbox() <- msg
 	reply := <-msg.Reply
@@ -115,6 +118,8 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 	if !exists {
 		return nil
 	}
+	g.WG.Add(1)
+	defer g.WG.Done()
 	msg := game.ResignMsg{
 		Player: client.UserID,
 	}
@@ -128,20 +133,23 @@ func (c *Controller) endGame(info game.EndNotification) {
 		return
 	}
 	t, ok := c.tournamentManager.getTournament(info.TournamentID)
-	if ok && info.Result == 4 {
-		if len(info.Moves)%2 == 0 {
-			info.Method = 16
-			info.Result = 2
-			t.Inbox() <- tournament.UpdatePlayerStatus{
-				ID:     info.WhiteID,
-				Status: false,
-			}
-		} else {
-			info.Method = 17
-			info.Result = 1
-			t.Inbox() <- tournament.UpdatePlayerStatus{
-				ID:     info.BlackID,
-				Status: false,
+	if ok {
+		defer t.WG.Done()
+		if info.Result == 4 {
+			if len(info.Moves)%2 == 0 {
+				info.Method = 16
+				info.Result = 2
+				t.Inbox() <- tournament.UpdatePlayerStatus{
+					ID:     info.WhiteID,
+					Status: false,
+				}
+			} else {
+				info.Method = 17
+				info.Result = 1
+				t.Inbox() <- tournament.UpdatePlayerStatus{
+					ID:     info.BlackID,
+					Status: false,
+				}
 			}
 		}
 	}
@@ -206,7 +214,6 @@ func (c *Controller) endGame(info game.EndNotification) {
 				ExtraPointPlayer: info.ExtraPointPlayer,
 			}
 			t.Inbox() <- msg
-			t.WG.Done()
 		}
 		cw = int32(up1.Rating - p1info.Rating)
 		cb = int32(up2.Rating - p2info.Rating)
@@ -238,8 +245,6 @@ func (c *Controller) endGame(info game.EndNotification) {
 		Payload: json.RawMessage(payload),
 	}
 	c.socketManager.BroadcastToRoom(e, info.ID)
-	g.Done() <- struct{}{}
-	c.gameManager.removeGame(info.ID)
 	c.rematchManager.addRematch(info.ID, &rematchInfo{
 		WhiteID:   info.WhiteID,
 		BlackID:   info.BlackID,
@@ -247,13 +252,16 @@ func (c *Controller) endGame(info game.EndNotification) {
 		Increment: g.Increment,
 		Offer:     false,
 	})
-	c.batchInsertMoves(info.ID, info.Moves)
 	time.AfterFunc(time.Second*30, func() {
 		e = socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
 		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.BlackID)
 		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
 		c.rematchManager.removeRematch(info.ID)
 	})
+	c.batchInsertMoves(info.ID, info.Moves)
+	g.WG.Wait()
+	g.Done() <- struct{}{}
+	c.gameManager.removeGame(info.ID)
 }
 
 func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
@@ -265,7 +273,8 @@ func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
 	if !exists || !t.BerserkAllowed {
 		return nil
 	}
-
+	g.WG.Add(1)
+	defer g.WG.Done()
 	var payload map[string]any
 
 	if client.UserID == g.WhiteID {
