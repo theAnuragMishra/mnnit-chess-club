@@ -4,8 +4,9 @@
 	import resignImg from '$lib/assets/icons/flag.svg';
 	import crossImg from '$lib/assets/icons/cross.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
+	import flipImg from '$lib/assets/icons/flip.svg';
 
-	const { gameID, isDisabled, showBerserkButton } = $props();
+	const { gameID, isDisabled, showBerserkButton, handleFlip } = $props();
 	let offer = $state(false);
 	let resignSelected = $state(false);
 
@@ -56,6 +57,11 @@
 </script>
 
 <div class="flex items-center justify-center gap-2 text-xl text-white md:text-2xl">
+	<button
+		onclick={handleFlip}
+		class="cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:px-4 md:py-2"
+		><img src={flipImg} alt="flip the board" class="h-[32px]" /></button
+	>
 	<button
 		class={`cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:px-4 md:py-2 ${offer && 'animate-pulse bg-blue-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 		onclick={handleDraw}
