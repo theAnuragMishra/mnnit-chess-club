@@ -13,5 +13,10 @@ CREATE TABLE users(
     volatility FLOAT NOT NULL DEFAULT 0.06
 );
 
+CREATE INDEX users_username_index ON users(username);
+CREATE INDEX users_rating_index ON users(rating DESC);
+
 -- +goose Down
+DROP INDEX IF EXISTS users_rating_index;
+DROP INDEX IF EXISTS users_username_index;
 DROP TABLE users;

@@ -52,11 +52,11 @@ CREATE TABLE moves (
     move_fen TEXT NOT NULL,
     time_left INT
 );
+CREATE INDEX tp_pid_tid_index ON tournament_players(tournament_id, player_id);
 CREATE INDEX games_w_id_index ON games(white_id);
 CREATE INDEX games_b_id_index ON games(black_id);
-CREATE INDEX games_wb_id_index ON games(white_id, black_id);
-CREATE INDEX games_result_index ON games(result);
-CREATE INDEX games_created_at_index ON games(created_at);
+CREATE INDEX games_tournament_id_index ON games(tournament_id);
+CREATE INDEX games_created_at_index ON games(created_at DESC);
 CREATE INDEX moves_game_id_index ON moves(game_id);
 CREATE INDEX moves_move_number_index ON moves(move_number);
 
@@ -64,10 +64,10 @@ CREATE INDEX moves_move_number_index ON moves(move_number);
 DROP INDEX IF EXISTS moves_move_number_index;
 DROP INDEX IF EXISTS moves_game_id_index;
 DROP INDEX IF EXISTS games_created_at_index;
-DROP INDEX IF EXISTS games_result_index;
-DROP INDEX IF EXISTS games_wb_id_index;
+DROP INDEX IF EXISTS games_tournament_id_index;
 DROP INDEX IF EXISTS games_b_id_index;
 DROP INDEX IF EXISTS games_w_id_index;
+DROP INDEX IF EXISTS tp_pid_tid_index;
 DROP TABLE IF EXISTS moves;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS tournament_players;
