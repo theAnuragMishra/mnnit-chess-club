@@ -99,11 +99,10 @@ func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) e
 	if !ok {
 		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
 		return err
-	} else if t.Status == 1 {
+	} else {
 		err = handleJoinLeaveDuringTournament(c, e, client, t)
 		return err
 	}
-	return nil
 }
 
 func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
@@ -199,6 +198,10 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 		}
 		t.Inbox() <- msg
 		player := <-msg.Reply
+		if player.ID == 0 {
+			client.Send(e)
+			return nil
+		}
 		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": player.Score, "Username": client.Username, "Rating": rating, "IsActive": player.IsActive}})
 		if err != nil {
 			client.Send(e)

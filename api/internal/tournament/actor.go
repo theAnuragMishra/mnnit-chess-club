@@ -68,9 +68,6 @@ func (t *Tournament) run() {
 		case <-ticker.C:
 			t.PairPlayers()
 		case m := <-t.inbox:
-			if _, ok := m.(GetPlayers); !ok && t.Status != 1 {
-				continue
-			}
 			switch msg := m.(type) {
 			case GetPlayers:
 				if msg.Reply != nil {
@@ -83,22 +80,32 @@ func (t *Tournament) run() {
 				}
 			case TogglePlayerActiveMsg:
 				p := t.players[msg.ID]
-				p.IsActive = !p.IsActive
+				if t.Status == 1 {
+					p.IsActive = !p.IsActive
+				}
 				if msg.Reply != nil {
 					msg.Reply <- p.IsActive
 				}
 			case AddPlayer:
-				p := NewPlayer(msg.ID, msg.Rating, true)
-				t.players[msg.ID] = p
-				t.waitingPlayers = append(t.waitingPlayers, p)
-				if msg.Reply != nil {
-					msg.Reply <- *p
+				if t.Status == 1 {
+					p := NewPlayer(msg.ID, msg.Rating, true)
+					t.players[msg.ID] = p
+					t.waitingPlayers = append(t.waitingPlayers, p)
+					if msg.Reply != nil {
+						msg.Reply <- *p
+					}
+				} else {
+					msg.Reply <- Player{}
 				}
 			case UpdatePlayerStatus:
-				p := t.players[msg.ID]
-				p.IsActive = msg.Status
+				if t.Status == 1 {
+					p := t.players[msg.ID]
+					p.IsActive = msg.Status
+				}
 			case UpdatePlayers:
-				t.handleUpdatePlayers(msg)
+				if t.Status == 1 {
+					t.handleUpdatePlayers(msg)
+				}
 			case EndTournament:
 				t.end()
 			}
