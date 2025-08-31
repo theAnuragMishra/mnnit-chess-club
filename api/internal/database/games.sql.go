@@ -130,11 +130,16 @@ func (q *Queries) DeleteLiveTournaments(ctx context.Context) error {
 }
 
 const deleteTournamentPlayer = `-- name: DeleteTournamentPlayer :exec
-DELETE FROM tournament_players WHERE player_id = $1
+DELETE FROM tournament_players WHERE tournament_id = $1 AND player_id = $2
 `
 
-func (q *Queries) DeleteTournamentPlayer(ctx context.Context, playerID int32) error {
-	_, err := q.db.Exec(ctx, deleteTournamentPlayer, playerID)
+type DeleteTournamentPlayerParams struct {
+	TournamentID string
+	PlayerID     int32
+}
+
+func (q *Queries) DeleteTournamentPlayer(ctx context.Context, arg DeleteTournamentPlayerParams) error {
+	_, err := q.db.Exec(ctx, deleteTournamentPlayer, arg.TournamentID, arg.PlayerID)
 	return err
 }
 
@@ -293,14 +298,24 @@ func (q *Queries) GetGameMoves(ctx context.Context, gameID string) ([]GetGameMov
 }
 
 const getGameNumbers = `-- name: GetGameNumbers :one
+WITH target_user AS (
+    SELECT id FROM users WHERE username = $1
+),
+     user_games AS (
+         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.end_time_left_white, g.end_time_left_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, true AS is_white
+         FROM games g, target_user u
+         WHERE g.white_id = u.id
+         UNION ALL
+         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.end_time_left_white, g.end_time_left_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, false AS is_white
+         FROM games g, target_user u
+         WHERE g.black_id = u.id
+     )
 SELECT
-COUNT(*) FILTER(WHERE games.white_id = users.id OR games.black_id = users.id) AS game_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 1) OR (games.black_id = users.id AND result = 2)) AS win_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = 3) AS draw_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 2) OR (games.black_id = users.id AND result = 1)) AS loss_count
-FROM games
-JOIN users ON users.id = games.white_id or users.id = games.black_id
-WHERE users.username = $1
+    COUNT(*) AS game_count,
+    COUNT(*) FILTER(WHERE (is_white AND result = 1) OR (NOT is_white AND result = 2)) AS win_count,
+    COUNT(*) FILTER(WHERE result = 3) AS draw_count,
+    COUNT(*) FILTER(WHERE (is_white AND result = 2) OR (NOT is_white AND result = 1)) AS loss_count
+FROM user_games
 `
 
 type GetGameNumbersRow struct {
@@ -508,43 +523,6 @@ func (q *Queries) GetScheduledTournaments(ctx context.Context) ([]Tournament, er
 	return items, nil
 }
 
-const getTopN = `-- name: GetTopN :many
-SELECT id, username, avatar_url, rating FROM users
-ORDER BY rating DESC LIMIT $1 OFFSET 0
-`
-
-type GetTopNRow struct {
-	ID        int32
-	Username  *string
-	AvatarUrl *string
-	Rating    float64
-}
-
-func (q *Queries) GetTopN(ctx context.Context, limit int32) ([]GetTopNRow, error) {
-	rows, err := q.db.Query(ctx, getTopN, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetTopNRow{}
-	for rows.Next() {
-		var i GetTopNRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Username,
-			&i.AvatarUrl,
-			&i.Rating,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getTournamentByID = `-- name: GetTournamentByID :one
 SELECT id FROM tournaments WHERE id = $1
 `
@@ -591,16 +569,16 @@ func (q *Queries) GetTournamentInfo(ctx context.Context, id string) (GetTourname
 }
 
 const getTournamentPlayer = `-- name: GetTournamentPlayer :one
-SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2
+SELECT id FROM tournament_players WHERE tournament_id = $1 AND player_id = $2
 `
 
 type GetTournamentPlayerParams struct {
-	PlayerID     int32
 	TournamentID string
+	PlayerID     int32
 }
 
 func (q *Queries) GetTournamentPlayer(ctx context.Context, arg GetTournamentPlayerParams) (int32, error) {
-	row := q.db.QueryRow(ctx, getTournamentPlayer, arg.PlayerID, arg.TournamentID)
+	row := q.db.QueryRow(ctx, getTournamentPlayer, arg.TournamentID, arg.PlayerID)
 	var id int32
 	err := row.Scan(&id)
 	return id, err

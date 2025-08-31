@@ -64,6 +64,43 @@ func (q *Queries) GetRatingInfo(ctx context.Context, id int32) (GetRatingInfoRow
 	return i, err
 }
 
+const getTopN = `-- name: GetTopN :many
+SELECT id, username, avatar_url, rating FROM users
+ORDER BY rating DESC LIMIT $1 OFFSET 0
+`
+
+type GetTopNRow struct {
+	ID        int32
+	Username  *string
+	AvatarUrl *string
+	Rating    float64
+}
+
+func (q *Queries) GetTopN(ctx context.Context, limit int32) ([]GetTopNRow, error) {
+	rows, err := q.db.Query(ctx, getTopN, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTopNRow{}
+	for rows.Next() {
+		var i GetTopNRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.AvatarUrl,
+			&i.Rating,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, created_at, updated_at, role, username, avatar_url, google_id, rating, rd, volatility FROM users WHERE email = $1
 `

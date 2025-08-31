@@ -141,7 +141,10 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
 		c.socketManager.BroadcastToRoom(e, tournamentID)
 	} else {
-		err := c.queries.DeleteTournamentPlayer(context.Background(), client.UserID)
+		err := c.queries.DeleteTournamentPlayer(context.Background(), database.DeleteTournamentPlayerParams{
+			TournamentID: tournamentID,
+			PlayerID:     client.UserID,
+		})
 		if err != nil {
 			client.Send(e)
 			return fmt.Errorf("error deleting player from tournament:%s : %w", tournamentID, err)

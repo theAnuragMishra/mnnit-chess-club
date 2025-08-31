@@ -63,14 +63,24 @@ ORDER BY games.created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: GetGameNumbers :one
+WITH target_user AS (
+    SELECT id FROM users WHERE username = $1
+),
+     user_games AS (
+         SELECT g.*, true AS is_white
+         FROM games g, target_user u
+         WHERE g.white_id = u.id
+         UNION ALL
+         SELECT g.*, false AS is_white
+         FROM games g, target_user u
+         WHERE g.black_id = u.id
+     )
 SELECT
-COUNT(*) FILTER(WHERE games.white_id = users.id OR games.black_id = users.id) AS game_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 1) OR (games.black_id = users.id AND result = 2)) AS win_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id OR games.black_id = users.id) AND result = 3) AS draw_count,
-COUNT(*) FILTER(WHERE (games.white_id = users.id AND result = 2) OR (games.black_id = users.id AND result = 1)) AS loss_count
-FROM games
-JOIN users ON users.id = games.white_id or users.id = games.black_id
-WHERE users.username = $1;
+    COUNT(*) AS game_count,
+    COUNT(*) FILTER(WHERE (is_white AND result = 1) OR (NOT is_white AND result = 2)) AS win_count,
+    COUNT(*) FILTER(WHERE result = 3) AS draw_count,
+    COUNT(*) FILTER(WHERE (is_white AND result = 2) OR (NOT is_white AND result = 1)) AS loss_count
+FROM user_games;
 
 -- name: DeleteLiveGames :exec
 DELETE FROM games WHERE result = 0;
@@ -100,10 +110,10 @@ SELECT * FROM tournaments WHERE status = 0 ORDER BY start_time;
 SELECT * FROM tournaments WHERE status = 1 ORDER BY start_time;
 
 -- name: GetTournamentPlayer :one
-SELECT id FROM tournament_players WHERE player_id = $1 AND tournament_id = $2;
+SELECT id FROM tournament_players WHERE tournament_id = $1 AND player_id = $2;
 
 -- name: DeleteTournamentPlayer :exec
-DELETE FROM tournament_players WHERE player_id = $1;
+DELETE FROM tournament_players WHERE tournament_id = $1 AND player_id = $2;
 
 -- name: GetTournamentStatus :one
 SELECT status FROM tournaments WHERE id = $1;
@@ -135,7 +145,3 @@ SET score = players_data.score,
     streak = players_data.streak
 FROM players_data
 WHERE t.tournament_id = $1 AND t.player_id = players_data.id;
-
--- name: GetTopN :many
-SELECT id, username, avatar_url, rating FROM users
-ORDER BY rating DESC LIMIT $1 OFFSET 0;
