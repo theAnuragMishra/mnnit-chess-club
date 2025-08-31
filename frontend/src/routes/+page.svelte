@@ -26,4 +26,16 @@
 			the site. You can create and share challenge links to your friends though!
 		</p>
 	</div>
+	<div>
+		<p>
+			If you're wondering why you've been logged out and have to create a username again, umm
+			actually I nuked the database because of schema changes.
+		</p>
+		<p>
+			I did this because the site is still only in "preview" and not publicly launched and
+			recreating the tables is much smoother than running alter table queries. Once the site is
+			launched for everyone though, I will not have the freedom to delete the database and recreate
+			because who would want their games lost 🤷🏻
+		</p>
+	</div>
 </div>
