@@ -57,8 +57,14 @@
 		activeIndex = index;
 		ground?.cancelPremove();
 		ground?.selectSquare(null);
+		if (activeIndex === moveHistory.length - 1) {
+			ground?.set({
+				movable: { dests: getValidMoves(chessLatest) }
+			});
+		}
 		ground?.set({
 			fen: chessForView.fen(),
+			turnColor: activeIndex % 2 == 0 ? 'black' : 'white',
 			lastMove:
 				activeIndex === -1 ? [] : [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest],
 			viewOnly: activeIndex !== moveHistory.length - 1,
@@ -119,7 +125,7 @@
 								GameID: gameID
 							}
 						});
-						console.log('begin', performance.now());
+						//console.log('begin', performance.now());
 					}
 				}
 			}
@@ -143,18 +149,17 @@
 
 	const handleMoveResponse = (payload: any) => {
 		//console.log(payload);
-		console.log('finish', performance.now());
+		//console.log('finish', performance.now());
 		moveHistory = [...moveHistory, payload.Move];
 		timeBlack = payload.TimeBlack;
 		timeWhite = payload.TimeWhite;
-		ground?.set({
-			turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
-			movable: { dests: getValidMoves(chessLatest) }
-		});
+
 		if (activeIndex === moveHistory.length - 2) {
 			activeIndex = moveHistory.length - 1;
 			ground?.set({
 				fen: payload.Move.MoveFen,
+				turnColor: moveHistory.length % 2 == 0 ? 'white' : 'black',
+				movable: { dests: getValidMoves(chessLatest) },
 				check: chessForView.isCheck(),
 				lastMove: [
 					moveHistory[moveHistory.length - 1].Orig,
