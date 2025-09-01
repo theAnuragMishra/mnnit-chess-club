@@ -4,6 +4,7 @@
 	import nextImg from '$lib/assets/icons/next.svg';
 	import previousImg from '$lib/assets/icons/previous.svg';
 	const { setActiveIndex, activeIndex, moveHistory, highlightLastArrow } = $props();
+	let container: HTMLDivElement;
 	const moveButtons: (HTMLButtonElement | null)[] = $state([]);
 	$effect(() => {
 		const activeButton = moveButtons[activeIndex];
@@ -20,9 +21,13 @@
 					class="flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 					onclick={() => {
 						setActiveIndex(-1);
+						container.scrollTo({
+							top: 0,
+							behavior: 'smooth'
+						});
 					}}
 				>
-					<img src={firstImg} alt="go to first move" class="h-[16px] md:h-[24px]" />
+					<img src={firstImg} alt="go to first move" class="h-[20px] md:h-[24px]" />
 				</button>
 				<button
 					aria-label="go to previous move"
@@ -30,7 +35,7 @@
 					onclick={() => {
 						setActiveIndex(activeIndex - 1);
 					}}
-					><img src={previousImg} class="h-[16px] md:h-[24px]" alt="go to previous move" /></button
+					><img src={previousImg} class="h-[20px] md:h-[24px]" alt="go to previous move" /></button
 				>
 			</div>
 			<div class="flex gap-[10px]">
@@ -39,7 +44,7 @@
 					class="flex cursor-pointer items-center justify-center py-1 hover:bg-gray-700"
 					onclick={() => {
 						setActiveIndex(activeIndex + 1);
-					}}><img src={nextImg} alt="go to next move" class="h-[16px] md:h-[24px]" /></button
+					}}><img src={nextImg} alt="go to next move" class="h-[20px] md:h-[24px]" /></button
 				>
 				<button
 					aria-label="go to latest move"
@@ -48,13 +53,14 @@
 						setActiveIndex(moveHistory.length - 1);
 					}}
 				>
-					<img src={lastImg} alt="go to last move" class="h-[16px] md:h-[24px]" />
+					<img src={lastImg} alt="go to last move" class="h-[20px] md:h-[24px]" />
 				</button>
 			</div>
 		{/if}
 	</div>
 	<div
-		class="grid h-[50px] grid-cols-[1fr_5fr_5fr] place-items-center overflow-y-auto px-2 py-2 md:h-[70px] md:overflow-x-hidden"
+		bind:this={container}
+		class="grid h-[55px] grid-cols-[1fr_5fr_5fr] place-items-center overflow-y-auto px-2 py-2 md:h-[95px] md:overflow-x-hidden"
 	>
 		{#each moveHistory as move, index}
 			{#if index % 2 == 0}
