@@ -5,7 +5,7 @@ import { user } from './user.svelte';
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
-	//private reconnectDelay: number = 2000;
+	private reconnectDelay: number = 500;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
@@ -34,7 +34,7 @@ class WebSocketStore {
 			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 			this.ws.onclose = () => {
 				console.warn('⚠️ WebSocket Disconnected');
-				// setTimeout(() => this.connect(), this.reconnectDelay);
+				setTimeout(() => this.connect(), this.reconnectDelay);
 			};
 			this.ws.onerror = (error: Event) => {
 				console.error('WebSocket Error:', error);
