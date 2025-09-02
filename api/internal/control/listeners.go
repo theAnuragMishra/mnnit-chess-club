@@ -12,12 +12,6 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 )
 
-func (c *Controller) gameReceiveListener() {
-	for req := range c.gameRecv {
-		go c.endGame(req)
-	}
-}
-
 func (c *Controller) tournamentReceiveListener() {
 	for m := range c.tournamentRecv {
 		switch msg := m.(type) {
@@ -33,7 +27,7 @@ func (c *Controller) tournamentReceiveListener() {
 					msg.Reply <- false
 					return
 				}
-				g := game.New(id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, msg.PlayerA.ID, msg.PlayerB.ID, t.ID, c.gameRecv)
+				g := game.New(id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, msg.PlayerA.ID, msg.PlayerB.ID, t.ID, c.endGame)
 				c.gameManager.addGame(g)
 				err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 					ID:           id,

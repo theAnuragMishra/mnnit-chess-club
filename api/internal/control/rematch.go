@@ -76,7 +76,7 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 	if err != nil {
 		return fmt.Errorf("error getting rating for user %d: %w", info.WhiteID, err)
 	}
-	g := game.New(id, info.BaseTime, info.Increment, info.BlackID, info.WhiteID, "", c.gameRecv)
+	g := game.New(id, info.BaseTime, info.Increment, info.BlackID, info.WhiteID, "", c.endGame)
 	c.gameManager.addGame(g)
 	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,

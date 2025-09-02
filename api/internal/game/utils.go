@@ -3,8 +3,6 @@ package game
 import (
 	"crypto/rand"
 	"time"
-
-	"github.com/notnil/chess"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -35,29 +33,8 @@ func (g *Game) setUpAbort() {
 	} else {
 		t = g.BaseTime
 	}
-	timer := time.AfterFunc(t, func() { g.inbox <- Abort{} })
-	g.st.AbortTimer = timer
-}
-
-func (g *Game) snapshot() SnapShot {
-	if len(g.st.Moves) >= 2 {
-		timePassed := time.Since(g.st.LastMoveTime)
-		if g.st.Board.Position().Turn() == chess.White {
-			g.st.TimeWhite = max(g.st.TimeWhite-timePassed, 0)
-		} else {
-			g.st.TimeBlack = max(g.st.TimeBlack-timePassed, 0)
-		}
-		g.st.LastMoveTime = time.Now()
-	}
-	moves := make([]Move, len(g.st.Moves))
-	copy(moves, g.st.Moves)
-	out := SnapShot{
-		Result:        g.st.Result,
-		TimeWhite:     g.st.TimeWhite.Milliseconds(),
-		TimeBlack:     g.st.TimeBlack.Milliseconds(),
-		DrawOfferedBy: g.st.DrawOfferedBy,
-		Moves:         moves,
-		RematchOffer:  g.st.RematchOffer,
-	}
-	return out
+	timer := time.AfterFunc(t, func() {
+		g.handleAbort()
+	})
+	g.AbortTimer = timer
 }

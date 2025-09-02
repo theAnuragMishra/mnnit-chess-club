@@ -52,20 +52,12 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 	}
 	gameID := move.GameID
 	g, exists := c.gameManager.getGameByID(gameID)
-	g.WG.Add(1)
-	defer g.WG.Done()
 	if !exists {
 		return errors.New("game not found")
 	}
-
-	replyChan := make(chan game.MoveResp, 1)
-	msg := game.MoveMessage{
-		Player: client.UserID,
-		Move:   move,
-		Reply:  replyChan,
-	}
-	g.Inbox() <- msg
-	reply := <-replyChan
+	g.Lock()
+	reply := g.HandleMove(client.UserID, move)
+	g.Unlock()
 	if (reply == game.MoveResp{}) {
 		return nil
 	}
@@ -93,11 +85,9 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 	if !exists {
 		return nil
 	}
-	g.WG.Add(1)
-	defer g.WG.Done()
-	msg := game.DrawMsg{Player: client.UserID, Reply: make(chan int32, 1)}
-	g.Inbox() <- msg
-	reply := <-msg.Reply
+	g.Lock()
+	reply := g.HandleDraw(client.UserID)
+	g.Unlock()
 	if reply != 0 {
 		e := socket.Event{
 			Type:    "drawOffer",
@@ -118,60 +108,52 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 	if !exists {
 		return nil
 	}
-	g.WG.Add(1)
-	defer g.WG.Done()
-	msg := game.ResignMsg{
-		Player: client.UserID,
-	}
-	g.Inbox() <- msg
+	g.Lock()
+	g.HandleResign(client.UserID)
+	g.Unlock()
 	return nil
 }
 
-func (c *Controller) endGame(info game.EndNotification) {
-	g, exists := c.gameManager.getGameByID(info.ID)
-	if !exists {
-		return
-	}
-	t, ok := c.tournamentManager.getTournament(info.TournamentID)
+func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
+	t, ok := c.tournamentManager.getTournament(g.TournamentID)
 	if ok {
-		defer t.WG.Done()
-		if info.Result == 4 {
-			if len(info.Moves)%2 == 0 {
+		if g.Result == 4 {
+			if len(g.Moves)%2 == 0 {
 				info.Method = 16
-				info.Result = 2
+				g.Result = 2
 				t.Inbox() <- tournament.UpdatePlayerStatus{
-					ID:     info.WhiteID,
+					ID:     g.WhiteID,
 					Status: false,
 				}
 			} else {
 				info.Method = 17
-				info.Result = 1
+				g.Result = 1
 				t.Inbox() <- tournament.UpdatePlayerStatus{
-					ID:     info.BlackID,
+					ID:     g.BlackID,
 					Status: false,
 				}
 			}
 		}
 	}
 	var cw, cb int32
-	if info.Result != 4 {
+	if g.Result != 4 {
 		var r float64
-		if info.Result == 1 {
+		if g.Result == 1 {
 			r = 1.0
-		} else if info.Result == 2 {
+		} else if g.Result == 2 {
 			r = 0.0
 		} else {
 			r = 0.5
 		}
 
-		p1info, err := c.queries.GetRatingInfo(context.Background(), info.WhiteID)
+		p1info, err := c.queries.GetRatingInfo(context.Background(), g.WhiteID)
 		if err != nil {
-			log.Println("error getting rating info for user ", info.WhiteID, err)
+			log.Println("error getting rating info for user ", g.WhiteID, err)
 			return
 		}
-		p2info, err := c.queries.GetRatingInfo(context.Background(), info.BlackID)
+		p2info, err := c.queries.GetRatingInfo(context.Background(), g.BlackID)
 		if err != nil {
-			log.Println("error getting rating info for user ", info.BlackID, err)
+			log.Println("error getting rating info for user ", g.BlackID, err)
 			return
 		}
 		p1 := utils.Player{
@@ -189,26 +171,26 @@ func (c *Controller) endGame(info game.EndNotification) {
 			Rating:     up1.Rating,
 			Rd:         up1.RD,
 			Volatility: up1.Volatility,
-			ID:         info.WhiteID,
+			ID:         g.WhiteID,
 		})
 		if err != nil {
-			log.Println("error updating rating for", info.WhiteID, err)
+			log.Println("error updating rating for", g.WhiteID, err)
 		}
 		err = c.queries.UpdateRating(context.Background(), database.UpdateRatingParams{
 			Rating:     up2.Rating,
 			Rd:         up2.RD,
 			Volatility: up2.Volatility,
-			ID:         info.BlackID,
+			ID:         g.BlackID,
 		})
 		if err != nil {
-			log.Println("error updating rating for", info.BlackID, err)
+			log.Println("error updating rating for", g.BlackID, err)
 		}
 
 		if ok {
 			msg := tournament.UpdatePlayers{
-				Result:           info.Result,
-				Player1:          info.WhiteID,
-				Player2:          info.BlackID,
+				Result:           g.Result,
+				Player1:          g.WhiteID,
+				Player2:          g.BlackID,
 				Rating1:          up1.Rating,
 				Rating2:          up2.Rating,
 				ExtraPointPlayer: info.ExtraPointPlayer,
@@ -220,22 +202,22 @@ func (c *Controller) endGame(info game.EndNotification) {
 	}
 
 	err := c.queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-		Result:           int32(info.Result),
+		Result:           int32(g.Result),
 		Method:           int32(info.Method),
-		ID:               info.ID,
-		GameLength:       int32(len(info.Moves)),
+		ID:               g.ID,
+		GameLength:       int32(len(g.Moves)),
 		ChangeW:          &cw,
 		ChangeB:          &cb,
 		EndTimeLeftWhite: info.TimeLeftWhite,
 		EndTimeLeftBlack: info.TimeLeftBlack,
-		BerserkBlack:     info.BerserkBlack,
-		BerserkWhite:     info.BerserkWhite,
+		BerserkBlack:     g.BerserkBlack,
+		BerserkWhite:     g.BerserkWhite,
 	})
 	if err != nil {
-		log.Println("error ending game id", info.ID, err)
+		log.Println("error ending game id", g.ID, err)
 		return
 	}
-	payload, err := json.Marshal(map[string]any{"Result": info.Result, "Method": info.Method, "changeW": cw, "changeB": cb, "timeWhite": info.TimeLeftWhite, "timeBlack": info.TimeLeftBlack})
+	payload, err := json.Marshal(map[string]any{"Result": g.Result, "Method": info.Method, "changeW": cw, "changeB": cb, "timeWhite": info.TimeLeftWhite, "timeBlack": info.TimeLeftBlack})
 	if err != nil {
 		log.Println(err)
 		return
@@ -244,24 +226,22 @@ func (c *Controller) endGame(info game.EndNotification) {
 		Type:    "game_end",
 		Payload: json.RawMessage(payload),
 	}
-	c.socketManager.BroadcastToRoom(e, info.ID)
-	c.rematchManager.addRematch(info.ID, &rematchInfo{
-		WhiteID:   info.WhiteID,
-		BlackID:   info.BlackID,
+	c.socketManager.BroadcastToRoom(e, g.ID)
+	c.rematchManager.addRematch(g.ID, &rematchInfo{
+		WhiteID:   g.WhiteID,
+		BlackID:   g.BlackID,
 		BaseTime:  g.BaseTime,
 		Increment: g.Increment,
 		Offer:     false,
 	})
 	time.AfterFunc(time.Second*30, func() {
 		e = socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}
-		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.BlackID)
-		c.socketManager.SendToUserClientsInARoom(e, info.ID, info.WhiteID)
-		c.rematchManager.removeRematch(info.ID)
+		c.socketManager.SendToUserClientsInARoom(e, g.ID, g.BlackID)
+		c.socketManager.SendToUserClientsInARoom(e, g.ID, g.WhiteID)
+		c.rematchManager.removeRematch(g.ID)
 	})
-	c.batchInsertMoves(info.ID, info.Moves)
-	g.WG.Wait()
-	g.Done() <- struct{}{}
-	c.gameManager.removeGame(info.ID)
+	c.batchInsertMoves(g.ID, g.Moves)
+	c.gameManager.removeGame(g.ID)
 }
 
 func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
@@ -273,22 +253,19 @@ func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
 	if !exists || !t.BerserkAllowed {
 		return nil
 	}
-	g.WG.Add(1)
-	defer g.WG.Done()
 	var payload map[string]any
-
 	if client.UserID == g.WhiteID {
-		msg := game.BerserkMsg{WB: 0, Reply: make(chan bool, 1)}
-		g.Inbox() <- msg
-		success := <-msg.Reply
+		g.Lock()
+		success := g.HandleBerserk(0)
+		g.Unlock()
 		if !success {
 			return nil
 		}
 		payload = map[string]any{"wb": 0}
 	} else {
-		msg := game.BerserkMsg{WB: 1, Reply: make(chan bool, 1)}
-		g.Inbox() <- msg
-		success := <-msg.Reply
+		g.Lock()
+		success := g.HandleBerserk(1)
+		g.Unlock()
 		if !success {
 			return nil
 		}

@@ -167,17 +167,16 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// server game response
-		g.WG.Add(1)
-		defer g.WG.Done()
 		t, ok := c.tournamentManager.getTournament(g.TournamentID)
 		berserkAllowed := false
 		if ok && t.BerserkAllowed {
 			berserkAllowed = true
 		}
-		msg := game.GetState{Reply: make(chan game.SnapShot, 1)}
-		g.Inbox() <- msg
-		snapshot := <-msg.Reply
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": snapshot.Moves, "game": foundGame, "timeWhite": snapshot.TimeWhite, "timeBlack": snapshot.TimeBlack, "canRematch": true, "berserkAllowed": berserkAllowed})
+		g.RLock()
+		moves := make([]game.Move, len(g.Moves))
+		copy(moves, g.Moves)
+		g.RUnlock()
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": g.TimeWhite, "timeBlack": g.TimeBlack, "canRematch": true, "berserkAllowed": berserkAllowed})
 	}
 }
 

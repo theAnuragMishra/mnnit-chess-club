@@ -114,7 +114,7 @@ func initGame(c *Controller, event socket.Event, client *socket.Client) error {
 	if err != nil {
 		return err
 	}
-	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp.UserID, client.UserID, "", c.gameRecv)
+	g := game.New(id, time.Duration(timeControls[tc].BaseTime)*time.Second, time.Duration(timeControls[tc].Increment)*time.Second, opp.UserID, client.UserID, "", c.endGame)
 	c.gameManager.addGame(g)
 	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           id,

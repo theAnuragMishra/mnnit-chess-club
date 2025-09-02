@@ -2,6 +2,8 @@ package control
 
 import (
 	"time"
+
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 )
 
 type GameIDPayload struct {
@@ -30,4 +32,10 @@ type TournamentPayload struct {
 
 type TournamentIDPayload struct {
 	TournamentID string `json:"tournamentID"`
+}
+
+type Challenge struct {
+	TimeControl     game.TimeControl
+	Creator         int32
+	CreatorUsername string
 }

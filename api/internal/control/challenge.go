@@ -15,16 +15,16 @@ import (
 
 type challengeManager struct {
 	sync.RWMutex
-	pendingChallenges map[string]game.Challenge
+	pendingChallenges map[string]Challenge
 }
 
 func newChallengeManager() *challengeManager {
 	return &challengeManager{
-		pendingChallenges: make(map[string]game.Challenge),
+		pendingChallenges: make(map[string]Challenge),
 	}
 }
 
-func (m *challengeManager) addChallenge(id string, c game.Challenge) {
+func (m *challengeManager) addChallenge(id string, c Challenge) {
 	m.Lock()
 	m.pendingChallenges[id] = c
 	m.Unlock()
@@ -36,7 +36,7 @@ func (m *challengeManager) removeChallenge(id string) {
 	m.Unlock()
 }
 
-func (m *challengeManager) getChallengeByID(id string) (game.Challenge, bool) {
+func (m *challengeManager) getChallengeByID(id string) (Challenge, bool) {
 	m.RLock()
 	c, exists := m.pendingChallenges[id]
 	m.RUnlock()
@@ -56,7 +56,7 @@ func createChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err != nil {
 		return err
 	}
-	c.challengeManager.addChallenge(id, game.Challenge{
+	c.challengeManager.addChallenge(id, Challenge{
 		TimeControl:     timeControl,
 		Creator:         client.UserID,
 		CreatorUsername: client.Username,
@@ -91,7 +91,7 @@ func acceptChallenge(c *Controller, event socket.Event, client *socket.Client) e
 	if err != nil {
 		return fmt.Errorf("error getting rating for user %d: %w", client.UserID, err)
 	}
-	g := game.New(acceptChallengePayload.GameID, time.Duration(challenge.TimeControl.BaseTime)*time.Second, time.Duration(challenge.TimeControl.Increment)*time.Second, challenge.Creator, client.UserID, "", c.gameRecv)
+	g := game.New(acceptChallengePayload.GameID, time.Duration(challenge.TimeControl.BaseTime)*time.Second, time.Duration(challenge.TimeControl.Increment)*time.Second, challenge.Creator, client.UserID, "", c.endGame)
 	c.gameManager.addGame(g)
 	err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
 		ID:           g.ID,
