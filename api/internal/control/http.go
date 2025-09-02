@@ -187,8 +187,10 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 		g.RLock()
 		moves := make([]game.Move, len(g.Moves))
 		copy(moves, g.Moves)
+		timeBlack := int(g.TimeBlack.Milliseconds())
+		timeWhite := int(g.TimeWhite.Milliseconds())
 		g.RUnlock()
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": int(g.TimeWhite.Milliseconds()), "timeBlack": int(g.TimeBlack.Milliseconds()), "canRematch": true, "berserkAllowed": berserkAllowed})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack, "canRematch": true, "berserkAllowed": berserkAllowed})
 	}
 }
 
