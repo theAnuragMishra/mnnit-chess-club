@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import AcceptChallenge from '$lib/components/AcceptChallenge.svelte';
 	import Game from '$lib/components/game.svelte';
-	import { websocketStore } from '$lib/websocket';
+	import { websocketStore } from '$lib/websocket.svelte.js';
 	let { data } = $props();
 
 	$effect(() => {

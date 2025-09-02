@@ -1,5 +1,6 @@
 import { goto, invalidateAll } from '$app/navigation';
 import { PUBLIC_WS_URL } from '$env/static/public';
+import { user } from './user.svelte';
 
 class WebSocketStore {
 	private url: string;
@@ -9,6 +10,15 @@ class WebSocketStore {
 
 	constructor(url: string) {
 		this.url = url;
+		$effect.root(() => {
+			$effect(() => {
+				if (!user.id) return;
+				this.connect();
+				return () => {
+					this.ws?.close();
+				};
+			});
+		});
 	}
 
 	connect(): Promise<void> {

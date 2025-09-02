@@ -1,7 +1,7 @@
+import { user } from '$lib/user.svelte';
 import { redirect } from '@sveltejs/kit';
 
-export async function load({ parent }) {
-	const { user } = await parent();
+export async function load() {
 	//console.log(user);
-	if (!user || user.username) redirect(303, '/');
+	if (!user.id || user.username) redirect(303, '/');
 }

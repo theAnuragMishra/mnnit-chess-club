@@ -1,9 +1,9 @@
+import { user } from '$lib/user.svelte';
 import { getBaseURL } from '$lib/utils';
 import { error, redirect } from '@sveltejs/kit';
 
-export async function load({ params, parent }) {
-	const { user } = await parent();
-	if (!user) redirect(303, '/');
+export async function load({ params }) {
+	if (!user.id) redirect(303, '/');
 	const response = await fetch(`${getBaseURL()}/tournament/${params.tournamentID}`, {
 		credentials: 'include'
 	});

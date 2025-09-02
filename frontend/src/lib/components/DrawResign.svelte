@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { websocketStore } from '$lib/websocket';
 	import { onDestroy, onMount } from 'svelte';
 	import resignImg from '$lib/assets/icons/flag.svg';
 	import crossImg from '$lib/assets/icons/cross.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
 	import flipImg from '$lib/assets/icons/flip.svg';
+	import { websocketStore } from '$lib/websocket.svelte';
 
 	const { gameID, isDisabled, showBerserkButton, handleFlip } = $props();
 	let offer = $state(false);

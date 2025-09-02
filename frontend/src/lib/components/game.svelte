@@ -6,7 +6,6 @@
 	import GameInfo from '$lib/components/GameInfo.svelte';
 	import Chessboard from '$lib/components/Chessboard.svelte';
 	import Clock from '$lib/components/Clock.svelte';
-	import { websocketStore } from '$lib/websocket';
 	import HistoryTable from '$lib/components/HistoryTable.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import type { Api } from '@lichess-org/chessground/api';
@@ -21,6 +20,8 @@
 	import trophyImg from '$lib/assets/icons/trophy.svg';
 	import playImg from '$lib/assets/icons/play.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
+	import { user } from '$lib/user.svelte';
+	import { websocketStore } from '$lib/websocket.svelte';
 
 	let { data } = $props();
 	//console.log(data);
@@ -49,9 +50,8 @@
 	let chessForView = $derived(
 		activeIndex !== -1 ? new Chess(moveHistory[activeIndex].MoveFen) : new Chess()
 	);
-	const isPlayer =
-		data.user.username === d.game.WhiteUsername || data.user.username === d.game.BlackUsername;
-	const whiteUp = d.game.WhiteUsername !== data.user.username;
+	const isPlayer = user.username === d.game.WhiteUsername || user.username === d.game.BlackUsername;
+	const whiteUp = d.game.WhiteUsername !== user.username;
 	const setActiveIndex = (index: number) => {
 		if (index > moveHistory.length - 1 || index < -1 || index == activeIndex) return;
 		activeIndex = index;

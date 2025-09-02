@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { websocketStore } from '$lib/websocket';
+	import { websocketStore } from '$lib/websocket.svelte';
 	import { onDestroy, onMount } from 'svelte';
 
 	let { canRematch } = $props();

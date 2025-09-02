@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { websocketStore } from '$lib/websocket';
 	import { page } from '$app/state';
 	import { getTimeLeft, getTimeControl } from '$lib/utils';
 	import Clock from '$lib/components/Clock.svelte';
@@ -9,6 +8,8 @@
 	import pauseImg from '$lib/assets/icons/pause.svg';
 	import fireImg from '$lib/assets/icons/fire.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
+	import { user } from '$lib/user.svelte.js';
+	import { websocketStore } from '$lib/websocket.svelte.js';
 	interface Player {
 		ID: number;
 		IsActive: boolean;
@@ -35,7 +36,7 @@
 	//$effect(() => console.log(joined));
 
 	function isJoinedActive() {
-		const i = players.findIndex((player: any) => player.Username === data.user.username);
+		const i = players.findIndex((player: any) => player.Username === user.username);
 		// console.log(i);
 		return [i !== -1, i !== -1 && players[i].IsActive];
 	}
@@ -210,7 +211,7 @@
 			<h2
 				class="shiny relative mb-5 overflow-hidden bg-green-600 py-0.5 text-center text-[16px] md:px-2 md:text-xl"
 			>
-				Standby {data.user.username}, pairing players. Get ready!
+				Standby {user.username}, pairing players. Get ready!
 			</h2>
 		{/if}
 		<div class="grid grid-cols-[auto_auto] content-start gap-[10px] text-[16px] md:text-xl">

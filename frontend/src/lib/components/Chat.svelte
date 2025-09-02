@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { scrollIntoContainerView } from '$lib/utils';
-	import { websocketStore } from '$lib/websocket';
+	import { websocketStore } from '$lib/websocket.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	interface MessageInterface {
 		sender: string;

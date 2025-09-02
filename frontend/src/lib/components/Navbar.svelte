@@ -1,20 +1,9 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
-	import { getBaseURL } from '$lib/utils';
 	import logo from '$lib/assets/mcc-logo.webp';
 	import signoutImg from '$lib/assets/icons/logout.svg';
 	import menuImg from '$lib/assets/icons/menu.svg';
 	import crossImg from '$lib/assets/icons/cross.svg';
-
-	let { data } = $props();
-
-	const handleLogout = async () => {
-		await fetch(`${getBaseURL()}/logout`, {
-			method: 'POST',
-			credentials: 'include'
-		});
-		invalidateAll();
-	};
+	import { logout, user } from '$lib/user.svelte';
 
 	let expanded = $state(false);
 </script>
@@ -36,12 +25,12 @@
 
 		<div class="flex items-center gap-4">
 			<div class="hidden items-center gap-1 sm:flex md:text-2xl">
-				{#if !data?.user}
+				{#if !user.id}
 					<a href="/login">Login</a>
 				{:else}
-					<a href={`/member/${data.user.username}`}>{data.user.username}</a>
+					<a href={`/member/${user.username}`}>{user.username}</a>
 					<button
-						onclick={handleLogout}
+						onclick={logout}
 						class="cursor-pointer rounded-lg hover:bg-gray-800"
 						aria-label="sign out"
 					>
@@ -87,15 +76,15 @@
 			<a href="/achievements" class="block" onclick={() => (expanded = false)}>Achievements</a>
 			<a href="/leaderboard" class="block" onclick={() => (expanded = false)}>Leaderboard</a>
 			<hr class="border-gray-700" />
-			{#if !data?.user}
+			{#if !user.id}
 				<a href="/login" class="block" onclick={() => (expanded = false)}>Login</a>
 			{:else}
-				<a href={`/member/${data.user.username}`} class="block" onclick={() => (expanded = false)}
-					>{data.user.username}</a
+				<a href={`/member/${user.username}`} class="block" onclick={() => (expanded = false)}
+					>{user.username}</a
 				>
 				<button
 					onclick={() => {
-						handleLogout();
+						logout();
 						expanded = false;
 					}}
 					class="flex cursor-pointer items-center justify-center gap-2 px-[0.5rem] py-[0.25rem]"

@@ -1,4 +1,6 @@
 <script>
+	import { user } from '$lib/user.svelte.js';
+
 	let { data } = $props();
 </script>
 
@@ -16,7 +18,7 @@
 	</p>
 	<div class="flex w-full flex-col gap-2">
 		<p>Or you can:</p>
-		{#if !data.user}
+		{#if !user.id}
 			<a href="/login" class="w-fit text-xl text-blue-500">Login to play</a>
 		{:else}
 			<a href="/play" class="w-fit cursor-pointer rounded-lg bg-gray-500 p-3 text-4xl"> Play! </a>

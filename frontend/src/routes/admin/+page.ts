@@ -1,10 +1,10 @@
+import { user } from '$lib/user.svelte';
 import { getBaseURL } from '$lib/utils.js';
 import { redirect } from '@sveltejs/kit';
 
-export async function load({ parent }) {
-	const { user } = await parent();
+export async function load() {
 	//console.log(user);
-	if (!user || user.role != 2) redirect(303, '/');
+	if (user.role != 2) redirect(303, '/');
 
 	const response = await fetch(`${getBaseURL()}/tournament/scheduled`, {
 		credentials: 'include'

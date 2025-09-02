@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { websocketStore } from '$lib/websocket';
-
-	const { data } = $props();
+	import { websocketStore } from '$lib/websocket.svelte';
 
 	async function handleInitGame(index: number) {
 		if (activeIndex === index) activeIndex = -1;
