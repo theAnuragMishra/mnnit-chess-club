@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/notnil/chess"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
@@ -172,11 +173,22 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 		if ok && t.BerserkAllowed {
 			berserkAllowed = true
 		}
+		g.Lock()
+		if len(g.Moves) >= 2 {
+			timePassed := time.Since(g.LastMoveTime)
+			if g.Board.Position().Turn() == chess.White {
+				g.TimeWhite = max(g.TimeWhite-timePassed, 0)
+			} else {
+				g.TimeBlack = max(g.TimeBlack-timePassed, 0)
+			}
+			g.LastMoveTime = time.Now()
+		}
+		g.Unlock()
 		g.RLock()
 		moves := make([]game.Move, len(g.Moves))
 		copy(moves, g.Moves)
 		g.RUnlock()
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": g.TimeWhite, "timeBlack": g.TimeBlack, "canRematch": true, "berserkAllowed": berserkAllowed})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": int(g.TimeWhite.Milliseconds()), "timeBlack": int(g.TimeBlack.Milliseconds()), "canRematch": true, "berserkAllowed": berserkAllowed})
 	}
 }
 
