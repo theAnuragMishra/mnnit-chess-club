@@ -7,10 +7,7 @@ type PlayerSnapShot struct {
 	Rating float64
 	Streak int
 }
-type UpdatedPlayerSnapShots struct {
-	Player1 PlayerSnapShot
-	Player2 PlayerSnapShot
-}
+
 type EndPlayer struct {
 	ID     int32 `json:"id"`
 	Score  int   `json:"score"`

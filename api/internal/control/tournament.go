@@ -3,7 +3,6 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -190,7 +189,6 @@ func (c *Controller) startTournamentPairing(t *tournament.Tournament) {
 			select {
 			case <-ticker.C:
 				c.runTournamentPairing(t)
-				fmt.Println("tick happened")
 			case <-t.Done:
 				return
 			}
