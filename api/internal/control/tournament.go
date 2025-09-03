@@ -88,7 +88,7 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 	}
 	paired := make(map[int32]bool)
 
-	availableToPair := make([]*tournament.Player, len(t.WaitingPlayers))
+	availableToPair := make([]*tournament.Player, 0, len(t.WaitingPlayers))
 	for _, player := range t.WaitingPlayers {
 		if c.socketManager.IsUserInARoom(t.ID, player.ID) {
 			availableToPair = append(availableToPair, player)
@@ -100,14 +100,14 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 	}
 	for i := 0; i < len(availableToPair); i++ {
 		playerA := availableToPair[i]
-		if paired[playerA.ID] {
+		if paired[playerA.ID] || !playerA.IsActive {
 			continue
 		}
 		bestMatch := -1
 		minScoreDiff := 1000000
 		for j := i + 1; j < len(availableToPair); j++ {
 			playerB := availableToPair[j]
-			if paired[playerB.ID] {
+			if paired[playerB.ID] || !playerB.IsActive {
 				continue
 			}
 			currentDiff := utils.Abs(int(playerA.Rating) - int(playerB.Rating))
