@@ -19,6 +19,13 @@ class WebSocketStore {
 					this.ws?.close();
 				};
 			});
+			$effect(() => {
+				document.addEventListener('visibilitychange', () => {
+					if (document.visibilityState === 'visible') {
+						this.connect();
+					}
+				});
+			});
 		});
 	}
 
