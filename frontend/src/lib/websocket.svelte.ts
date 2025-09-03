@@ -20,11 +20,15 @@ class WebSocketStore {
 				};
 			});
 			$effect(() => {
-				document.addEventListener('visibilitychange', () => {
+				const handleVisibilityChange = () => {
 					if (document.visibilityState === 'visible') {
 						this.connect();
 					}
-				});
+				};
+				document.addEventListener('visibilitychange', handleVisibilityChange);
+				return () => {
+					document.removeEventListener('visibilitychange', handleVisibilityChange);
+				};
 			});
 		});
 	}
