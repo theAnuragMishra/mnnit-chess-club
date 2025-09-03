@@ -145,10 +145,15 @@ func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *sock
 }
 
 func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
+	t.RLock()
 	p, exists := t.Players[client.UserID]
+	t.RUnlock()
 	if exists {
+		t.Lock()
 		p.IsActive = !p.IsActive
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": p.IsActive}})
+		active := p.IsActive
+		t.Unlock()
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": active}})
 		if err != nil {
 			client.Send(e)
 			return err
@@ -169,11 +174,13 @@ func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *sock
 			client.Send(e)
 			return err
 		}
-		p := tournament.NewPlayer(client.UserID, rating, true)
+		p := tournament.NewPlayer(client.UserID, rating)
+		t.Lock()
 		t.Players[client.UserID] = p
 		t.WaitingPlayers = append(t.WaitingPlayers, p)
+		t.Unlock()
 
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": p.Score, "Username": client.Username, "Rating": rating, "IsActive": p.IsActive}})
+		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": 0, "Username": client.Username, "Rating": rating, "IsActive": true}})
 		if err != nil {
 			client.Send(e)
 			return err

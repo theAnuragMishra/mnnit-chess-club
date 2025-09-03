@@ -208,7 +208,9 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 	}
 	t, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
+		t.RLock()
 		snapshot := t.SnapshotPlayers()
+		t.RUnlock()
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
@@ -373,7 +375,7 @@ func (c *Controller) startTournament(w http.ResponseWriter, r *http.Request) {
 		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, len(players), tournamentInfo.BerserkAllowed)
 
 		for _, player := range players {
-			p := tournament.NewPlayer(player.ID, player.Rating, c.socketManager.IsUserInARoom(tournamentInfo.ID, player.ID))
+			p := tournament.NewPlayer(player.ID, player.Rating)
 			t.Players[player.ID] = p
 			t.WaitingPlayers = append(t.WaitingPlayers, p)
 		}

@@ -121,11 +121,15 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 			if len(g.Moves)%2 == 0 {
 				info.Method = 16
 				g.Result = 2
+				t.Lock()
 				t.Players[g.WhiteID].IsActive = false
+				t.Unlock()
 			} else {
 				info.Method = 17
 				g.Result = 1
+				t.Lock()
 				t.Players[g.BlackID].IsActive = false
+				t.Unlock()
 			}
 		}
 	}
@@ -181,6 +185,7 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 		}
 
 		if ok {
+			t.Lock()
 			t.UpdatePlayers(tournament.UpdatePlayersInfo{
 				Result:           g.Result,
 				Player1:          g.WhiteID,
@@ -189,7 +194,10 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 				Rating2:          up2.Rating,
 				ExtraPointPlayer: info.ExtraPointPlayer,
 			})
+			t.Unlock()
+			t.RLock()
 			c.sendScoreUpdateEvent(g, t)
+			t.RUnlock()
 		}
 		cw = int32(up1.Rating - p1info.Rating)
 		cb = int32(up2.Rating - p2info.Rating)

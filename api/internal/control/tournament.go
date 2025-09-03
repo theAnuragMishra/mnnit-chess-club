@@ -46,6 +46,8 @@ func (m *tournamentManager) getTournament(id string) (*tournament.Tournament, bo
 }
 
 func (c *Controller) endTournament(t *tournament.Tournament) {
+	t.Lock()
+	defer t.Unlock()
 	close(t.Done)
 	err := c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
 		Status: 2,
@@ -79,7 +81,9 @@ func (c *Controller) endTournament(t *tournament.Tournament) {
 }
 
 func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
+	t.RLock()
 	if len(t.WaitingPlayers) < 2 {
+		t.RUnlock()
 		return
 	}
 	paired := make(map[int32]bool)
@@ -91,6 +95,7 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 		}
 	}
 	if len(availableToPair) < 2 {
+		t.RUnlock()
 		return
 	}
 	for i := 0; i < len(availableToPair); i++ {
@@ -106,7 +111,7 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 				continue
 			}
 			currentDiff := utils.Abs(int(playerA.Rating) - int(playerB.Rating))
-			currentDiff += utils.Abs(int(playerA.Score)-int(playerB.Score)) * 2
+			currentDiff += utils.Abs(playerA.Score-playerB.Score) * 2
 			currentDiff += int(playerA.Opponents[playerB.ID]) * 10
 
 			if playerA.LastPlayedColor == playerB.LastPlayedColor {
@@ -120,6 +125,7 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 		}
 		if bestMatch != -1 {
 			playerB := availableToPair[bestMatch]
+			//todo optimise this
 			id, err := c.generateUniqueGameID()
 			if err != nil {
 				log.Println(err)
@@ -160,7 +166,10 @@ func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
 			newWaitingPlayers = append(newWaitingPlayers, player)
 		}
 	}
+	t.RUnlock()
+	t.Lock()
 	t.WaitingPlayers = newWaitingPlayers
+	t.Unlock()
 }
 
 func (c *Controller) startTournamentPairing(t *tournament.Tournament) {

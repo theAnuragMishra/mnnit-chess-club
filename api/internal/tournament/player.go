@@ -13,7 +13,7 @@ type Player struct {
 	LastPlayedColor chess.Color
 }
 
-func NewPlayer(id int32, rating float64, connected bool) *Player {
+func NewPlayer(id int32, rating float64) *Player {
 	return &Player{
 		ID:        id,
 		IsActive:  true,
