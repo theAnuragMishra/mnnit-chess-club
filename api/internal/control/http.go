@@ -206,13 +206,9 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 		utils.RespondWithError(w, 500, "error getting players")
 		return
 	}
-	st, exists := c.tournamentManager.getTournament(tournamentID)
+	t, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
-		st.WG.Add(1)
-		defer st.WG.Done()
-		msg := tournament.GetPlayers{Reply: make(chan map[int32]tournament.Player, 1)}
-		st.Inbox() <- msg
-		snapshot := <-msg.Reply
+		snapshot := t.SnapshotPlayers()
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
@@ -227,16 +223,16 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 		}
 		//log.Println(players)
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-			"name":           st.Name,
+			"name":           t.Name,
 			"players":        players,
-			"startTime":      st.StartTime,
-			"duration":       st.Duration,
-			"baseTime":       st.TimeControl.BaseTime,
-			"increment":      st.TimeControl.Increment,
-			"createdBy":      st.CreatedBy,
-			"creator":        st.Creator,
-			"status":         st.Status,
-			"berserkAllowed": st.BerserkAllowed,
+			"startTime":      t.StartTime,
+			"duration":       t.Duration,
+			"baseTime":       t.TimeControl.BaseTime,
+			"increment":      t.TimeControl.Increment,
+			"createdBy":      t.CreatedBy,
+			"creator":        t.Creator,
+			"status":         1,
+			"berserkAllowed": t.BerserkAllowed,
 		})
 		return
 	}
@@ -374,13 +370,14 @@ func (c *Controller) startTournament(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		initialPlayers := make(map[int32]*tournament.Player)
+		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, len(players), tournamentInfo.BerserkAllowed)
+
 		for _, player := range players {
 			p := tournament.NewPlayer(player.ID, player.Rating, c.socketManager.IsUserInARoom(tournamentInfo.ID, player.ID))
-			initialPlayers[player.ID] = p
+			t.Players[player.ID] = p
+			t.WaitingPlayers = append(t.WaitingPlayers, p)
 		}
 
-		t := tournament.New(tournamentInfo.ID, tournamentInfo.Name, tournamentInfo.Duration, *tournamentInfo.Username, *tournamentInfo.CreatedBy, tournamentInfo.BaseTime, tournamentInfo.Increment, initialPlayers, c.tournamentRecv, tournamentInfo.BerserkAllowed)
 		c.tournamentManager.addTournament(t)
 
 		//send refresh event to all the players on the tournament page
@@ -391,6 +388,13 @@ func (c *Controller) startTournament(w http.ResponseWriter, r *http.Request) {
 		}
 		e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
 		c.socketManager.BroadcastToRoom(e, tournamentInfo.ID)
+
+		time.Sleep(time.Second * 3)
+		time.AfterFunc(time.Duration(tournamentInfo.Duration)*time.Second, func() {
+			c.endTournament(t)
+		})
+		c.runTournamentPairing(t)
+		c.startTournamentPairing(t)
 	}()
 	utils.RespondWithJSON(w, http.StatusOK, "")
 }

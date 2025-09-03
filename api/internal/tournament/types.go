@@ -17,3 +17,12 @@ type EndPlayer struct {
 	Scores []int `json:"scores"`
 	Streak int   `json:"streak"`
 }
+
+type UpdatePlayersInfo struct {
+	Result           int
+	Player1          int32
+	Player2          int32
+	Rating1          float64
+	Rating2          float64
+	ExtraPointPlayer int32
+}

@@ -121,17 +121,11 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 			if len(g.Moves)%2 == 0 {
 				info.Method = 16
 				g.Result = 2
-				t.Inbox() <- tournament.UpdatePlayerStatus{
-					ID:     g.WhiteID,
-					Status: false,
-				}
+				t.Players[g.WhiteID].IsActive = false
 			} else {
 				info.Method = 17
 				g.Result = 1
-				t.Inbox() <- tournament.UpdatePlayerStatus{
-					ID:     g.BlackID,
-					Status: false,
-				}
+				t.Players[g.BlackID].IsActive = false
 			}
 		}
 	}
@@ -187,15 +181,15 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 		}
 
 		if ok {
-			msg := tournament.UpdatePlayers{
+			t.UpdatePlayers(tournament.UpdatePlayersInfo{
 				Result:           g.Result,
 				Player1:          g.WhiteID,
 				Player2:          g.BlackID,
 				Rating1:          up1.Rating,
 				Rating2:          up2.Rating,
 				ExtraPointPlayer: info.ExtraPointPlayer,
-			}
-			t.Inbox() <- msg
+			})
+			c.sendScoreUpdateEvent(g, t)
 		}
 		cw = int32(up1.Rating - p1info.Rating)
 		cb = int32(up2.Rating - p2info.Rating)

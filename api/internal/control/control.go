@@ -7,7 +7,6 @@ import (
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
-	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
 )
 
 type EventHandler func(c *Controller, event socket.Event, client *socket.Client) error
@@ -35,7 +34,6 @@ type Controller struct {
 	challengeManager  *challengeManager
 	queries           *database.Queries
 	tournamentManager *tournamentManager
-	tournamentRecv    chan tournament.ControllerMsg
 }
 
 func NewController(queries *database.Queries) *Controller {
@@ -47,7 +45,6 @@ func NewController(queries *database.Queries) *Controller {
 	c.challengeManager = newChallengeManager()
 	c.tournamentManager = newTournamentManager()
 	c.queries = queries
-	c.tournamentRecv = make(chan tournament.ControllerMsg, 256)
 
 	if err := queries.DeleteLiveGames(context.Background()); err != nil {
 		log.Println("Error deleting live games", err)
@@ -55,7 +52,6 @@ func NewController(queries *database.Queries) *Controller {
 	if err := queries.DeleteLiveTournaments(context.Background()); err != nil {
 		log.Println("Error deleting live tournaments, err")
 	}
-	go c.tournamentReceiveListener()
 	return &c
 }
 

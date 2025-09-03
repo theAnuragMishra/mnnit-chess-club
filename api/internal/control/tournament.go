@@ -3,14 +3,16 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/game"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/tournament"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
 type tournamentManager struct {
@@ -43,21 +45,22 @@ func (m *tournamentManager) getTournament(id string) (*tournament.Tournament, bo
 	return t, exists
 }
 
-func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
+func (c *Controller) endTournament(t *tournament.Tournament) {
+	close(t.Done)
 	err := c.queries.UpdateTournamentStatus(context.Background(), database.UpdateTournamentStatusParams{
 		Status: 2,
-		ID:     id,
+		ID:     t.ID,
 	})
 	if err != nil {
 		log.Println("error updating tournament status", err)
 	}
 
-	inputBytes, err := json.Marshal(players)
+	inputBytes, err := json.Marshal(t.Players)
 	if err != nil {
 		log.Println(err)
 	} else {
 		err = c.queries.BatchUpdateTournamentPlayers(context.Background(), database.BatchUpdateTournamentPlayersParams{
-			TournamentID: id,
+			TournamentID: t.ID,
 			PlayersInput: inputBytes,
 		})
 		if err != nil {
@@ -65,153 +68,113 @@ func (c *Controller) endTournament(id string, players []tournament.EndPlayer) {
 		}
 	}
 
-	payload := map[string]any{"ID": id, "Type": "tournament"}
+	payload := map[string]any{"ID": t.ID, "Type": "tournament"}
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Println(err)
 	}
 	e := socket.Event{Type: "Refresh", Payload: json.RawMessage(rawPayload)}
-	c.socketManager.BroadcastToRoom(e, id)
-	t, ok := c.tournamentManager.getTournament(id)
-	if ok {
-		t.WG.Wait()
-		c.tournamentManager.removeTournament(id)
-		t.Done <- struct{}{}
-	}
+	c.socketManager.BroadcastToRoom(e, t.ID)
+	c.tournamentManager.removeTournament(t.ID)
 }
 
-func handleJoinLeave(c *Controller, event socket.Event, client *socket.Client) error {
-	payload, err := json.Marshal(map[string]any{})
-	if err != nil {
-		return err
+func (c *Controller) runTournamentPairing(t *tournament.Tournament) {
+	if len(t.WaitingPlayers) < 2 {
+		return
 	}
-	e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-	var tidP TournamentIDPayload
-	if err = json.Unmarshal(event.Payload, &tidP); err != nil {
-		client.Send(e)
-		return err
+	paired := make(map[int32]bool)
+
+	availableToPair := make([]*tournament.Player, len(t.WaitingPlayers))
+	for _, player := range t.WaitingPlayers {
+		if c.socketManager.IsUserInARoom(t.ID, player.ID) {
+			availableToPair = append(availableToPair, player)
+		}
 	}
-	if tidP.TournamentID == "" {
-		client.Send(e)
-		return errors.New("tournament ID can't be empty")
+	if len(availableToPair) < 2 {
+		return
 	}
-	t, ok := c.tournamentManager.getTournament(tidP.TournamentID)
-	if !ok {
-		err = handleJoinLeaveBeforeTournament(c, e, client, tidP.TournamentID)
-		return err
-	} else {
-		err = handleJoinLeaveDuringTournament(c, e, client, t)
-		return err
+	for i := 0; i < len(availableToPair); i++ {
+		playerA := availableToPair[i]
+		if paired[playerA.ID] {
+			continue
+		}
+		bestMatch := -1
+		minScoreDiff := 1000000
+		for j := i + 1; j < len(availableToPair); j++ {
+			playerB := availableToPair[j]
+			if paired[playerB.ID] {
+				continue
+			}
+			currentDiff := utils.Abs(int(playerA.Rating) - int(playerB.Rating))
+			currentDiff += utils.Abs(int(playerA.Score)-int(playerB.Score)) * 2
+			currentDiff += int(playerA.Opponents[playerB.ID]) * 10
+
+			if playerA.LastPlayedColor == playerB.LastPlayedColor {
+				currentDiff += 20
+			}
+
+			if currentDiff < minScoreDiff {
+				minScoreDiff = currentDiff
+				bestMatch = j
+			}
+		}
+		if bestMatch != -1 {
+			playerB := availableToPair[bestMatch]
+			id, err := c.generateUniqueGameID()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			g := game.New(id, time.Duration(t.TimeControl.BaseTime)*time.Second, time.Duration(t.TimeControl.Increment)*time.Second, playerA.ID, playerB.ID, t.ID, c.endGame)
+			c.gameManager.addGame(g)
+			err = c.queries.CreateGame(context.Background(), database.CreateGameParams{
+				ID:           id,
+				BaseTime:     t.TimeControl.BaseTime,
+				Increment:    t.TimeControl.Increment,
+				WhiteID:      &playerA.ID,
+				BlackID:      &playerB.ID,
+				RatingW:      int32(playerA.Rating),
+				RatingB:      int32(playerB.Rating),
+				TournamentID: &t.ID,
+			})
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			payload := map[string]any{"ID": id, "Type": "game"}
+			rawPayload, err := json.Marshal(payload)
+			if err != nil {
+				log.Println(err)
+			}
+			e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
+
+			c.socketManager.SendToUserClientsInARoom(e, t.ID, playerA.ID)
+			c.socketManager.SendToUserClientsInARoom(e, t.ID, playerB.ID)
+			paired[playerA.ID] = true
+			paired[playerB.ID] = true
+		}
 	}
+	var newWaitingPlayers []*tournament.Player
+	for _, player := range t.WaitingPlayers {
+		if !paired[player.ID] {
+			newWaitingPlayers = append(newWaitingPlayers, player)
+		}
+	}
+	t.WaitingPlayers = newWaitingPlayers
 }
 
-func handleJoinLeaveBeforeTournament(c *Controller, e socket.Event, client *socket.Client, tournamentID string) error {
-	status, err := c.queries.GetTournamentStatus(context.Background(), tournamentID)
-	if err != nil {
-		client.Send(e)
-		return fmt.Errorf("error getting tournament status for tournament: %s : %w", tournamentID, err)
-	}
-	if status == 2 {
-		client.Send(e)
-		return nil
-	}
-	_, err = c.queries.GetTournamentPlayer(context.Background(), database.GetTournamentPlayerParams{
-		PlayerID:     client.UserID,
-		TournamentID: tournamentID,
-	})
-	if err != nil {
-		err = c.queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
-			PlayerID:     client.UserID,
-			TournamentID: tournamentID,
-		})
-		if err != nil {
-			client.Send(e)
-			return fmt.Errorf("error inserting player to tournament:%s : %w", tournamentID, err)
+func (c *Controller) startTournamentPairing(t *tournament.Tournament) {
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				c.runTournamentPairing(t)
+				fmt.Println("tick happened")
+			case <-t.Done:
+				return
+			}
 		}
-		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
-		if err != nil {
-			client.Send(e)
-			return fmt.Errorf("error getting user: %d rating: %w", client.UserID, err)
-		}
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": 0, "Username": client.Username, "Rating": rating}})
-		if err != nil {
-			client.Send(e)
-			return err
-		}
-		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.socketManager.BroadcastToRoom(e, tournamentID)
-	} else {
-		err := c.queries.DeleteTournamentPlayer(context.Background(), database.DeleteTournamentPlayerParams{
-			TournamentID: tournamentID,
-			PlayerID:     client.UserID,
-		})
-		if err != nil {
-			client.Send(e)
-			return fmt.Errorf("error deleting player from tournament:%s : %w", tournamentID, err)
-		}
-		payload, err := json.Marshal(map[string]any{"id": client.UserID})
-		if err != nil {
-			return err
-		}
-		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.socketManager.BroadcastToRoom(e, tournamentID)
-	}
-	return nil
-}
-
-func handleJoinLeaveDuringTournament(c *Controller, e socket.Event, client *socket.Client, t *tournament.Tournament) error {
-	msg := tournament.CheckIfPlayerExists{
-		ID:    client.UserID,
-		Reply: make(chan bool, 1),
-	}
-	t.Inbox() <- msg
-	exists := <-msg.Reply
-	if exists {
-		msg := tournament.TogglePlayerActiveMsg{
-			ID:    client.UserID,
-			Reply: make(chan bool, 1),
-		}
-		t.Inbox() <- msg
-		active := <-msg.Reply
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "IsActive": active}})
-		if err != nil {
-			client.Send(e)
-			return err
-		}
-		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.socketManager.BroadcastToRoom(e, t.ID)
-	} else {
-		err := c.queries.InsertTournamentPlayer(context.Background(), database.InsertTournamentPlayerParams{
-			PlayerID:     client.UserID,
-			TournamentID: t.ID,
-		})
-		if err != nil {
-			client.Send(e)
-			return fmt.Errorf("error inserting player to tournament:%s : %w", t.ID, err)
-		}
-		rating, err := c.queries.GetUserRating(context.Background(), client.UserID)
-		if err != nil {
-			client.Send(e)
-			return err
-		}
-		msg := tournament.AddPlayer{
-			ID:     client.UserID,
-			Rating: rating,
-			Reply:  make(chan tournament.Player, 1),
-		}
-		t.Inbox() <- msg
-		player := <-msg.Reply
-		if player.ID == 0 {
-			client.Send(e)
-			return nil
-		}
-		payload, err := json.Marshal(map[string]any{"player": map[string]any{"ID": client.UserID, "Score": player.Score, "Username": client.Username, "Rating": rating, "IsActive": player.IsActive}})
-		if err != nil {
-			client.Send(e)
-			return err
-		}
-		e := socket.Event{Type: "jl_response", Payload: json.RawMessage(payload)}
-		c.socketManager.BroadcastToRoom(e, t.ID)
-	}
-	return nil
+	}()
 }

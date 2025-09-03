@@ -13,10 +13,12 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/socket"
 )
 
-func (c *Controller) sendScoreUpdateEvent(p tournament.UpdatedPlayerSnapShots, room string) {
+func (c *Controller) sendScoreUpdateEvent(g *game.Game, t *tournament.Tournament) {
+	player1 := t.PlayerSnapshot(g.WhiteID)
+	player2 := t.PlayerSnapshot(g.BlackID)
 	payload, err := json.Marshal(map[string]any{
-		"p1": p.Player1,
-		"p2": p.Player2,
+		"p1": player1,
+		"p2": player2,
 	})
 	if err != nil {
 		log.Println(err)
@@ -25,8 +27,7 @@ func (c *Controller) sendScoreUpdateEvent(p tournament.UpdatedPlayerSnapShots, r
 		Type:    "update_score",
 		Payload: json.RawMessage(payload),
 	}
-
-	c.socketManager.BroadcastToRoom(e, room)
+	c.socketManager.BroadcastToRoom(e, g.TournamentID)
 }
 
 func (c *Controller) batchInsertMoves(id string, m []game.Move) {
