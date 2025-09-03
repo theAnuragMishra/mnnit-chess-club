@@ -38,6 +38,7 @@ func (c *Client) readMessages() {
 	defer func() {
 		//log.Println("client disconnected ", c)
 		c.manager.OnClientDisconnect(c)
+		close(c.egress)
 		c.manager.Lock()
 		c.manager.RemoveClient(c)
 		c.manager.Unlock()
@@ -70,8 +71,7 @@ func (c *Client) readMessages() {
 
 func (c *Client) writeMessages() {
 	//defer func() {
-	//	log.Println("Closing write connection for client:", c.UserID)
-	//	c.manager.RemoveClient(c)
+	//	log.Println("client disconnected", c)
 	//}()
 	for {
 		select {
@@ -96,9 +96,7 @@ func (c *Client) writeMessages() {
 
 // Send sends an event to the egress channel which is then written to the client by WriteMessage
 func (c *Client) Send(event Event) {
-	if c.egress != nil {
-		c.egress <- event
-	}
+	c.egress <- event
 }
 
 func (m *Manager) BroadcastToRoom(event Event, room string) {

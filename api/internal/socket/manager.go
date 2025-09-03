@@ -81,8 +81,6 @@ func (m *Manager) RemoveClient(client *Client) {
 				log.Println("error trying to close connection of ", client, err)
 				return
 			}
-			close(client.egress)
-			client.egress = nil
 			delete(m.rooms[client.Room], client)
 			delete(m.clients[client.UserID], client)
 			if len(m.rooms[client.Room]) == 0 {
