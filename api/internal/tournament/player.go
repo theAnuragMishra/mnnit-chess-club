@@ -35,22 +35,3 @@ func (t *Tournament) PlayerSnapshot(id int32) PlayerSnapShot {
 		Streak: player.Streak,
 	}
 }
-
-func (t *Tournament) SnapshotPlayers() map[int32]Player {
-	m := make(map[int32]Player, len(t.Players))
-	for k, v := range t.Players {
-		scores := make([]int, len(v.Scores))
-		copy(scores, v.Scores)
-		m[k] = Player{
-			ID:              v.ID,
-			IsActive:        v.IsActive,
-			Score:           v.Score,
-			Scores:          v.Scores,
-			Rating:          v.Rating,
-			Streak:          v.Streak,
-			Opponents:       v.Opponents,
-			LastPlayedColor: v.LastPlayedColor,
-		}
-	}
-	return m
-}

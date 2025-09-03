@@ -209,20 +209,19 @@ func (c *Controller) writeTournamentInfo(w http.ResponseWriter, r *http.Request)
 	t, exists := c.tournamentManager.getTournament(tournamentID)
 	if exists {
 		t.RLock()
-		snapshot := t.SnapshotPlayers()
-		t.RUnlock()
 		players := make([]any, len(dbPlayers))
 		for i, player := range dbPlayers {
 			players[i] = map[string]any{
-				"Score":    snapshot[player.ID].Score,
+				"Score":    t.Players[player.ID].Score,
 				"ID":       player.ID,
-				"IsActive": snapshot[player.ID].IsActive,
+				"IsActive": t.Players[player.ID].IsActive,
 				"Username": player.Username,
 				"Rating":   player.Rating,
-				"Streak":   snapshot[player.ID].Streak,
-				"Scores":   snapshot[player.ID].Scores,
+				"Streak":   t.Players[player.ID].Streak,
+				"Scores":   t.Players[player.ID].Scores,
 			}
 		}
+		t.RUnlock()
 		//log.Println(players)
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"name":           t.Name,
