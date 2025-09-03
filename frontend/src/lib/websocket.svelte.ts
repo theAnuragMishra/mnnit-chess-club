@@ -6,6 +6,7 @@ class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
 	private reconnectDelay: number = 500;
+	private reconnectAttempts: number = 0;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
@@ -22,18 +23,21 @@ class WebSocketStore {
 	}
 
 	connect(): Promise<void> {
-		if (this.ws?.readyState === WebSocket.OPEN) return Promise.resolve();
+		if (this.ws?.readyState === WebSocket.OPEN || this.reconnectAttempts > 10)
+			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
 			this.ws = new WebSocket(this.url);
 
 			this.ws.onopen = () => {
 				console.log('✅ WebSocket Connected');
+				this.reconnectAttempts = 0;
 				resolve();
 			};
 			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 			this.ws.onclose = () => {
 				console.warn('⚠️ WebSocket Disconnected');
+				this.reconnectAttempts++;
 				setTimeout(() => this.connect(), this.reconnectDelay);
 			};
 			this.ws.onerror = (error: Event) => {
