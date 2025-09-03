@@ -13,6 +13,7 @@ import (
 )
 
 type rematchInfo struct {
+	sync.Mutex
 	WhiteID   int32
 	BlackID   int32
 	BaseTime  time.Duration
@@ -48,19 +49,31 @@ func (m *rematchManager) getRematchByID(id string) (*rematchInfo, bool) {
 	return info, exists
 }
 
+func (r *rematchInfo) offerLock() bool {
+	r.Lock()
+	defer r.Unlock()
+	return r.Offer
+}
+
+func (r *rematchInfo) setOfferLock() {
+	r.Lock()
+	r.Offer = true
+	r.Unlock()
+}
+
 func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 	info, exists := c.rematchManager.getRematchByID(client.Room())
 	if !exists {
 		return nil
 	}
-	if !info.Offer {
+	if !info.offerLock() {
 		opp := info.WhiteID
 		if info.WhiteID == client.UserID {
 			opp = info.BlackID
 		}
 		e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage("[]")}
 		c.socketManager.SendToUserClientsInARoom(e, client.Room(), opp)
-		info.Offer = true
+		info.setOfferLock()
 		return nil
 	}
 	c.rematchManager.removeRematch(client.Room())
