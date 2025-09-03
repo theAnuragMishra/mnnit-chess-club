@@ -93,7 +93,7 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 			Type:    "drawOffer",
 			Payload: json.RawMessage("[]"),
 		}
-		c.socketManager.SendToUserClientsInARoom(e, client.Room, reply)
+		c.socketManager.SendToUserClientsInARoom(e, client.Room(), reply)
 	}
 	return nil
 }
@@ -247,7 +247,7 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 }
 
 func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
-	g, ok := c.gameManager.getGameByID(client.Room)
+	g, ok := c.gameManager.getGameByID(client.Room())
 	if !ok {
 		return nil
 	}
@@ -282,6 +282,6 @@ func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
 		Type:    "berserk",
 		Payload: json.RawMessage(rawPayload),
 	}
-	c.socketManager.BroadcastToRoom(e, client.Room)
+	c.socketManager.BroadcastToRoom(e, client.Room())
 	return nil
 }

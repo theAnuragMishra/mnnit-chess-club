@@ -49,7 +49,7 @@ func (m *rematchManager) getRematchByID(id string) (*rematchInfo, bool) {
 }
 
 func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
-	info, exists := c.rematchManager.getRematchByID(client.Room)
+	info, exists := c.rematchManager.getRematchByID(client.Room())
 	if !exists {
 		return nil
 	}
@@ -59,11 +59,11 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 			opp = info.BlackID
 		}
 		e := socket.Event{Type: "rematchOffer", Payload: json.RawMessage("[]")}
-		c.socketManager.SendToUserClientsInARoom(e, client.Room, opp)
+		c.socketManager.SendToUserClientsInARoom(e, client.Room(), opp)
 		info.Offer = true
 		return nil
 	}
-	c.rematchManager.removeRematch(client.Room)
+	c.rematchManager.removeRematch(client.Room())
 	id, err := c.generateUniqueGameID()
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func rematch(c *Controller, _ socket.Event, client *socket.Client) error {
 		return err
 	}
 	e := socket.Event{Type: "GoTo", Payload: json.RawMessage(rawPayload)}
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.BlackID)
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, info.WhiteID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room(), info.BlackID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room(), info.WhiteID)
 	return nil
 }

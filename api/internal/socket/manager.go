@@ -81,10 +81,10 @@ func (m *Manager) RemoveClient(client *Client) {
 				log.Println("error trying to close connection of ", client, err)
 				return
 			}
-			delete(m.rooms[client.Room], client)
+			delete(m.rooms[client.room], client)
 			delete(m.clients[client.UserID], client)
-			if len(m.rooms[client.Room]) == 0 {
-				delete(m.rooms, client.Room)
+			if len(m.rooms[client.room]) == 0 {
+				delete(m.rooms, client.room)
 			}
 			if len(m.clients[client.UserID]) == 0 {
 				delete(m.clients, client.UserID)

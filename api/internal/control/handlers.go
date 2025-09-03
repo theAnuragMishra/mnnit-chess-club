@@ -26,20 +26,20 @@ func chat(c *Controller, event socket.Event, client *socket.Client) error {
 		Type:    "chat",
 		Payload: json.RawMessage(payload),
 	}
-	g, exists := c.gameManager.getGameByID(client.Room)
+	g, exists := c.gameManager.getGameByID(client.Room())
 	if !exists {
 		// handle game ended message
-		c.socketManager.BroadcastToRoom(e, client.Room)
+		c.socketManager.BroadcastToRoom(e, client.Room())
 		return nil
 	}
 
 	if client.UserID != g.WhiteID && client.UserID != g.BlackID {
 		// handle message by non player
-		c.socketManager.BroadcastToNonPlayers(e, client.Room, g.WhiteID, g.BlackID)
+		c.socketManager.BroadcastToNonPlayers(e, client.Room(), g.WhiteID, g.BlackID)
 		return nil
 	}
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, g.WhiteID)
-	c.socketManager.SendToUserClientsInARoom(e, client.Room, g.BlackID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room(), g.WhiteID)
+	c.socketManager.SendToUserClientsInARoom(e, client.Room(), g.BlackID)
 	return nil
 }
 
@@ -48,18 +48,18 @@ func roomChange(c *Controller, event socket.Event, client *socket.Client) error 
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
 		return err
 	}
-	if client.Room == payload.RoomID {
+	if client.Room() == payload.RoomID {
 		return nil
 	}
-	c.socketManager.DeleteClientFromRoom(client.Room, client)
-	client.Room = payload.RoomID
+	c.socketManager.DeleteClientFromRoom(client.Room(), client)
+	client.ChangeRoom(payload.RoomID)
 	c.socketManager.AddClientToRoom(payload.RoomID, client)
 	return nil
 }
 
 func leaveRoom(c *Controller, _ socket.Event, client *socket.Client) error {
-	c.socketManager.DeleteClientFromRoom(client.Room, client)
-	client.Room = ""
+	c.socketManager.DeleteClientFromRoom(client.Room(), client)
+	client.ChangeRoom("")
 	return nil
 }
 

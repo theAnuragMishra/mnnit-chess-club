@@ -3,6 +3,7 @@ package socket
 import (
 	"encoding/json"
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -12,18 +13,16 @@ type ClientList map[int32]map[*Client]struct{}
 
 // Client is a websocket client, basically a frontend visitor
 type Client struct {
-	// the websocket connection
+	sync.RWMutex
 	connection *websocket.Conn
 	UserID     int32
-	// manager is the manager used to manage the client
-	manager   *Manager
-	egress    chan Event
-	Room      string
-	Username  string
-	sessionID string
+	manager    *Manager
+	egress     chan Event
+	room       string
+	Username   string
+	sessionID  string
 }
 
-// NewClient is used to initialize a new Client with all required values initialized
 func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username string) *Client {
 	return &Client{
 		UserID:     userID,
@@ -94,7 +93,22 @@ func (c *Client) writeMessages() {
 	}
 }
 
-// Send sends an event to the egress channel which is then written to the client by WriteMessage
+func (c *Client) Room() string {
+	return c.room
+}
+
+func (c *Client) ChangeRoom(room string) {
+	c.Lock()
+	c.room = room
+	c.Unlock()
+}
+
+func (c *Client) RoomLock() string {
+	c.RLock()
+	defer c.RUnlock()
+	return c.room
+}
+
 func (c *Client) Send(event Event) {
 	c.egress <- event
 }
@@ -117,7 +131,6 @@ func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, playe
 	}
 }
 
-// Broadcast sends the event to every client
 func (m *Manager) Broadcast(event Event) {
 	m.RLock() // Read lock to safely access the clients' map
 	defer m.RUnlock()
@@ -135,7 +148,7 @@ func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
 	clients, ok := m.clients[id]
 	if ok {
 		for client := range clients {
-			if client.Room == room {
+			if client.RoomLock() == room {
 				client.egress <- event
 			}
 		}
@@ -148,7 +161,7 @@ func (m *Manager) IsUserInARoom(room string, id int32) bool {
 	clients, ok := m.clients[id]
 	if ok {
 		for client := range clients {
-			if client.Room == room {
+			if client.RoomLock() == room {
 				return true
 			}
 		}
