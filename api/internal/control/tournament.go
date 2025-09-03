@@ -57,7 +57,17 @@ func (c *Controller) endTournament(t *tournament.Tournament) {
 		log.Println("error updating tournament status", err)
 	}
 
-	inputBytes, err := json.Marshal(t.Players)
+	input := make([]tournament.EndPlayer, 0, len(t.Players))
+	for _, player := range t.Players {
+		input = append(input, tournament.EndPlayer{
+			ID:     player.ID,
+			Score:  player.Score,
+			Scores: player.Scores,
+			Streak: player.Streak,
+		})
+	}
+
+	inputBytes, err := json.Marshal(input)
 	if err != nil {
 		log.Println(err)
 	} else {
