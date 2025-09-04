@@ -12,13 +12,13 @@ class WebSocketStore {
 	constructor(url: string) {
 		this.url = url;
 		$effect.root(() => {
-			$effect(() => {
-				if (!user.id) return;
-				this.connect();
-				return () => {
-					this.ws?.close();
-				};
-			});
+			// $effect(() => {
+			// 	if (!user.id) return;
+			// 	this.connect();
+			// 	return () => {
+			// 		this.ws?.close();
+			// 	};
+			// });
 			$effect(() => {
 				const handleVisibilityChange = () => {
 					if (document.visibilityState === 'visible') {
@@ -34,7 +34,7 @@ class WebSocketStore {
 	}
 
 	connect(): Promise<void> {
-		if (this.ws?.readyState === WebSocket.OPEN || this.reconnectAttempts > 10)
+		if (!user.id || this.ws?.readyState === WebSocket.OPEN || this.reconnectAttempts > 10)
 			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
