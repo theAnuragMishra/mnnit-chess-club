@@ -3,6 +3,10 @@ import { websocketStore } from '$lib/websocket.svelte';
 import type { ClientInit } from '@sveltejs/kit';
 
 export const init: ClientInit = async () => {
-	await initUser();
-	await websocketStore.connect();
+	try {
+		await initUser();
+		await websocketStore.connect();
+	} catch (e) {
+		console.error(e);
+	}
 };
