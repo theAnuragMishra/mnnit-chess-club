@@ -3,7 +3,7 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -53,7 +53,7 @@ func move(c *Controller, event socket.Event, client *socket.Client) error {
 	gameID := move.GameID
 	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
-		return errors.New("game not found")
+		return fmt.Errorf("move event: game %s not found, client %d", gameID, client.UserID)
 	}
 	g.Lock()
 	reply := g.HandleMove(client.UserID, move)
@@ -83,7 +83,7 @@ func draw(c *Controller, event socket.Event, client *socket.Client) error {
 	gameID := draw.GameID
 	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
-		return nil
+		return fmt.Errorf("draw event: game %s not found, client %d", gameID, client.UserID)
 	}
 	g.Lock()
 	reply := g.HandleDraw(client.UserID)
@@ -106,7 +106,7 @@ func resign(c *Controller, event socket.Event, client *socket.Client) error {
 	gameID := resign.GameID
 	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
-		return nil
+		return fmt.Errorf("resign event: game %s not found, client %d", gameID, client.UserID)
 	}
 	g.Lock()
 	g.HandleResign(client.UserID)
@@ -248,7 +248,7 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 func berserk(c *Controller, _ socket.Event, client *socket.Client) error {
 	g, ok := c.gameManager.getGameByID(client.Room())
 	if !ok {
-		return nil
+		return fmt.Errorf("berserk event: game %s not found, client %d", client.Room(), client.UserID)
 	}
 	t, exists := c.tournamentManager.getTournament(g.TournamentID)
 	if !exists || !t.BerserkAllowed {

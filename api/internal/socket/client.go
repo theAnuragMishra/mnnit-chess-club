@@ -62,7 +62,7 @@ func (c *Client) readMessages() {
 		//}
 
 		if err := c.manager.OnMessage(request, c); err != nil {
-			log.Printf("error on message %v", err)
+			log.Printf("error returned by event handler: %v", err)
 		}
 
 	}
