@@ -23,7 +23,6 @@ type Game struct {
 	TimeBlack     time.Duration
 	DrawOfferedBy int32
 	Moves         []Move
-	RematchOffer  bool
 	LastMoveTime  time.Time
 	AbortTimer    *time.Timer
 	ClockTimer    *time.Timer
