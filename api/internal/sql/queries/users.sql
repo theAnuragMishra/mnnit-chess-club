@@ -34,5 +34,7 @@ SELECT rating FROM users WHERE id = $1;
 UPDATE users SET rating = $1, rd = $2, volatility = $3 WHERE id = $4;
 
 -- name: GetTopN :many
-SELECT id, username, avatar_url, rating FROM users
+SELECT id, username, avatar_url, rating
+FROM users
+WHERE rd <= 110
 ORDER BY rating DESC LIMIT $1 OFFSET 0;

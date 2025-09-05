@@ -65,7 +65,9 @@ func (q *Queries) GetRatingInfo(ctx context.Context, id int32) (GetRatingInfoRow
 }
 
 const getTopN = `-- name: GetTopN :many
-SELECT id, username, avatar_url, rating FROM users
+SELECT id, username, avatar_url, rating
+FROM users
+WHERE rd <= 110
 ORDER BY rating DESC LIMIT $1 OFFSET 0
 `
 
