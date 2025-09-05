@@ -33,8 +33,39 @@ class WebSocketStore {
 		});
 	}
 
-	connect(): Promise<void> {
-		if (!user.id || this.ws?.readyState === WebSocket.OPEN || this.reconnectAttempts > 10)
+	connect() {
+		if (
+			!user.id ||
+			this.ws?.readyState === WebSocket.OPEN ||
+			this.ws?.readyState === WebSocket.CONNECTING ||
+			this.reconnectAttempts > 10
+		)
+			return;
+
+		this.ws = new WebSocket(this.url);
+
+		this.ws.onopen = () => {
+			console.log('✅ WebSocket Connected');
+			this.reconnectAttempts = 0;
+		};
+		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
+		this.ws.onclose = () => {
+			console.warn('⚠️ WebSocket Disconnected');
+			this.reconnectAttempts++;
+			setTimeout(() => this.connect(), this.reconnectDelay);
+		};
+		this.ws.onerror = (error: Event) => {
+			console.error('WebSocket Error:', error);
+		};
+	}
+
+	connectWithResult(): Promise<void> {
+		if (
+			!user.id ||
+			this.ws?.readyState === WebSocket.OPEN ||
+			this.ws?.readyState === WebSocket.CONNECTING ||
+			this.reconnectAttempts > 10
+		)
 			return Promise.resolve();
 
 		return new Promise((resolve, reject) => {
@@ -95,6 +126,7 @@ class WebSocketStore {
 	}
 
 	sendMessage(message: unknown): void {
+		this.connect();
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
 			this.ws.send(JSON.stringify(message));
 		} else {

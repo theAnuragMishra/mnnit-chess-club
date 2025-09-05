@@ -5,7 +5,7 @@ import type { ClientInit } from '@sveltejs/kit';
 export const init: ClientInit = async () => {
 	try {
 		await initUser();
-		await websocketStore.connect();
+		await websocketStore.connectWithResult();
 	} catch (e) {
 		console.error(e);
 	}
