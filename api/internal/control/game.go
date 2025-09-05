@@ -234,7 +234,6 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 		BlackID:   g.BlackID,
 		BaseTime:  g.BaseTime,
 		Increment: g.Increment,
-		Offer:     false,
 	})
 	time.AfterFunc(time.Second*30, func() {
 		e = socket.Event{Type: "GameDeleted", Payload: json.RawMessage("[]")}

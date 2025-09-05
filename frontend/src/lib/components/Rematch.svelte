@@ -14,7 +14,7 @@
 		});
 	};
 	const handleRematchOffer = (payload: any) => {
-		offer = true;
+		offer = !offer;
 	};
 
 	const handleGameDeleted = (payload: any) => {
