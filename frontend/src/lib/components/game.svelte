@@ -390,6 +390,7 @@
 		<div class="draw-resign h-fit w-full">
 			{#if isPlayer && result === 0}
 				<DrawResign
+					drawOfferedBy={d.drawOfferedBy}
 					handleFlip={() => ground?.toggleOrientation()}
 					isDisabled={moveHistory.length < 2}
 					{gameID}

@@ -5,12 +5,15 @@
 	import berserkImg from '$lib/assets/icons/kill.svg';
 	import flipImg from '$lib/assets/icons/flip.svg';
 	import { websocketStore } from '$lib/websocket.svelte';
+	import { user } from '$lib/user.svelte';
 
-	const { gameID, isDisabled, showBerserkButton, handleFlip } = $props();
-	let offer = $state(false);
+	const { gameID, isDisabled, showBerserkButton, handleFlip, drawOfferedBy } = $props();
+	let offer = $state(drawOfferedBy !== user.id && drawOfferedBy !== 0);
 	let resignSelected = $state(false);
+	let offered = $derived(drawOfferedBy === user.id);
 
 	const handleDraw = () => {
+		offered = !offered;
 		websocketStore.sendMessage({
 			type: 'draw',
 			payload: {
@@ -63,11 +66,15 @@
 		><img src={flipImg} alt="flip the board" class="h-[32px]" /></button
 	>
 	<button
-		class={`cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:px-4 md:py-2 ${offer && 'animate-pulse bg-blue-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+		class={`cursor-pointer rounded-lg p-1  md:px-4 md:py-2 ${offered ? 'bg-red-600' : offer ? 'animate-pulse bg-blue-600' : 'hover:bg-gray-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 		onclick={handleDraw}
 		disabled={isDisabled}
 	>
-		1/2
+		{#if offered}
+			<img src={crossImg} alt="cancel resignation" class="h-[24px]" />
+		{:else}
+			1/2
+		{/if}
 	</button>
 	<button
 		aria-label="resign"
