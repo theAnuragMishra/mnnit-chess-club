@@ -62,7 +62,7 @@
 <svelte:head>
 	<title>Profile - {page.params.username}</title>
 </svelte:head>
-<div class="flex w-full flex-col rounded-xl bg-black p-4 text-xl text-gray-300">
+<div class="flex w-full flex-col rounded-xl bg-black p-4 text-sm text-gray-300 md:text-xl">
 	<div class="mb-4">
 		<div class="text-3xl">{page.params.username}</div>
 		<div class="text-[1rem]">
@@ -119,7 +119,7 @@
 				</div>
 				<div class="flex w-full items-center justify-center gap-5">
 					<div class="flex flex-col items-center justify-center">
-						<span class="text-2xl">{item.WhiteUsername}</span><span class="text-[16px]"
+						<span class="md:text-2xl">{item.WhiteUsername}</span><span class="text-[16px]"
 							><span>{item.RatingW}</span>&nbsp;&nbsp;<span
 								class={`${item.ChangeW > 0 ? 'text-green-500' : item.ChangeW < 0 ? 'text-red-500' : ''}`}
 								>{`${item.ChangeW > 0 ? '+' : ''}`}{item.ChangeW}</span
@@ -128,7 +128,7 @@
 					</div>
 					<div>Vs</div>
 					<div class="flex flex-col items-center justify-center">
-						<span class="text-2xl">{item.BlackUsername}</span><span class="text-[16px]"
+						<span class="md:text-2xl">{item.BlackUsername}</span><span class="text-[16px]"
 							><span>{item.RatingB}</span>&nbsp;&nbsp;<span
 								class={`${item.ChangeB > 0 ? 'text-green-500' : item.ChangeB < 0 ? 'text-red-500' : ''}`}
 								>{`${item.ChangeB > 0 ? '+' : ''}`}{item.ChangeB}</span
@@ -143,7 +143,7 @@
 						Playing right now
 					{/if}
 				</div>
-				<div class="flex items-center justify-between text-lg">
+				<div class="flex items-center justify-between">
 					<span
 						>{Math.ceil(item.GameLength / 2)} move{`${Math.ceil(item.GameLength / 2) > 1 ? 's' : ''}`}</span
 					>
