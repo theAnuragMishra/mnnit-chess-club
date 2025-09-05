@@ -404,7 +404,7 @@
 		<div class="back_to_tournament w-full text-center">
 			{#if isPlayer && tournamentID && result !== 0}
 				<a
-					class="flex w-full items-center justify-center gap-[5px] px-3 py-2"
+					class="flex w-full items-center justify-center gap-[5px] px-3 py-2 hover:bg-gray-700"
 					href={`/tournament/${tournamentID}`}
 				>
 					<img src={playImg} alt="back to tournament" /> BACK TO TOURNAMENT</a
