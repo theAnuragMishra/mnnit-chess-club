@@ -150,14 +150,20 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	g, exists := c.gameManager.getGameByID(gameID)
 	if !exists {
-		_, canRematch := c.rematchManager.getRematchByID(gameID)
+		i, canRematch := c.rematchManager.getRematchByID(gameID)
+		var rematchOfferedBy int32
+		if canRematch {
+			i.Lock()
+			rematchOfferedBy = i.Offer
+			i.Unlock()
+		}
 		moves, err := c.queries.GetGameMoves(r.Context(), gameID)
 		if err != nil {
 			log.Println("error getting game moves for game", gameID, err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "error getting game moves")
 			return
 		}
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "canRematch": canRematch})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "canRematch": canRematch, "rematchOfferedBy": rematchOfferedBy})
 
 	} else {
 		// server game response

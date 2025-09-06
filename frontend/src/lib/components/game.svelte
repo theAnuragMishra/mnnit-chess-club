@@ -370,7 +370,7 @@
 		</div>
 		<div class="rematch flex w-full justify-center">
 			{#if result !== 0 && isPlayer && !tournamentID}
-				<Rematch canRematch={d.canRematch} />
+				<Rematch canRematch={d.canRematch} offeredBy={d.rematchOfferedBy ?? 0} />
 			{/if}
 		</div>
 		<div class="namet flex h-fit justify-between md:w-[300px]">
