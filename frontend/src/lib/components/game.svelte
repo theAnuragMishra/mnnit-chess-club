@@ -34,8 +34,8 @@
 	let tournamentID = d.game.TournamentID;
 	let whiteUsername = d.game.WhiteUsername;
 	let blackUsername = d.game.BlackUsername;
-	let timeBlack = $state(d.timeBlack);
-	let timeWhite = $state(d.timeWhite);
+	let timeBlack = $state(d.game.TimeBlack);
+	let timeWhite = $state(d.game.TimeWhite);
 	let ratingWhite = d.game.RatingW;
 	let ratingBlack = d.game.RatingB;
 	let changeWhite = $state(d.game.ChangeW ?? 0);

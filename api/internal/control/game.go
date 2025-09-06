@@ -204,16 +204,16 @@ func (c *Controller) endGame(g *game.Game, info game.EndInfo) {
 	}
 
 	err := c.queries.EndGameWithResult(context.Background(), database.EndGameWithResultParams{
-		Result:           int32(g.Result),
-		Method:           int32(info.Method),
-		ID:               g.ID,
-		GameLength:       int32(len(g.Moves)),
-		ChangeW:          &cw,
-		ChangeB:          &cb,
-		EndTimeLeftWhite: info.TimeLeftWhite,
-		EndTimeLeftBlack: info.TimeLeftBlack,
-		BerserkBlack:     g.BerserkBlack,
-		BerserkWhite:     g.BerserkWhite,
+		Result:       int32(g.Result),
+		Method:       int32(info.Method),
+		ID:           g.ID,
+		GameLength:   int32(len(g.Moves)),
+		ChangeW:      &cw,
+		ChangeB:      &cb,
+		TimeWhite:    info.TimeLeftWhite,
+		TimeBlack:    info.TimeLeftBlack,
+		BerserkBlack: g.BerserkBlack,
+		BerserkWhite: g.BerserkWhite,
 	})
 	if err != nil {
 		log.Println("error ending game id", g.ID, err)

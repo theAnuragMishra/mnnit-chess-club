@@ -145,21 +145,21 @@ func (q *Queries) DeleteTournamentPlayer(ctx context.Context, arg DeleteTourname
 
 const endGameWithResult = `-- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, method = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7, berserk_white = $8, berserk_black = $9
+SET result = $1, method = $2, change_w = $3, change_b = $4, game_length = $5, time_white = $6, time_black = $7, berserk_white = $8, berserk_black = $9
 WHERE id = $10
 `
 
 type EndGameWithResultParams struct {
-	Result           int32
-	Method           int32
-	ChangeW          *int32
-	ChangeB          *int32
-	GameLength       int32
-	EndTimeLeftWhite *int32
-	EndTimeLeftBlack *int32
-	BerserkWhite     bool
-	BerserkBlack     bool
-	ID               string
+	Result       int32
+	Method       int32
+	ChangeW      *int32
+	ChangeB      *int32
+	GameLength   int32
+	TimeWhite    *int32
+	TimeBlack    *int32
+	BerserkWhite bool
+	BerserkBlack bool
+	ID           string
 }
 
 func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultParams) error {
@@ -169,8 +169,8 @@ func (q *Queries) EndGameWithResult(ctx context.Context, arg EndGameWithResultPa
 		arg.ChangeW,
 		arg.ChangeB,
 		arg.GameLength,
-		arg.EndTimeLeftWhite,
-		arg.EndTimeLeftBlack,
+		arg.TimeWhite,
+		arg.TimeBlack,
 		arg.BerserkWhite,
 		arg.BerserkBlack,
 		arg.ID,
@@ -190,7 +190,7 @@ func (q *Queries) GetGameByID(ctx context.Context, id string) (string, error) {
 
 const getGameInfo = `-- name: GetGameInfo :one
 SELECT
-    games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.end_time_left_white, games.end_time_left_black, games.method, games.rating_w, games.rating_b, games.change_w, games.change_b, games.berserk_white, games.berserk_black,
+    games.id, games.base_time, games.increment, games.tournament_id, games.white_id, games.black_id, games.game_length, games.result, games.created_at, games.time_white, games.time_black, games.method, games.rating_w, games.rating_b, games.change_w, games.change_b, games.berserk_white, games.berserk_black,
     u1.username as white_username,
     u2.username as black_username,
     t.name as tournament_name
@@ -202,27 +202,27 @@ WHERE games.id = $1
 `
 
 type GetGameInfoRow struct {
-	ID               string
-	BaseTime         int32
-	Increment        int32
-	TournamentID     *string
-	WhiteID          *int32
-	BlackID          *int32
-	GameLength       int32
-	Result           int32
-	CreatedAt        time.Time
-	EndTimeLeftWhite *int32
-	EndTimeLeftBlack *int32
-	Method           int32
-	RatingW          int32
-	RatingB          int32
-	ChangeW          *int32
-	ChangeB          *int32
-	BerserkWhite     bool
-	BerserkBlack     bool
-	WhiteUsername    *string
-	BlackUsername    *string
-	TournamentName   *string
+	ID             string
+	BaseTime       int32
+	Increment      int32
+	TournamentID   *string
+	WhiteID        *int32
+	BlackID        *int32
+	GameLength     int32
+	Result         int32
+	CreatedAt      time.Time
+	TimeWhite      *int32
+	TimeBlack      *int32
+	Method         int32
+	RatingW        int32
+	RatingB        int32
+	ChangeW        *int32
+	ChangeB        *int32
+	BerserkWhite   bool
+	BerserkBlack   bool
+	WhiteUsername  *string
+	BlackUsername  *string
+	TournamentName *string
 }
 
 func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, error) {
@@ -238,8 +238,8 @@ func (q *Queries) GetGameInfo(ctx context.Context, id string) (GetGameInfoRow, e
 		&i.GameLength,
 		&i.Result,
 		&i.CreatedAt,
-		&i.EndTimeLeftWhite,
-		&i.EndTimeLeftBlack,
+		&i.TimeWhite,
+		&i.TimeBlack,
 		&i.Method,
 		&i.RatingW,
 		&i.RatingB,
@@ -302,11 +302,11 @@ WITH target_user AS (
     SELECT id FROM users WHERE username = $1
 ),
      user_games AS (
-         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.end_time_left_white, g.end_time_left_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, true AS is_white
+         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.time_white, g.time_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, true AS is_white
          FROM games g, target_user u
          WHERE g.white_id = u.id
          UNION ALL
-         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.end_time_left_white, g.end_time_left_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, false AS is_white
+         SELECT g.id, g.base_time, g.increment, g.tournament_id, g.white_id, g.black_id, g.game_length, g.result, g.created_at, g.time_white, g.time_black, g.method, g.rating_w, g.rating_b, g.change_w, g.change_b, g.berserk_white, g.berserk_black, false AS is_white
          FROM games g, target_user u
          WHERE g.black_id = u.id
      )
@@ -338,7 +338,7 @@ func (q *Queries) GetGameNumbers(ctx context.Context, username *string) (GetGame
 }
 
 const getLiveGames = `-- name: GetLiveGames :many
-SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, end_time_left_white, end_time_left_black, method, rating_w, rating_b, change_w, change_b, berserk_white, berserk_black FROM games WHERE result = 0
+SELECT id, base_time, increment, tournament_id, white_id, black_id, game_length, result, created_at, time_white, time_black, method, rating_w, rating_b, change_w, change_b, berserk_white, berserk_black FROM games WHERE result = 0
 `
 
 func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
@@ -360,8 +360,8 @@ func (q *Queries) GetLiveGames(ctx context.Context) ([]Game, error) {
 			&i.GameLength,
 			&i.Result,
 			&i.CreatedAt,
-			&i.EndTimeLeftWhite,
-			&i.EndTimeLeftBlack,
+			&i.TimeWhite,
+			&i.TimeBlack,
 			&i.Method,
 			&i.RatingW,
 			&i.RatingB,

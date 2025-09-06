@@ -157,14 +157,7 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithError(w, http.StatusInternalServerError, "error getting game moves")
 			return
 		}
-		var timeBlack, timeWhite int32
-		if foundGame.EndTimeLeftWhite != nil {
-			timeWhite = *foundGame.EndTimeLeftWhite
-		}
-		if foundGame.EndTimeLeftBlack != nil {
-			timeBlack = *foundGame.EndTimeLeftBlack
-		}
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack, "canRematch": canRematch})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "canRematch": canRematch})
 
 	} else {
 		// server game response
@@ -187,14 +180,16 @@ func (c *Controller) writeGameInfo(w http.ResponseWriter, r *http.Request) {
 		g.RLock()
 		moves := make([]game.Move, len(g.Moves))
 		copy(moves, g.Moves)
-		timeBlack := int(g.TimeBlack.Milliseconds())
-		timeWhite := int(g.TimeWhite.Milliseconds())
+		timeBlack := int32(g.TimeBlack.Milliseconds())
+		timeWhite := int32(g.TimeWhite.Milliseconds())
 		drawOfferedBy := g.DrawOfferedBy
 		foundGame.BerserkBlack = g.BerserkBlack
 		foundGame.BerserkWhite = g.BerserkWhite
 		foundGame.GameLength = int32(len(g.Moves))
+		foundGame.TimeBlack = &timeBlack
+		foundGame.TimeWhite = &timeWhite
 		g.RUnlock()
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "timeWhite": timeWhite, "timeBlack": timeBlack, "canRematch": true, "berserkAllowed": berserkAllowed, "drawOfferedBy": drawOfferedBy})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"moves": moves, "game": foundGame, "canRematch": true, "berserkAllowed": berserkAllowed, "drawOfferedBy": drawOfferedBy})
 	}
 }
 

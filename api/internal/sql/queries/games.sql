@@ -49,7 +49,7 @@ ORDER BY move_number;
 
 -- name: EndGameWithResult :exec
 UPDATE games
-SET result = $1, method = $2, change_w = $3, change_b = $4, game_length = $5, end_time_left_white = $6, end_time_left_black = $7, berserk_white = $8, berserk_black = $9
+SET result = $1, method = $2, change_w = $3, change_b = $4, game_length = $5, time_white = $6, time_black = $7, berserk_white = $8, berserk_black = $9
 WHERE id = $10;
 
 -- name: GetPlayerGames :many

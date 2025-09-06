@@ -9,24 +9,24 @@ import (
 )
 
 type Game struct {
-	ID               string
-	BaseTime         int32
-	Increment        int32
-	TournamentID     *string
-	WhiteID          *int32
-	BlackID          *int32
-	GameLength       int32
-	Result           int32
-	CreatedAt        time.Time
-	EndTimeLeftWhite *int32
-	EndTimeLeftBlack *int32
-	Method           int32
-	RatingW          int32
-	RatingB          int32
-	ChangeW          *int32
-	ChangeB          *int32
-	BerserkWhite     bool
-	BerserkBlack     bool
+	ID           string
+	BaseTime     int32
+	Increment    int32
+	TournamentID *string
+	WhiteID      *int32
+	BlackID      *int32
+	GameLength   int32
+	Result       int32
+	CreatedAt    time.Time
+	TimeWhite    *int32
+	TimeBlack    *int32
+	Method       int32
+	RatingW      int32
+	RatingB      int32
+	ChangeW      *int32
+	ChangeB      *int32
+	BerserkWhite bool
+	BerserkBlack bool
 }
 
 type Move struct {
