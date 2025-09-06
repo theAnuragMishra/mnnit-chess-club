@@ -11,6 +11,7 @@
 	let text = $state('');
 
 	let chatContainer: HTMLDivElement;
+	let chatInput: HTMLInputElement;
 
 	const scrollToBottom = (node: HTMLDivElement, watch: () => MessageInterface[]) => {
 		$effect(() => {
@@ -35,6 +36,14 @@
 		if (messages) messages = [...messages, payload];
 		else messages = [payload];
 	};
+
+	$effect(() => {
+		window.addEventListener('scroll', (e) => {
+			if (document.activeElement === chatInput) {
+				chatInput.blur();
+			}
+		});
+	});
 
 	onMount(() => {
 		websocketStore.onMessage('chat', handleMessage);
@@ -62,6 +71,7 @@
 		<input
 			type="text"
 			bind:value={text}
+			bind:this={chatInput}
 			class="flex-1 rounded border p-2"
 			placeholder="Chat ki maryadaon ka palan krein..."
 			onkeydown={(e) => {
