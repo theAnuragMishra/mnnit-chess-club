@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -69,6 +70,13 @@ func (c *Controller) updateUsername(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&usernamePayload)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	re := regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+
+	if !re.MatchString(usernamePayload.Username) {
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid username")
 		return
 	}
 

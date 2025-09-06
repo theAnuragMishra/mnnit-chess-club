@@ -1,11 +1,17 @@
-<script>
+<script lang="ts">
 	import { getBaseURL } from '$lib/utils';
 
 	let username = $state('');
 	let loading = $state(false);
 	let error = $state('');
+	let uiError = $derived(!isValid(username));
+
+	function isValid(str: string) {
+		return /^[A-Za-z0-9_]+$/.test(str);
+	}
 
 	const handleSubmit = async () => {
+		if (!isValid(username)) return;
 		loading = true;
 
 		const res = await fetch(`${getBaseURL()}/set-username`, {
@@ -41,10 +47,15 @@
 	{#if error}
 		<p class="text-sm text-red-500">{error}</p>
 	{/if}
+	{#if uiError}
+		<p class="text-sm text-red-500">
+			Username may only contain alphanumeric characters and underscores
+		</p>
+	{/if}
 	<button
 		class="w-[200px] rounded-md bg-blue-500 py-2 text-white transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
 		onclick={handleSubmit}
-		disabled={loading}
+		disabled={loading || uiError}
 	>
 		{loading ? 'Submitting...' : 'Submit'}
 	</button>
