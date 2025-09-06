@@ -13,6 +13,12 @@
 	let chatContainer: HTMLDivElement;
 	let chatInput: HTMLInputElement;
 
+	const mouchEvents: (keyof HTMLElementEventMap)[] = ['mousedown', 'touchstart'];
+	const mouchListener: any = (e: MouseEvent) => {
+		if (!e.shiftKey && e.buttons !== 2 && e.button !== 2 && e.target !== chatInput)
+			chatInput.blur();
+	};
+
 	const scrollToBottom = (node: HTMLDivElement, watch: () => MessageInterface[]) => {
 		$effect(() => {
 			void watch?.();
@@ -37,19 +43,14 @@
 		else messages = [payload];
 	};
 
-	$effect(() => {
-		window.addEventListener('scroll', (e) => {
-			if (document.activeElement === chatInput) {
-				chatInput.blur();
-			}
-		});
-	});
-
 	onMount(() => {
 		websocketStore.onMessage('chat', handleMessage);
 	});
 	onDestroy(() => {
 		websocketStore.offMessage('chat', handleMessage);
+		mouchEvents.forEach((event) =>
+			document.body.removeEventListener(event, mouchListener, { capture: true })
+		);
 	});
 </script>
 
@@ -76,6 +77,16 @@
 			placeholder="Chat ki maryadaon ka palan krein..."
 			onkeydown={(e) => {
 				if (e.key === 'Enter') handleSend();
+			}}
+			onfocus={() => {
+				mouchEvents.forEach((event) =>
+					document.body.addEventListener(event, mouchListener, { passive: true, capture: true })
+				);
+			}}
+			onblur={() => {
+				mouchEvents.forEach((event) =>
+					document.body.removeEventListener(event, mouchListener, { capture: true })
+				);
 			}}
 		/>
 		<!-- <button onclick={handleSend} class="rounded bg-blue-500 px-4 py-2 text-white"> Send </button> -->
