@@ -5,8 +5,9 @@ import { user } from './user.svelte';
 class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
-	private reconnectDelay: number = 500;
-	// private reconnectAttempts: number = 0;
+	// private reconnectDelay: number = 500;
+	private maxBackoff = 30000;
+	private reconnectAttempts: number = 0;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
@@ -45,13 +46,16 @@ class WebSocketStore {
 
 		this.ws.onopen = () => {
 			console.log('✅ WebSocket Connected');
-			// this.reconnectAttempts = 0;
+			this.reconnectAttempts = 0;
 		};
 		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 		this.ws.onclose = () => {
 			console.warn('⚠️ WebSocket Disconnected');
-			// this.reconnectAttempts++;
-			setTimeout(() => this.connect(), this.reconnectDelay);
+			this.reconnectAttempts++;
+			setTimeout(
+				() => this.connect(),
+				Math.min(1000 * Math.pow(2, this.reconnectAttempts), this.maxBackoff)
+			);
 		};
 		this.ws.onerror = (error: Event) => {
 			console.error('WebSocket Error:', error);
@@ -71,14 +75,17 @@ class WebSocketStore {
 
 			this.ws.onopen = () => {
 				console.log('✅ WebSocket Connected');
-				// this.reconnectAttempts = 0;
+				this.reconnectAttempts = 0;
 				resolve();
 			};
 			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 			this.ws.onclose = () => {
 				console.warn('⚠️ WebSocket Disconnected');
-				// this.reconnectAttempts++;
-				setTimeout(() => this.connect(), this.reconnectDelay);
+				this.reconnectAttempts++;
+				setTimeout(
+					() => this.connect(),
+					Math.min(1000 * Math.pow(2, this.reconnectAttempts), this.maxBackoff)
+				);
 			};
 			this.ws.onerror = (error: Event) => {
 				console.error('WebSocket Error:', error);
