@@ -41,6 +41,7 @@
 
 	const handleCancelDraw = (payload: any) => {
 		offer = false;
+		offered = false;
 	};
 
 	const sendBerserk = () => {
@@ -66,11 +67,11 @@
 		><img src={flipImg} alt="flip the board" class="h-[32px]" /></button
 	>
 	<button
-		class={`cursor-pointer rounded-lg p-1  md:px-4 md:py-2 ${offered ? 'bg-red-600' : offer ? 'animate-pulse bg-blue-600' : 'hover:bg-gray-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+		class={`cursor-pointer rounded-lg p-1  md:px-4 md:py-2 ${offer ? 'animate-pulse bg-blue-600' : offered ? 'bg-red-600' : 'hover:bg-gray-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 		onclick={handleDraw}
 		disabled={isDisabled}
 	>
-		{#if offered}
+		{#if !offer && offered}
 			<img src={crossImg} alt="cancel resignation" class="h-[24px]" />
 		{:else}
 			1/2
