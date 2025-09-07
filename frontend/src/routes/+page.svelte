@@ -10,6 +10,11 @@
 		participate in weekly arenas. We will decorate the home page better soon!
 	</p>
 	<p>
+		<em>Important Note:</em> This website is owned by the mnnit chess club, but that does
+		<strong><u>NOT</u></strong> mean it's only for the chessies from mnnit. The site is
+		<strong><u>OPEN TO EVERYONE</u></strong>!
+	</p>
+	<p>
 		In the mean time, you can take a look at some of these:
 		<a class="text-blue-700" href="https://github.com/theAnuragMishra/mnnit-chess-club"
 			>source code</a
