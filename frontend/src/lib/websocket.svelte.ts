@@ -6,7 +6,7 @@ class WebSocketStore {
 	private url: string;
 	private ws: WebSocket | null = null;
 	private reconnectDelay: number = 500;
-	private reconnectAttempts: number = 0;
+	// private reconnectAttempts: number = 0;
 	private listeners: Map<string, ((data: any) => void)[]> = new Map();
 
 	constructor(url: string) {
@@ -37,8 +37,7 @@ class WebSocketStore {
 		if (
 			!user.id ||
 			this.ws?.readyState === WebSocket.OPEN ||
-			this.ws?.readyState === WebSocket.CONNECTING ||
-			this.reconnectAttempts > 10
+			this.ws?.readyState === WebSocket.CONNECTING
 		)
 			return;
 
@@ -46,12 +45,12 @@ class WebSocketStore {
 
 		this.ws.onopen = () => {
 			console.log('✅ WebSocket Connected');
-			this.reconnectAttempts = 0;
+			// this.reconnectAttempts = 0;
 		};
 		this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 		this.ws.onclose = () => {
 			console.warn('⚠️ WebSocket Disconnected');
-			this.reconnectAttempts++;
+			// this.reconnectAttempts++;
 			setTimeout(() => this.connect(), this.reconnectDelay);
 		};
 		this.ws.onerror = (error: Event) => {
@@ -63,8 +62,7 @@ class WebSocketStore {
 		if (
 			!user.id ||
 			this.ws?.readyState === WebSocket.OPEN ||
-			this.ws?.readyState === WebSocket.CONNECTING ||
-			this.reconnectAttempts > 10
+			this.ws?.readyState === WebSocket.CONNECTING
 		)
 			return Promise.resolve();
 
@@ -73,13 +71,13 @@ class WebSocketStore {
 
 			this.ws.onopen = () => {
 				console.log('✅ WebSocket Connected');
-				this.reconnectAttempts = 0;
+				// this.reconnectAttempts = 0;
 				resolve();
 			};
 			this.ws.onmessage = (event: MessageEvent) => this.handleMessage(event);
 			this.ws.onclose = () => {
 				console.warn('⚠️ WebSocket Disconnected');
-				this.reconnectAttempts++;
+				// this.reconnectAttempts++;
 				setTimeout(() => this.connect(), this.reconnectDelay);
 			};
 			this.ws.onerror = (error: Event) => {
