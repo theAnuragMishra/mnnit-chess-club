@@ -23,6 +23,8 @@ class WebSocketStore {
 			$effect(() => {
 				const handleVisibilityChange = () => {
 					if (document.visibilityState === 'visible') {
+						// reset reconnect attempts when page's visibility changes
+						this.reconnectAttempts = 0;
 						this.connect();
 					}
 				};
