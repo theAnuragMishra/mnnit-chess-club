@@ -1,6 +1,5 @@
 <script lang="ts">
 	const { data } = $props();
-	const topSize = 40;
 </script>
 
 <svelte:head>
@@ -12,8 +11,7 @@
 	{#each data.leaderboard as player, i}
 		<a
 			href={`/member/${player.Username}`}
-			style={`font-size: ${topSize - 2 * i}px`}
-			class={`flex w-full justify-center gap-2`}
+			class={`flex w-full justify-center gap-2 text-xl md:text-2xl`}
 		>
 			<span>{player.Username}</span><span>{Math.floor(player.Rating)}</span>
 		</a>
