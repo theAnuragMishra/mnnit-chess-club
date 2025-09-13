@@ -17,9 +17,7 @@
 				</p> -->
 
 				{#each data.live as tournament, i}
-					<p
-						class={`flex justify-around py-3 md:text-lg ${i % 2 == 0 ? 'bg-[#212632]' : 'bg-black'}`}
-					>
+					<p class={`flex justify-around bg-[#212632] py-3 md:text-lg`}>
 						<span><a href={`/tournament/${tournament.ID}`}>{tournament.Name}</a></span><span
 							>{tournament.BaseTime / 60}+{tournament.Increment}</span
 						><span
@@ -48,9 +46,7 @@
 				</p> -->
 
 				{#each data.scheduled as tournament, i}
-					<p
-						class={`flex justify-around py-3 md:text-lg ${i % 2 == 0 ? 'bg-[#212632]' : 'bg-black '}`}
-					>
+					<p class={`flex justify-around bg-[#212632] py-3 md:text-lg`}>
 						<span><a href={`/tournament/${tournament.ID}`}>{tournament.Name}</a></span><span
 							>{tournament.BaseTime / 60}+{tournament.Increment}</span
 						><span
