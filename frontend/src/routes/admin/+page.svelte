@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { dateTimeToDate, getBaseURL } from '$lib/utils';
+	import crossImg from '$lib/assets/icons/cross.svg';
 
 	const { data } = $props();
 	//console.log(data);
@@ -13,6 +14,7 @@
 
 	let startLoading = $state(false);
 	let createLoading = $state(false);
+	let deleteLoading = $state(false);
 
 	let createError = $state('');
 	let startError = $state(false);
@@ -43,13 +45,29 @@
 		});
 
 		const response = await res.json();
-
+		createLoading = false;
 		if (!res.ok) {
 			createError = response.error;
 			return;
 		}
 		invalidateAll();
-		createLoading = false;
+	};
+
+	const handleDeleteTournament = async (id: string) => {
+		deleteLoading = true;
+		const res = await fetch(`${getBaseURL()}/admin/delete-tournament`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				tournamentID: id
+			}),
+			credentials: 'include'
+		});
+		deleteLoading = false;
+		if (!res.ok) {
+			return;
+		}
+		invalidateAll();
 	};
 
 	const baseTimes = [
@@ -67,7 +85,9 @@
 </script>
 
 <div class="w-[100%] p-2 lg:p-5">
-	<h1 class="mb-5 text-xl">You're an mcc admin. Use this page to create or start a tournament!</h1>
+	<h1 class="mb-5 text-center text-xl">
+		You're an mcc admin. Use this page to create or start a tournament!
+	</h1>
 
 	<div class="m-auto flex w-full flex-col gap-2 border-2 p-[2px] lg:w-1/2 lg:p-2 lg:px-10">
 		<h2>Create tournament</h2>
@@ -124,16 +144,17 @@
 		<p class="text-red-500">{createError}</p>
 	</div>
 
-	<div>
+	<div class="mt-10 flex flex-col gap-[10px]">
 		{#if data.tournaments === undefined}<p class="text-xl">
 				Error fetching tournaments. Refresh or try again after some time.
 			</p>
 		{:else}
-			<p class="text-xl">Upcoming tournaments:</p>
+			<p class="mb-2 bg-gray-700 p-2 text-center text-2xl md:text-3xl">Scheduled tournaments</p>
 			<p class="mb-[5px] flex justify-around text-xl">
 				<span>Name</span><span>Time Control</span><span>Start Time</span><span
 					>Duration (hours)</span
 				><span>Start</span>
+				<span>Delete</span>
 			</p>
 			<hr class="mb-4" />
 			{#each data.tournaments as tournament}
@@ -172,6 +193,14 @@
 								startLoading = false;
 								invalidateAll();
 							}}>Start</button
+						></span
+					>
+					<span class="flex items-center justify-center"
+						><button
+							onclick={() => handleDeleteTournament(tournament.ID)}
+							disabled={deleteLoading}
+							class="cursor-pointer rounded-lg p-2 hover:bg-red-600 disabled:cursor-not-allowed"
+							><img class="" src={crossImg} alt="delete tournament" /></button
 						></span
 					>
 				</p>

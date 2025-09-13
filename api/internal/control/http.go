@@ -412,3 +412,23 @@ func (c *Controller) startTournament(w http.ResponseWriter, r *http.Request) {
 	}()
 	utils.RespondWithJSON(w, http.StatusOK, "")
 }
+
+func (c *Controller) deleteTournament(w http.ResponseWriter, r *http.Request) {
+	var tournamentID TournamentIDPayload
+	if json.NewDecoder(r.Body).Decode(&tournamentID) != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if tournamentID.TournamentID == "" {
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid tournament ID")
+		return
+	}
+
+	err := c.queries.DeleteTournament(r.Context(), tournamentID.TournamentID)
+	if err != nil {
+		log.Println("error deleting tournament with id", tournamentID.TournamentID, err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Error deleting tournament")
+		return
+	}
+	utils.RespondWithJSON(w, http.StatusOK, "")
+}

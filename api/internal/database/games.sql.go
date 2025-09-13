@@ -129,6 +129,15 @@ func (q *Queries) DeleteLiveTournaments(ctx context.Context) error {
 	return err
 }
 
+const deleteTournament = `-- name: DeleteTournament :exec
+DELETE FROM tournaments WHERE id = $1 AND status = 0
+`
+
+func (q *Queries) DeleteTournament(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deleteTournament, id)
+	return err
+}
+
 const deleteTournamentPlayer = `-- name: DeleteTournamentPlayer :exec
 DELETE FROM tournament_players WHERE tournament_id = $1 AND player_id = $2
 `

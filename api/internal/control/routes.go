@@ -28,6 +28,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *Controller) *chi.Mux {
 	adminRouter.Use(authHandler.AdminCheckMiddleware)
 	router.Mount("/admin", adminRouter)
 	adminRouter.Post("/create-tournament", controller.createTournament)
+	adminRouter.Post("/delete-tournament", controller.deleteTournament)
 	adminRouter.Post("/start-tournament", controller.startTournament)
 
 	// authenticated routes
