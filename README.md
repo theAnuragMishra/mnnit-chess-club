@@ -1,6 +1,9 @@
 # MNNIT Chess Club's official website
 
-[mnnitchessclub.com](https://mnnitchessclub.com)
+[mnnitchessclub.pages.dev](https://mnnitchessclub.pages.dev)
+
+> [!NOTE]
+> The deployment at [mnnitchessclub.pages.dev](https://mnnitchessclub.pages.dev) is for purposes of project demonstration and casual play. It's still as secure as the production deployment I ran at mnnitchessclub.com, but now that I have moved the project to free tiers requests may be slow and there may be cold starts. Also since the database itself is in free tier too, I make no guarantee of data availability and your games or even your account may disappear at any time. For casual play or testing my project though, it's all working!
 
 ## Features:
 
@@ -15,7 +18,7 @@
 
 ## Development
 
-A high level design of the architecture (well, not very well-drawn) can be found [here](https://mnnitchessclub.com/dev).
+A high level design of the architecture (well, not very well-drawn) can be found [here](https://mnnitchessclub.pages.dev/dev).
 
 ### Stack
 
