@@ -27,13 +27,14 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		session, err := h.ValidateSession(r.Context(), sessionTokenCookie.Value)
 		if err != nil {
 			cookie := &http.Cookie{
-				Name:     "session_token",
-				Value:    "",
-				Expires:  time.Now().Add(-time.Hour),
-				HttpOnly: true,
-				Path:     "/",
-				Secure:   CookieCfg.Secure,
-				SameSite: CookieCfg.SameSite,
+				Name:        "session_token",
+				Value:       "",
+				Expires:     time.Now().Add(-time.Hour),
+				HttpOnly:    true,
+				Path:        "/",
+				Secure:      CookieCfg.Secure,
+				SameSite:    CookieCfg.SameSite,
+				Partitioned: CookieCfg.Partitioned,
 			}
 			http.SetCookie(w, cookie)
 
@@ -42,11 +43,14 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 		}
 		if time.Now().Add(time.Hour * 24 * 15).After(session.ExpiresAt) {
 			cookie := &http.Cookie{
-				Name:     "session_token",
-				Value:    sessionTokenCookie.Value,
-				Expires:  time.Now().Add(time.Hour * 24 * 30),
-				HttpOnly: true,
-				Path:     "/",
+				Name:        "session_token",
+				Value:       sessionTokenCookie.Value,
+				Expires:     time.Now().Add(time.Hour * 24 * 30),
+				HttpOnly:    true,
+				Path:        "/",
+				Secure:      CookieCfg.Secure,
+				SameSite:    CookieCfg.SameSite,
+				Partitioned: CookieCfg.Partitioned,
 			}
 			http.SetCookie(w, cookie)
 		}

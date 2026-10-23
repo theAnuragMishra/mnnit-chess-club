@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
@@ -14,7 +15,7 @@ func NewChiRouter(authHandler *auth.Handler, controller *Controller) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(utils.RecoveryMiddleware)
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://localhost:*", "http://localhost:*"},
+		AllowedOrigins:   config.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

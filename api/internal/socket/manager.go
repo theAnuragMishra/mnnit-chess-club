@@ -127,5 +127,5 @@ func (m *Manager) DeleteClientFromRoom(room string, client *Client) {
 func checkOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 
-	return origin == config.FrontendURL
+	return config.IsAllowedOrigin(origin)
 }

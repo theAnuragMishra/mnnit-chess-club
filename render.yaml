@@ -1,0 +1,43 @@
+services:
+  # Go API Web Service
+  - type: web
+    name: mnnit-chess-club-api
+    runtime: go
+    rootDir: api
+    plan: free
+    buildCommand: go build -o server ./cmd
+    startCommand: ./server
+    envVars:
+      - key: APP_ENV
+        value: prod
+      # SameSite=none is required for cross-domain cookies (Cloudflare Pages frontend + Render backend)
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+      # Automatically wire Render Postgres database connection string
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mnnit-chess-club-db
+          property: connectionString
+      # Base URL of this Render API service (e.g., https://mnnit-chess-club-api.onrender.com)
+      - key: BASE_URL
+        sync: false
+      # Frontend URL on Cloudflare Pages (e.g., https://mnnit-chess-club.pages.dev or custom domain)
+      - key: FRONTEND_URL
+        sync: false
+      # Additional comma-separated origins for CORS if needed
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      # Google OAuth Credentials
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+databases:
+  # Managed PostgreSQL Database
+  - name: mnnit-chess-club-db
+    plan: free
+    databaseName: mnnit_chess_club
+    user: mnnit

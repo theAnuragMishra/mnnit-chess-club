@@ -26,15 +26,19 @@ func setupAPI() {
 	config.Config()
 	auth.Config()
 
-	// database setup
+	// server port setup
 	portString := os.Getenv("PORT")
 	if portString == "" {
-		log.Fatal("PORT is not found in the environment")
+		portString = "8080"
 	}
 
+	// database connection setup (supports PG_URL from Docker / local and DATABASE_URL from Render)
 	dbURL := os.Getenv("PG_URL")
 	if dbURL == "" {
-		log.Fatal("DB_URL is not found in the environment")
+		dbURL = os.Getenv("DATABASE_URL")
+	}
+	if dbURL == "" {
+		log.Fatal("Neither PG_URL nor DATABASE_URL was found in the environment")
 	}
 
 	ctx := context.Background()

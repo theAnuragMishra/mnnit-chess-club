@@ -24,13 +24,14 @@ func (c *Controller) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 	c.socketManager.DisconnectAllClientsOfASession(session.UserID, session.ID)
 	cookie := &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HttpOnly: true,
-		Path:     "/",
-		Secure:   auth.CookieCfg.Secure,
-		SameSite: auth.CookieCfg.SameSite,
+		Name:        "session_token",
+		Value:       "",
+		Expires:     time.Now().Add(-time.Hour),
+		HttpOnly:    true,
+		Path:        "/",
+		Secure:      auth.CookieCfg.Secure,
+		SameSite:    auth.CookieCfg.SameSite,
+		Partitioned: auth.CookieCfg.Partitioned,
 	}
 	http.SetCookie(w, cookie)
 

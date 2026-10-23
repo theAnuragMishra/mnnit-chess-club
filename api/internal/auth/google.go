@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
@@ -26,6 +27,9 @@ type GoogleIDToken struct {
 
 func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("Google Callback")
+	errorRedirectURL := strings.TrimRight(config.FrontendURL, "/") + "/error-page"
+	successRedirectURL := strings.TrimRight(config.FrontendURL, "/") + "/"
+
 	state := r.URL.Query().Get("state")
 	_, ok := stateMap[state]
 	if !ok {
@@ -36,21 +40,21 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	token, err := oauthCfg.Exchange(context.Background(), code)
 	if err != nil {
 		log.Println(err, "failed to exchange token")
-		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, errorRedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		log.Println("No id_token field in oauth2 token")
-		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, errorRedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
 	googleUser, err := decodeIDToken(idToken)
 	if err != nil {
 		log.Printf("failed to decode ID Token: %v", err)
-		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, errorRedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -68,7 +72,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println("error creating user on google callback", err)
-			http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, errorRedirectURL, http.StatusTemporaryRedirect)
 			return
 
 		}
@@ -87,13 +91,14 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	sessionToken := generateToken(32)
 
 	cookie := &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-		HttpOnly: true,
-		Path:     "/",
-		Secure:   CookieCfg.Secure,
-		SameSite: CookieCfg.SameSite,
+		Name:        "session_token",
+		Value:       sessionToken,
+		Expires:     time.Now().Add(time.Hour * 24 * 30),
+		HttpOnly:    true,
+		Path:        "/",
+		Secure:      CookieCfg.Secure,
+		SameSite:    CookieCfg.SameSite,
+		Partitioned: CookieCfg.Partitioned,
 	}
 
 	http.SetCookie(w, cookie)
@@ -104,10 +109,10 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Println(err, "failed to create session")
-		http.Redirect(w, r, config.FrontendURL+"/error-page", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, errorRedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
 
-	http.Redirect(w, r, config.FrontendURL+"/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, successRedirectURL, http.StatusTemporaryRedirect)
 
 }
