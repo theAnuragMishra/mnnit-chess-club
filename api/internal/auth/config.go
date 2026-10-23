@@ -15,7 +15,6 @@ var oauthCfg *oauth2.Config
 type cookieConfig struct {
 	SameSite    http.SameSite
 	Secure      bool
-	Partitioned bool
 }
 
 var CookieCfg cookieConfig
@@ -33,28 +32,23 @@ func Config() {
 	sameSiteEnv := strings.ToLower(os.Getenv("COOKIE_SAMESITE"))
 	switch sameSiteEnv {
 	case "none":
-		// Required for cross-site deployments (e.g. frontend on GitHub Pages, API on Render)
+		// Required for cross-site deployments (e.g. frontend on Cloudflare Pages, API on Render)
 		CookieCfg.SameSite = http.SameSiteNoneMode
 		CookieCfg.Secure = true
-		CookieCfg.Partitioned = true
 	case "lax":
 		CookieCfg.SameSite = http.SameSiteLaxMode
 		CookieCfg.Secure = os.Getenv("APP_ENV") == "prod" || os.Getenv("COOKIE_SECURE") == "true"
-		CookieCfg.Partitioned = false
 	case "strict":
 		CookieCfg.SameSite = http.SameSiteStrictMode
 		CookieCfg.Secure = os.Getenv("APP_ENV") == "prod" || os.Getenv("COOKIE_SECURE") == "true"
-		CookieCfg.Partitioned = false
 	default:
 		// Default behavior: Strict in prod (for same-domain/proxy setups like Caddy), Default in dev
 		if os.Getenv("APP_ENV") == "prod" {
 			CookieCfg.SameSite = http.SameSiteStrictMode
 			CookieCfg.Secure = true
-			CookieCfg.Partitioned = false
 		} else {
 			CookieCfg.SameSite = http.SameSiteDefaultMode
 			CookieCfg.Secure = false
-			CookieCfg.Partitioned = false
 		}
 	}
 }

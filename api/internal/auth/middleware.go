@@ -34,7 +34,6 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 				Path:        "/",
 				Secure:      CookieCfg.Secure,
 				SameSite:    CookieCfg.SameSite,
-				Partitioned: CookieCfg.Partitioned,
 			}
 			http.SetCookie(w, cookie)
 
@@ -50,7 +49,6 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 				Path:        "/",
 				Secure:      CookieCfg.Secure,
 				SameSite:    CookieCfg.SameSite,
-				Partitioned: CookieCfg.Partitioned,
 			}
 			http.SetCookie(w, cookie)
 		}

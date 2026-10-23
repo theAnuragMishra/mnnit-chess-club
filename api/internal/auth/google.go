@@ -98,7 +98,6 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:        "/",
 		Secure:      CookieCfg.Secure,
 		SameSite:    CookieCfg.SameSite,
-		Partitioned: CookieCfg.Partitioned,
 	}
 
 	http.SetCookie(w, cookie)

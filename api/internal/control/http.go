@@ -31,7 +31,6 @@ func (c *Controller) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Path:        "/",
 		Secure:      auth.CookieCfg.Secure,
 		SameSite:    auth.CookieCfg.SameSite,
-		Partitioned: auth.CookieCfg.Partitioned,
 	}
 	http.SetCookie(w, cookie)
 
