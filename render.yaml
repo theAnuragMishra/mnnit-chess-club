@@ -10,9 +10,9 @@ services:
     envVars:
       - key: APP_ENV
         value: prod
-      # SameSite=none is required for cross-domain cookies (Cloudflare Pages frontend + Render backend)
+      # SameSite=lax is ideal for first-party/proxied setups (via Cloudflare Pages /api)
       - key: COOKIE_SAMESITE
-        value: none
+        value: lax
       - key: COOKIE_SECURE
         value: "true"
       # Automatically wire Render Postgres database connection string
@@ -20,10 +20,10 @@ services:
         fromDatabase:
           name: mnnit-chess-club-db
           property: connectionString
-      # Base URL of this Render API service (e.g., https://mnnit-chess-club-api.onrender.com)
+      # Base URL for API callbacks (e.g. https://<your-project>.pages.dev/api when using Pages proxy)
       - key: BASE_URL
         sync: false
-      # Frontend URL on Cloudflare Pages (e.g., https://mnnit-chess-club.pages.dev or custom domain)
+      # Frontend URL on Cloudflare Pages (e.g., https://<your-project>.pages.dev)
       - key: FRONTEND_URL
         sync: false
       # Additional comma-separated origins for CORS if needed

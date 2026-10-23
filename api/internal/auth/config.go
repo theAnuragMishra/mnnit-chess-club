@@ -42,9 +42,9 @@ func Config() {
 		CookieCfg.SameSite = http.SameSiteStrictMode
 		CookieCfg.Secure = os.Getenv("APP_ENV") == "prod" || os.Getenv("COOKIE_SECURE") == "true"
 	default:
-		// Default behavior: Strict in prod (for same-domain/proxy setups like Caddy), Default in dev
+		// Default behavior: Lax in prod (standard for first-party/proxied setups like Caddy or Pages proxy), Default in dev
 		if os.Getenv("APP_ENV") == "prod" {
-			CookieCfg.SameSite = http.SameSiteStrictMode
+			CookieCfg.SameSite = http.SameSiteLaxMode
 			CookieCfg.Secure = true
 		} else {
 			CookieCfg.SameSite = http.SameSiteDefaultMode
