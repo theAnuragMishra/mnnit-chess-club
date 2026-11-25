@@ -18,7 +18,6 @@
 
 	import CapturedPieces from './CapturedPieces.svelte';
 	import trophyImg from '$lib/assets/icons/trophy.svg';
-	import playImg from '$lib/assets/icons/play.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
 	import { user } from '$lib/user.svelte';
 	import { websocketStore } from '$lib/websocket.svelte';
@@ -52,6 +51,13 @@
 	);
 	const isPlayer = user.username === d.game.WhiteUsername || user.username === d.game.BlackUsername;
 	const whiteUp = d.game.WhiteUsername !== user.username;
+	let flipped = $state(false);
+	const topIsWhite = $derived(flipped ? !whiteUp : whiteUp);
+	function flipBoard() {
+		if (!ground) return;
+		ground.toggleOrientation();
+		flipped = !flipped;
+	}
 	const setActiveIndex = (index: number) => {
 		if (index > moveHistory.length - 1 || index < -1 || index == activeIndex) return;
 		activeIndex = index;
@@ -67,7 +73,7 @@
 			turnColor: activeIndex % 2 == 0 ? 'black' : 'white',
 			lastMove:
 				activeIndex === -1 ? [] : [moveHistory[activeIndex].Orig, moveHistory[activeIndex].Dest],
-			viewOnly: activeIndex !== moveHistory.length - 1,
+			viewOnly: !isPlayer || result !== 0 || activeIndex !== moveHistory.length - 1,
 			check: chessForView.isCheck()
 		});
 	};
@@ -300,309 +306,241 @@
 	});
 </script>
 
-<svelte:head>
-	<title
-		>{result === 0 ? 'Play' : 'Game Over'} vs
-		{whiteUp ? whiteUsername : blackUsername} - {baseTime / 60} + {increment}</title
-	>
-</svelte:head>
-<div class="flex w-full flex-col-reverse items-center justify-center gap-5 xl:flex-row">
-	<div class="flex w-[95%] flex-col gap-5 md:flex-row xl:w-[300px] xl:flex-col">
-		{#if tournamentID}
-			<a
-				class="flex h-fit w-fit items-center gap-[5px] text-2xl"
-				href={`/tournament/${tournamentID}`}
-			>
-				<img class="h-[30px]" src={trophyImg} alt="trophy" />{tournamentName}</a
-			>
-		{/if}
-		<GameInfo
-			{whiteUsername}
-			{blackUsername}
-			{result}
-			{createdAt}
-			{baseTime}
-			{increment}
-			{method}
-		/>
-		<Chat hei="256px" />
-	</div>
-	<div class="acontainer w-full xl:w-3/4">
-		<div class="abortt">
-			{#if result === 0 && (whiteUp ? moveHistory.length == 0 : moveHistory.length == 1)}
-				<AbortTimer {lowAbortTime} time={whiteUp ? abortTimeWhite : abortTimeBlack} tb="t" />
+{#snippet playerRow(isWhite: boolean)}
+	{@const username = isWhite ? whiteUsername : blackUsername}
+	{@const rating = isWhite ? ratingWhite : ratingBlack}
+	{@const ratingChange = isWhite ? changeWhite : changeBlack}
+	{@const material = isWhite ? balance : -balance}
+	{@const captured = isWhite ? bCap : wCap}
+	{@const berserk = isWhite ? berserkWhite : berserkBlack}
+	<div class="player-row">
+		<div class="player-info">
+			<div class="player-name">
+				<span
+					class="color-chip"
+					class:white={isWhite}
+					aria-label={isWhite ? 'White' : 'Black'}
+					role="img"
+				></span>
+				<a href={`/member/${username}`}>{username}</a>
+				<span class="rating">{rating}</span>
+				{#if result !== 0 && ratingChange !== 0}
+					<span class="rating-change" class:negative={ratingChange < 0}
+						>{ratingChange > 0 ? '+' : ''}{ratingChange}</span
+					>
+				{/if}
+			</div>
+			{#if captured.length}
+				<div class="captured">
+					<CapturedPieces pieces={captured} />
+					{#if material > 0}<span>+{material}</span>{/if}
+				</div>
 			{/if}
 		</div>
-		<div class="board flex w-full flex-col justify-center">
-			<Chessboard {setGround} {boardConfig} />
-		</div>
-		<div class="abortb">
-			{#if result === 0 && (whiteUp ? moveHistory.length == 1 : moveHistory.length == 0)}
-				<AbortTimer {lowAbortTime} time={whiteUp ? abortTimeBlack : abortTimeWhite} tb="b" />
-			{/if}
-		</div>
-		<div
-			class="piecest flex h-[15px] items-center text-[10px] text-gray-400 md:h-[35px] md:w-[300px] md:flex-wrap-reverse md:text-[20px]"
-		>
-			<CapturedPieces pieces={whiteUp ? bCap : wCap} /><span class="ml-[6px]"
-				>{whiteUp
-					? balance > 0
-						? `+${Math.abs(balance)}`
-						: ''
-					: balance < 0
-						? `+${Math.abs(balance)}`
-						: ''}
-			</span>
-		</div>
-		<div class="clockt flex h-fit items-center gap-2">
+		<div class="player-clock">
+			{#if berserk}<img src={berserkImg} alt="Berserk" width="18" height="18" />{/if}
 			<Clock
 				{lowTime}
-				time={whiteUp ? wtime : btime}
-				active={result !== 0 || moveHistory.length < 2
-					? false
-					: whiteUp
-						? chessLatest.turn() === 'w'
-						: chessLatest.turn() === 'b'}
-			/>
-			{#if whiteUp ? berserkWhite : berserkBlack}
-				<img src={berserkImg} alt="berserk icon" class="h-[32px]" />
-			{/if}
-		</div>
-		<div class="rematch flex w-full justify-center">
-			{#if result !== 0 && isPlayer && !tournamentID}
-				<Rematch canRematch={d.canRematch} offeredBy={d.rematchOfferedBy ?? 0} />
-			{/if}
-		</div>
-		<div class="namet flex h-fit justify-between md:w-[300px]">
-			<a href={`/member/${whiteUp ? whiteUsername : blackUsername}`}
-				>{whiteUp ? whiteUsername : blackUsername}&nbsp;&nbsp;</a
-			><span
-				>{whiteUp ? ratingWhite : ratingBlack}&nbsp;&nbsp;<span
-					class={`${whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
-					>{result !== 0
-						? whiteUp
-							? `${changeWhite > 0 ? '+' : ''}${changeWhite}`
-							: `${changeBlack > 0 ? '+' : ''}${changeBlack}`
-						: ''}</span
-				></span
-			>
-		</div>
-		<div class="draw-resign h-fit w-full">
-			{#if isPlayer && result === 0}
-				<DrawResign
-					drawOfferedBy={d.drawOfferedBy}
-					handleFlip={() => ground?.toggleOrientation()}
-					isDisabled={moveHistory.length < 2}
-					{gameID}
-					showBerserkButton={result === 0 &&
-						d.berserkAllowed &&
-						(whiteUp
-							? !berserkBlack && moveHistory.length <= 1
-							: !berserkWhite && moveHistory.length == 0)}
-				/>
-			{/if}
-		</div>
-		<div class="back_to_tournament w-full text-center">
-			{#if isPlayer && tournamentID && result !== 0}
-				<a
-					class="flex w-full items-center justify-center gap-[5px] px-3 py-2 hover:bg-gray-700"
-					href={`/tournament/${tournamentID}`}
-				>
-					<img src={playImg} alt="back to tournament" /> BACK TO TOURNAMENT</a
-				>
-			{/if}
-		</div>
-		<div class="history w-full">
-			<HistoryTable
-				{moveHistory}
-				{setActiveIndex}
-				{activeIndex}
-				highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
-					(whiteUp ? chessLatest.turn() === 'b' : chessLatest.turn() === 'w') &&
-					result === 0}
+				time={isWhite ? wtime : btime}
+				active={result === 0 &&
+					moveHistory.length >= 2 &&
+					chessLatest.turn() === (isWhite ? 'w' : 'b')}
+				compact
 			/>
 		</div>
+	</div>
+{/snippet}
 
-		<div class="nameb flex h-fit justify-between md:w-[300px]">
-			<a href={`/member/${whiteUp ? blackUsername : whiteUsername}`}
-				>{whiteUp ? blackUsername : whiteUsername}&nbsp;&nbsp;</a
-			>
-			<span
-				>{whiteUp ? ratingBlack : ratingWhite}&nbsp;&nbsp;<span
-					class={`${!whiteUp ? (changeWhite > 0 ? 'text-green-500' : changeWhite == 0 ? 'text-gray-500' : 'text-red-500') : changeBlack > 0 ? 'text-green-500' : changeBlack == 0 ? 'text-gray-500' : 'text-red-500'}`}
-					>{result !== 0
-						? whiteUp
-							? `${changeBlack > 0 ? '+' : ''}${changeBlack}`
-							: `${changeWhite > 0 ? '+' : ''}${changeWhite}`
-						: ''}</span
-				></span
-			>
-		</div>
-		<div class="clockb flex h-fit items-center gap-2">
-			<Clock
-				{lowTime}
-				time={whiteUp ? btime : wtime}
-				active={result !== 0 || moveHistory.length < 2
-					? false
-					: whiteUp
-						? chessLatest.turn() === 'b'
-						: chessLatest.turn() === 'w'}
-			/>
-			{#if whiteUp ? berserkBlack : berserkWhite}
-				<img src={berserkImg} alt="berserk icon" class="h-[32px]" />
-			{/if}
-		</div>
-		<div
-			class="piecesb flex h-[15px] items-center text-[10px] text-gray-400 md:h-[35px] md:w-[300px] md:flex-wrap md:text-[20px]"
-		>
-			<CapturedPieces pieces={whiteUp ? wCap : bCap} />
-			<span class="ml-[6px]"
-				>{whiteUp
-					? balance < 0
-						? `+${Math.abs(balance)}`
-						: ''
-					: balance > 0
-						? `+${Math.abs(balance)}`
-						: ''}
-			</span>
-		</div>
+<svelte:head>
+	<title>{whiteUsername} vs {blackUsername} · {baseTime / 60}+{increment} — MNNIT Chess Club</title>
+</svelte:head>
+
+<h1 class="sr-only">{whiteUsername} vs {blackUsername}</h1>
+<div class="game-layout">
+	<div class="board-column">
+		{@render playerRow(topIsWhite)}
+		<Chessboard {setGround} {boardConfig} />
+		{@render playerRow(!topIsWhite)}
 	</div>
+
+	<aside class="game-rail" aria-label="Game controls">
+		{#if result === 0 && moveHistory.length < 2}
+			<AbortTimer
+				{lowAbortTime}
+				time={moveHistory.length === 0 ? abortTimeWhite : abortTimeBlack}
+				player={moveHistory.length === 0 ? whiteUsername : blackUsername}
+				yourTurn={user.username === (moveHistory.length === 0 ? whiteUsername : blackUsername)}
+			/>
+		{/if}
+
+		<HistoryTable
+			{moveHistory}
+			{setActiveIndex}
+			{activeIndex}
+			highlightLastArrow={activeIndex !== moveHistory.length - 1 &&
+				chessLatest.turn() === (whiteUp ? 'b' : 'w') &&
+				result === 0}
+		/>
+
+		{#if isPlayer && result === 0}
+			<DrawResign
+				drawOfferedBy={d.drawOfferedBy}
+				handleFlip={flipBoard}
+				isDisabled={moveHistory.length < 2}
+				{gameID}
+				showBerserkButton={d.berserkAllowed &&
+					(whiteUp
+						? !berserkBlack && moveHistory.length <= 1
+						: !berserkWhite && moveHistory.length === 0)}
+			/>
+		{:else if isPlayer && !tournamentID}
+			<Rematch canRematch={d.canRematch} offeredBy={d.rematchOfferedBy ?? 0} />
+		{/if}
+
+		<GameInfo {result} {createdAt} {baseTime} {increment} {method} />
+
+		{#if tournamentID}
+			<a class="button button-secondary tournament-link" href={`/tournament/${tournamentID}`}>
+				<img src={trophyImg} alt="" width="18" height="18" />
+				<span>{tournamentName || 'Tournament'}</span>
+			</a>
+		{/if}
+
+		<details class="game-chat panel">
+			<summary>Chat</summary>
+			<Chat hei="clamp(5rem, 24dvh, 12rem)" />
+		</details>
+	</aside>
 </div>
 
 <style>
-	.acontainer {
+	.game-layout {
+		--game-padding: 0.75rem;
+		--board-gap: 0.375rem;
+		--player-height: 2.75rem;
+		--rail-width: clamp(13rem, 28vw, 18rem);
+		--board-limit: max(
+			10rem,
+			calc(
+				100dvh - var(--site-header-height) - 2 *
+					(var(--game-padding) + var(--board-gap) + var(--player-height))
+			)
+		);
 		display: grid;
-		row-gap: 1px;
-		/* grid-template-columns: auto auto;
-		grid-template-rows: auto auto auto auto auto; */
-		grid-template-areas:
-			'namet clockt'
-			'piecest clockt'
-			'abortt abortt'
-			'board board'
-			'abortb abortb'
-			'piecesb clockb'
-			'nameb clockb'
-			'btt btt'
-			'draw-resign draw-resign'
-			'rematch rematch'
-			'history history';
+		width: min(
+			calc(100% - 2 * var(--game-padding)),
+			calc(var(--board-limit) + var(--rail-width) + 1rem)
+		);
+		grid-template-columns: minmax(0, 1fr) var(--rail-width);
+		align-items: start;
+		gap: 1rem;
+		margin-inline: auto;
+		padding-block: var(--game-padding);
 	}
-	.namet {
-		grid-area: namet;
-		justify-self: start;
-		align-self: center;
-		margin-left: 10px;
+	.board-column,
+	.game-rail {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		min-width: 0;
+		gap: var(--board-gap);
 	}
-	.nameb {
-		grid-area: nameb;
-		justify-self: start;
-		align-self: center;
-		margin-left: 10px;
+	.game-rail {
+		gap: 0.5rem;
 	}
-	.board {
-		grid-area: board;
-		justify-self: center;
+	.player-row {
+		display: flex;
+		height: var(--player-height);
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding-inline: 0.625rem 0.25rem;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--surface);
 	}
-	.draw-resign {
-		grid-area: draw-resign;
+	.player-info,
+	.player-name {
+		min-width: 0;
 	}
-	.clockt {
-		grid-area: clockt;
-		justify-self: end;
-		flex-direction: row-reverse;
+	.player-name,
+	.player-clock,
+	.captured {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
 	}
-	.clockb {
-		grid-area: clockb;
-		justify-self: end;
-		flex-direction: row-reverse;
+	.player-name {
+		font-size: 0.875rem;
+		line-height: 1.2;
 	}
-	.history {
-		grid-area: history;
-		justify-self: center;
+	.player-name a {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-weight: 650;
 	}
-	.back_to_tournament {
-		grid-area: btt;
-		justify-self: center;
+	.player-name a:hover {
+		color: var(--accent);
 	}
-	.abortt {
-		grid-area: abortt;
-		display: none;
+	.color-chip {
+		width: 0.625rem;
+		height: 0.625rem;
+		flex: none;
+		border: 1px solid #8a968b;
+		border-radius: 50%;
+		background: #141916;
 	}
-	.abortb {
-		grid-area: abortb;
+	.color-chip.white {
+		background: #edf1e5;
 	}
-	.rematch {
-		grid-area: rematch;
+	.rating {
+		color: var(--muted);
 	}
-
-	.piecest {
-		grid-area: piecest;
-		align-self: center;
-		margin-left: 8px;
+	.rating-change {
+		color: var(--accent);
 	}
-	.piecesb {
-		grid-area: piecesb;
-		align-self: center;
-		margin-left: 8px;
+	.rating-change.negative {
+		color: #f7a59d;
 	}
-	@media (width>= 768px) {
-		.acontainer {
-			row-gap: 3px;
-			column-gap: 10px;
-			place-content: center;
-			place-items: start;
-			grid-template-areas:
-				'board .'
-				'board piecest'
-				'board clockt'
-				'board namet'
-				'board abortt'
-				'board btt'
-				'board history'
-				'board draw-resign'
-				'board rematch'
-				'board abortb'
-				'board nameb'
-				'board clockb'
-				'board piecesb'
-				'board .';
-		}
-		.nameb {
-			justify-self: auto;
-			margin: 0;
-		}
-		.namet {
-			justify-self: auto;
-			margin: 0;
-		}
-		.clockt {
-			justify-self: auto;
-			/* margin-top: auto; */
-			flex-direction: row;
-		}
-		.clockb {
-			justify-self: auto;
-			flex-direction: row;
-			/* margin-bottom: auto; */
-		}
-		.history {
-			justify-self: auto;
-		}
-		.back_to_tournament {
-			justify-self: auto;
-		}
-		.board {
-			justify-self: auto;
-		}
-		.abortt {
-			display: unset;
-		}
-		.piecesb {
-			margin: 0;
-		}
-		.piecest {
-			margin: 0;
+	.captured {
+		overflow: hidden;
+		gap: 0;
+		height: 1rem;
+		color: var(--muted);
+		font-size: 0.75rem;
+	}
+	.captured span {
+		margin-left: 0.2rem;
+	}
+	.player-clock {
+		flex: none;
+	}
+	.game-chat {
+		border-radius: 8px;
+	}
+	.game-chat summary {
+		padding: 0.625rem 0.875rem;
+		font-size: 0.875rem;
+	}
+	.tournament-link {
+		min-height: 2.5rem;
+		padding: 0.5rem;
+	}
+	.tournament-link img {
+		flex: none;
+	}
+	.tournament-link span {
+		overflow-wrap: anywhere;
+	}
+	@media (max-width: 639px) {
+		.game-layout {
+			/* Leave room for the opening countdown below the board on short phones. */
+			width: min(
+				calc(100% - 2 * var(--game-padding)),
+				max(10rem, calc(var(--board-limit) - 6.5rem))
+			);
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0.625rem;
 		}
 	}
 </style>

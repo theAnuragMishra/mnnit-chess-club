@@ -37,6 +37,8 @@
 
 <button
 	{disabled}
-	class={`mb-2 flex h-[50px] w-full cursor-pointer items-center justify-center text-xl disabled:cursor-not-allowed md:text-2xl ${disabled ? 'bg-[#1f2125] text-[#63666b]' : offer ? 'animate-pulse bg-blue-600' : 'bg-[#2a2e34] '}`}
+	class="button w-full"
+	class:button-secondary={!offer}
+	class:button-accent={offer}
 	onclick={handleRematch}>{offered ? 'Cancel Rematch' : 'Rematch'}</button
 >

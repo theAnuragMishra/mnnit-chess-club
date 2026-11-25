@@ -1,12 +1,8 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { websocketStore } from '$lib/websocket.svelte';
-
-	async function handleInitGame(index: number) {
-		if (activeIndex === index) activeIndex = -1;
-		else activeIndex = index;
-		websocketStore.sendMessage({ type: 'init_game', payload: index });
-	}
-
+	import { getTimeControl } from '$lib/utils';
+	import Icon from '$lib/components/Icon.svelte';
 	const timeControls = [
 		{ baseTime: 60, increment: 0 },
 		{ baseTime: 60, increment: 1 },
@@ -21,196 +17,293 @@
 		{ baseTime: 1800, increment: 0 },
 		{ baseTime: 1800, increment: 20 }
 	];
-
 	const baseTimes = [
 		0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25,
 		30, 35, 40, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180
 	];
-
 	const increments = [
 		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45,
 		60, 90, 120, 150, 180
 	];
-	//console.log(baseTimes.length, increments.length);
+	const filters = [
+		'All games',
+		...new Set(timeControls.map((control) => getTimeControl(control.baseTime, control.increment)))
+	];
+	let selectedFilter = $state('All games');
+	$effect(() => {
+		selectedFilter =
+			filters.find((filter) => filter.toLowerCase() === page.url.searchParams.get('mode')) ??
+			'All games';
+	});
 	let activeIndex = $state(-1);
 	let baseIndex = $state(6);
 	let incrementIndex = $state(0);
+	function handleInitGame(index: number) {
+		activeIndex = activeIndex === index ? -1 : index;
+		websocketStore.sendMessage({ type: 'init_game', payload: index });
+	}
 </script>
 
-<svelte:head>
-	<title>Play</title>
-</svelte:head>
-<div class="box">
-	{#each timeControls as timeControl, index}
-		<button onclick={() => handleInitGame(index)} class="btn relative cursor-pointer bg-gray-800"
-			><span>{timeControl.baseTime / 60}+{timeControl.increment}</span
-			>{#if activeIndex === index}<span class="loading-bar">
-					<span class="moving-indicator"></span>
-				</span>{/if}</button
-		>
-	{/each}
-	<div class="col-span-3 flex flex-col items-center justify-center gap-2">
-		<div class="flex flex-col items-center justify-center">
-			<span>Minutes per side: {baseTimes[baseIndex]}</span>
-			<input type="range" bind:value={baseIndex} min="0" max="37" />
-		</div>
-		<div class="flex flex-col items-center justify-center">
-			<span>Increment: {increments[incrementIndex]}</span>
-			<input type="range" bind:value={incrementIndex} min="0" max="30" />
-		</div>
+<svelte:head><title>Play chess — MNNIT Chess Club</title></svelte:head>
+
+<div class="play-page">
+	<div class="page-title">
+		<h1>Play chess</h1>
+		<a href="#challenge" class="text-link jump-link">Challenge a friend</a>
 	</div>
-	<div class="col-span-3">
-		<button
-			onclick={() => {
-				//console.log(baseTime, increment);
-				websocketStore.sendMessage({
-					type: 'create_challenge',
-					payload: { baseTime: baseTimes[baseIndex] * 60, increment: increments[incrementIndex] }
-				});
-			}}
-			class="cursor-pointer rounded-md bg-gray-800 px-3 py-2 text-xl">Create Challenge Link</button
-		>
+
+	<div class="play-layout">
+		<section class="pair-panel panel" aria-labelledby="pair-heading">
+			<div class="panel-heading">
+				<h2 id="pair-heading">Quick pairing</h2>
+				<div class="filters" role="group" aria-label="Time control">
+					{#each filters as filter}
+						<button
+							class:chosen={selectedFilter === filter}
+							aria-pressed={selectedFilter === filter}
+							onclick={() => (selectedFilter = filter)}
+							>{filter === 'All games' ? 'All' : filter}</button
+						>
+					{/each}
+				</div>
+			</div>
+			<div class="time-grid">
+				{#each timeControls as control, index}
+					{@const format = getTimeControl(control.baseTime, control.increment)}
+					{#if selectedFilter === 'All games' || selectedFilter === format}
+						<button
+							class="time-button"
+							class:searching={activeIndex === index}
+							aria-pressed={activeIndex === index}
+							aria-label={activeIndex === index
+								? 'Cancel matchmaking'
+								: `Play ${control.baseTime / 60} minutes plus ${control.increment} seconds, ${format}`}
+							onclick={() => handleInitGame(index)}
+						>
+							<span class="time-value"
+								>{control.baseTime / 60}<span> + </span>{control.increment}</span
+							>
+							<span class="time-format">{activeIndex === index ? 'Cancel search' : format}</span>
+						</button>
+					{/if}
+				{/each}
+			</div>
+
+			<div class="queue-status" aria-live="polite">
+				{#if activeIndex !== -1}
+					<p>Looking for an opponent…</p>
+					<button class="text-link" onclick={() => handleInitGame(activeIndex)}>Cancel</button>
+				{/if}
+			</div>
+		</section>
+
+		<section id="challenge" class="challenge-panel panel" aria-labelledby="challenge-heading">
+			<h2 id="challenge-heading">Challenge a friend</h2>
+			<div class="range-field">
+				<label for="minutes">Minutes per side <strong>{baseTimes[baseIndex]}</strong></label>
+				<input
+					id="minutes"
+					type="range"
+					bind:value={baseIndex}
+					min="0"
+					max={baseTimes.length - 1}
+					aria-valuetext={`${baseTimes[baseIndex]} minutes`}
+				/>
+			</div>
+			<div class="range-field">
+				<label for="increment">Increment <strong>{increments[incrementIndex]} sec</strong></label>
+				<input
+					id="increment"
+					type="range"
+					bind:value={incrementIndex}
+					min="0"
+					max={increments.length - 1}
+					aria-valuetext={`${increments[incrementIndex]} seconds`}
+				/>
+			</div>
+			<button
+				class="button button-primary"
+				onclick={() =>
+					websocketStore.sendMessage({
+						type: 'create_challenge',
+						payload: { baseTime: baseTimes[baseIndex] * 60, increment: increments[incrementIndex] }
+					})}><Icon name="link" size={18} />Create challenge link</button
+			>
+		</section>
 	</div>
 </div>
 
 <style>
-	.box {
+	.play-page {
+		width: min(64rem, calc(100% - 2rem));
+		margin-inline: auto;
+		padding-block: clamp(0.75rem, 3dvh, 1.75rem);
+	}
+	.page-title {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.875rem;
+	}
+	h1 {
+		font-size: clamp(1.375rem, 4vw, 1.875rem);
+		font-weight: 650;
+	}
+	h2 {
+		font-size: 1rem;
+		font-weight: 650;
+	}
+	.jump-link {
+		display: none;
+	}
+	.play-layout {
 		display: grid;
-		height: 300px;
-		width: 350px;
-		flex: 1;
-		grid-template-columns: 1fr 1fr 1fr;
-		place-content: center;
-		place-items: center;
-		place-self: center;
-		row-gap: 10px;
+		grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.42fr);
+		align-items: start;
+		gap: 0.875rem;
 	}
-	.btn {
-		width: 100px;
-		height: 70px;
-		font-size: 24px;
+	.pair-panel,
+	.challenge-panel {
+		padding: clamp(0.75rem, 2vw, 1.25rem);
+		border-radius: 12px;
 	}
-
-	.loading-bar {
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
-		display: inline-block;
-		top: 55px;
-		width: 60%;
-		height: 4px;
-		background-color: #e0e0e0;
-		overflow: hidden;
-		border-radius: 2px;
+	.panel-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.25rem 1rem;
+		margin-bottom: 0.625rem;
 	}
-
-	.moving-indicator {
-		display: inline-block;
-		width: 30%;
-		height: 100%;
-		background-color: #3b82f6;
-		position: absolute;
-		animation: move 1.2s ease-in-out infinite alternate;
-		border-radius: 2px;
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.125rem;
 	}
-
-	@keyframes move {
-		0% {
-			left: 0%;
+	.filters button {
+		min-height: 2.125rem;
+		padding: 0.25rem 0.625rem;
+		border-radius: 6px;
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+	.filters button:hover,
+	.filters .chosen {
+		color: var(--accent);
+		background: #2c3d2f;
+	}
+	.time-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.5rem;
+	}
+	.time-button {
+		display: flex;
+		min-height: clamp(3.375rem, 11dvh, 4.5rem);
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		padding-inline: 0.125rem;
+		border: 1px solid #354238;
+		border-radius: 8px;
+		background: #232d25;
+	}
+	.time-button:hover,
+	.time-button.searching {
+		border-color: #88ab8b;
+		background: #304735;
+	}
+	.time-value {
+		font-size: clamp(1.125rem, 3.5vw, 1.375rem);
+		font-weight: 650;
+		line-height: 1.15;
+		font-variant-numeric: tabular-nums;
+	}
+	.time-value > span,
+	.time-format {
+		color: var(--muted);
+		font-weight: 400;
+	}
+	.time-format {
+		font-size: 0.8125rem;
+		line-height: 1.15;
+	}
+	.queue-status:not(:empty) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		color: var(--accent);
+		font-size: 0.875rem;
+	}
+	.queue-status button {
+		min-height: 2.125rem;
+	}
+	.challenge-panel {
+		display: grid;
+		gap: 0.875rem;
+		scroll-margin-top: 0.75rem;
+	}
+	.range-field label {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 0.25rem;
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+	.range-field strong {
+		color: var(--accent);
+	}
+	.challenge-panel .button {
+		min-height: 2.5rem;
+		padding: 0.5rem;
+	}
+	@media (max-width: 639px) {
+		.play-layout {
+			grid-template-columns: minmax(0, 1fr);
 		}
-		100% {
-			left: 70%;
+		.time-grid {
+			gap: 0.375rem;
+		}
+		.time-button {
+			min-height: 3.375rem;
+		}
+		.time-value {
+			font-size: 1rem;
+			white-space: nowrap;
+		}
+		.time-format {
+			font-size: 0.75rem;
+		}
+		.jump-link {
+			display: inline;
 		}
 	}
-
-	@media (width>=450px) {
-		.box {
-			height: 400px;
-			width: 400px;
+	@media (max-height: 440px) {
+		.page-title {
+			margin-bottom: 0.5rem;
 		}
-		.btn {
-			width: 130px;
-			height: 90px;
-			font-size: 30px;
+		h1 {
+			line-height: 1.15;
 		}
-		.loading-bar {
-			top: 70px;
+		.panel-heading {
+			margin-bottom: 0.375rem;
 		}
-	}
-
-	@media (width>=600px) {
-		.box {
-			height: 500px;
-			width: 500px;
+		.filters button {
+			min-height: 1.875rem;
+			padding-inline: 0.5rem;
 		}
-		.btn {
-			width: 150px;
-			height: 100px;
+		.time-grid {
+			gap: 0.375rem;
 		}
-		.loading-bar {
-			top: 80px;
+		.time-button {
+			min-height: 2.75rem;
 		}
-	}
-
-	input[type='range'] {
-		appearance: none;
-		-webkit-appearance: none;
-		width: 300px;
-		height: 8px;
-		border-radius: 5px;
-		background: #ddd;
-		outline: none;
-		transition: background 0.3s;
-		margin: 10px 0;
-	}
-
-	input[type='range']:hover {
-		background: #ccc;
-	}
-
-	/* Thumb styling */
-	input[type='range']::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		height: 20px;
-		width: 20px;
-		background: #367995;
-		border-radius: 50%;
-		cursor: pointer;
-		border: none;
-		transition: background 0.3s;
-		margin-top: -6px; /* Align thumb vertically */
-	}
-
-	input[type='range']::-moz-range-thumb {
-		height: 20px;
-		width: 20px;
-		background: #367995;
-		border: none;
-		border-radius: 50%;
-		cursor: pointer;
-	}
-
-	/* Track styling for Firefox */
-	input[type='range']::-moz-range-track {
-		height: 8px;
-		background: #ddd;
-		border-radius: 5px;
-	}
-
-	/* IE and Edge */
-	input[type='range']::-ms-thumb {
-		height: 20px;
-		width: 20px;
-		background: #367995;
-		border: none;
-		border-radius: 50%;
-		cursor: pointer;
-	}
-
-	input[type='range']::-ms-track {
-		height: 8px;
-		background: transparent;
-		border-color: transparent;
-		color: transparent;
+		.time-value {
+			font-size: 1.125rem;
+		}
 	}
 </style>

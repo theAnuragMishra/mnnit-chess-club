@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getBaseURL } from '$lib/utils';
+	import Icon from '$lib/components/Icon.svelte';
 
 	let username = $state('');
 	let loading = $state(false);
@@ -33,30 +34,81 @@
 	};
 </script>
 
-<svelte:head>
-	<title>Set your mcc username</title>
-</svelte:head>
-<div class="mt-10 flex flex-col items-center justify-center gap-4 rounded-lg p-6">
-	<input
-		type="text"
-		placeholder="Enter your username"
-		bind:value={username}
-		class="rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-black focus:border-transparent focus:ring-2 focus:ring-blue-400 focus:outline-none"
-	/>
-
-	{#if error}
-		<p class="text-sm text-red-500">{error}</p>
-	{/if}
-	{#if uiError}
-		<p class="text-sm text-red-500">
-			Username may only contain alphanumeric characters and underscores
-		</p>
-	{/if}
-	<button
-		class="w-[200px] rounded-md bg-blue-500 py-2 text-white transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
-		onclick={handleSubmit}
-		disabled={loading || uiError}
+<svelte:head><title>Your club username — MNNIT Chess Club</title></svelte:head>
+<div class="page-shell username-page">
+	<form
+		class="panel username-panel"
+		onsubmit={(event) => {
+			event.preventDefault();
+			handleSubmit();
+		}}
 	>
-		{loading ? 'Submitting...' : 'Submit'}
-	</button>
+		<span class="empty-icon"><Icon name="knight" size={30} /></span>
+		<h1 class="page-heading">Choose a username</h1>
+		<label for="username">Your club username</label><input
+			id="username"
+			name="username"
+			class="form-field"
+			type="text"
+			placeholder="e.g. knight_owl"
+			autocomplete="username"
+			bind:value={username}
+			aria-describedby="username-hint username-error"
+			aria-invalid={username.length > 0 && uiError}
+		/>
+		<p id="username-hint" class="hint">Use letters, numbers, and underscores.</p>
+		<p id="username-error" class="error-message" aria-live="polite">
+			{error ||
+				(username.length > 0 && uiError ? 'Use only letters, numbers, and underscores.' : '')}
+		</p>
+		<button class="button button-primary" type="submit" disabled={loading || uiError}
+			>{loading ? 'Saving your username…' : 'Join the club'}</button
+		>
+	</form>
 </div>
+
+<style>
+	.username-page {
+		max-width: 600px;
+		padding-top: 65px;
+	}
+	.username-panel {
+		padding: 38px;
+	}
+	.empty-icon {
+		width: 58px;
+		height: 58px;
+		margin-bottom: 25px;
+	}
+	.page-heading {
+		font-size: 2.5rem;
+		line-height: 1.15;
+		margin-block: 15px;
+	}
+	label {
+		display: block;
+		margin: 30px 0 10px;
+		color: #bfccbf;
+		font-size: 0.875rem;
+	}
+	.hint {
+		color: #97a599;
+		margin-top: 12px;
+		font-size: 0.8125rem;
+		line-height: 1.7;
+	}
+	.error-message {
+		min-height: 24px;
+		margin-block: 10px;
+		color: #f1a49d;
+		font-size: 0.875rem;
+	}
+	.button {
+		width: 100%;
+	}
+	@media (max-width: 500px) {
+		.username-panel {
+			padding: 26px 22px;
+		}
+	}
+</style>

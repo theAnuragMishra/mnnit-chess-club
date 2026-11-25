@@ -4,14 +4,13 @@
 	import Clock from '$lib/components/Clock.svelte';
 	import Chat from '$lib/components/Chat.svelte';
 	import TopThree from '$lib/components/TopThree.svelte';
-	import trophyImg from '$lib/assets/icons/trophy.svg';
-	import pauseImg from '$lib/assets/icons/pause.svg';
 	import fireImg from '$lib/assets/icons/fire.svg';
 	import berserkImg from '$lib/assets/icons/kill.svg';
 	import { user } from '$lib/user.svelte.js';
 	import { websocketStore } from '$lib/websocket.svelte.js';
 	interface Player {
 		ID: number;
+		Username: string;
 		IsActive: boolean;
 		Streak: number;
 		Score: number;
@@ -22,21 +21,25 @@
 	const { data } = $props();
 
 	let loading = $state(false);
-	let players = $state(data.tournamentData.players);
+	let players = $state<Player[]>(data.tournamentData.players ?? []);
 	// $effect(() => {
 	// 	players.forEach((player: Player) => console.log(player));
 	// });
 	$effect(() => {
-		players = data.tournamentData.players;
+		players = data.tournamentData.players ?? [];
 	});
-	let sortedPlayers = $derived(players.toSorted((a: any, b: any) => b.Score - a.Score));
+	let sortedPlayers = $derived(players.toSorted((a, b) => b.Score - a.Score));
 
 	let joined = $derived(isJoinedActive());
+	let status = $derived(data.tournamentData.status);
+	let joinAction = $derived(
+		!joined[0] ? 'Join' : status === 0 ? 'Leave' : joined[1] ? 'Pause' : 'Resume'
+	);
 
 	//$effect(() => console.log(joined));
 
 	function isJoinedActive() {
-		const i = players.findIndex((player: any) => player.Username === user.username);
+		const i = players.findIndex((player) => player.Username === user.username);
 		// console.log(i);
 		return [i !== -1, i !== -1 && players[i].IsActive];
 	}
@@ -54,11 +57,11 @@
 
 		if (payload.player) {
 			//console.log(payload.player);
-			const i = players.findIndex((player: any) => player.ID === payload.player.ID);
+			const i = players.findIndex((player) => player.ID === payload.player.ID);
 			if (i === -1) players.push(payload.player);
 			else players[i].IsActive = payload.player.IsActive;
 		} else if (payload.id) {
-			const i = players.findIndex((player: any) => player.ID === payload.id);
+			const i = players.findIndex((player) => player.ID === payload.id);
 			if (i !== -1) {
 				players.splice(i, 1);
 			}
@@ -67,7 +70,7 @@
 	};
 
 	function updateScore(p: Player) {
-		const i = players.findIndex((player: any) => player.ID === p.ID);
+		const i = players.findIndex((player) => player.ID === p.ID);
 		if (i === -1) return;
 		Object.assign(players[i], p);
 		// console.log(players);
@@ -135,139 +138,286 @@
 </script>
 
 <svelte:head>
-	<title>{data.tournamentData.name} - MCC Arena</title>
+	<title>{data.tournamentData.name} — MNNIT Chess Club</title>
 </svelte:head>
-<h1 class="flex items-center gap-[5px] text-3xl">
-	<img class="h-[30px]" src={trophyImg} alt="trophy" />{data.tournamentData.name}
-</h1>
-<div class="flex w-full flex-col-reverse gap-10 p-2 md:flex-row md:gap-2 md:p-5">
-	<div class="flex w-full flex-col gap-2 md:w-1/4">
-		<div>
-			{#if data.tournamentData.status !== 1}
-				<p>
-					{#if data.tournamentData.status === 0}
-						Starts{/if}
-					{new Date(data.tournamentData.startTime).toLocaleString('en-IN', {
-						year: 'numeric',
-						month: 'short',
-						day: '2-digit',
-						hour: '2-digit',
-						minute: '2-digit',
-						hour12: false
-					})}
+
+<div class="page-shell tournament-page">
+	<a href="/tournaments" class="text-link">All tournaments</a>
+	<h1 class="page-heading">{data.tournamentData.name}</h1>
+
+	<div class="tournament-grid">
+		<aside class="tournament-sidebar" aria-label="Arena details">
+			<section class="arena-details panel" aria-label="Tournament information">
+				{#if status !== 0}
+					<p class="arena-status" class:live={status === 1}>
+						{status === 1 ? 'Live' : 'Finished'}
+					</p>
+				{/if}
+				<p class="arena-format">
+					<strong>{data.tournamentData.baseTime / 60}+{data.tournamentData.increment}</strong>
+					{getTimeControl(data.tournamentData.baseTime, data.tournamentData.increment)} · {data
+						.tournamentData.duration / 60} min
 				</p>
-			{/if}
-			<p>
-				{data.tournamentData.baseTime / 60}+{data.tournamentData.increment} &bull; {getTimeControl(
-					data.tournamentData.baseTime,
-					data.tournamentData.increment
-				)} &bull; {data.tournamentData.duration / 60}m
-			</p>
-			{#if data.tournamentData.berserkAllowed}
-				<p class="flex items-center gap-[5px]">
-					<img class="h-[16px]" src={berserkImg} alt="berserk allowed" />Berserk Allowed
-				</p>
-			{/if}
-			<p>By <a href={`/member/${data.tournamentData.creator}`}>{data.tournamentData.creator}</a></p>
-			{#if data.tournamentData.status !== 2}
-				<div>
-					{#if data.tournamentData.status === 0}
-						<p>Starting in</p>
-					{/if}
-					<Clock time={timeToShow} active={true} lowTime={0} />min:sec
-				</div>
-				<button
-					onclick={handleJoinLeave}
-					class={`${!joined[0] || (joined[0] && joined[1] === false) ? 'bg-green-500' : 'bg-red-600'} my-2 cursor-pointer rounded-lg px-3 py-1 text-white disabled:cursor-not-allowed`}
-					disabled={loading}
-					>{data.tournamentData.status === 1
-						? joined[0]
-							? joined[1]
-								? 'Pause'
-								: 'Resume'
-							: 'Join'
-						: joined[0]
-							? 'Leave'
-							: 'Join'}</button
-				>
-			{:else}
-				<p>Tournament Over</p>
-			{/if}
-		</div>
-		<div>
-			<h1 class="mb-2 text-xl">Chat Room</h1>
-			<Chat hei="250px" />
-		</div>
-	</div>
-	<div class="mr-10 w-full md:w-1/2">
-		{#if data.tournamentData.status === 2}
-			<TopThree
-				u1={sortedPlayers[0]?.Username}
-				u2={sortedPlayers[1]?.Username}
-				u3={sortedPlayers[2]?.Username}
-			/>
-		{/if}
-		{#if joined[1]}
-			<h2
-				class="shiny relative mb-5 overflow-hidden bg-green-600 py-0.5 text-center text-[16px] md:px-2 md:text-xl"
-			>
-				Standby {user.username}, pairing players. Get ready!
-			</h2>
-		{/if}
-		<div class="grid grid-cols-[auto_auto] content-start gap-[10px] text-[16px] md:text-xl">
-			{#each sortedPlayers as player, i}
-				<div>
-					<div class="inline-flex items-center gap-[5px]">
-						<span class="inline-flex h-[24px] w-[24px] items-center justify-center">
-							{#if player.IsActive === false}
-								<img src={pauseImg} alt="played paused" />
-							{:else}
-								{i + 1}
-							{/if}</span
-						><a href={`/member/${player.Username}`}>{player.Username}</a>
-						<i>{Math.floor(player.Rating)}</i>
+				{#if status !== 1}
+					<time datetime={data.tournamentData.startTime}>
+						{new Date(data.tournamentData.startTime).toLocaleString('en-IN', {
+							year: 'numeric',
+							month: 'short',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit'
+						})}
+					</time>
+				{/if}
+				{#if data.tournamentData.berserkAllowed}
+					<p class="arena-meta">
+						<img src={berserkImg} alt="" width="16" height="16" />Berserk allowed
+					</p>
+				{/if}
+				{#if data.tournamentData.creator}
+					<p>
+						By <a class="text-link" href={`/member/${data.tournamentData.creator}`}
+							>{data.tournamentData.creator}</a
+						>
+					</p>
+				{/if}
+				{#if status !== 2}
+					<div class="arena-countdown">
+						<span>{status === 0 ? 'Starts in' : 'Time remaining'}</span>
+						<Clock time={Math.max(0, timeToShow)} active={true} lowTime={0} compact />
 					</div>
-					<span class="text-[16px] text-gray-300">
-						{#each player.Scores as s}
-							{s}
+					<button
+						class="button"
+						class:button-primary={joinAction === 'Join' || joinAction === 'Resume'}
+						class:button-secondary={joinAction === 'Pause' || joinAction === 'Leave'}
+						onclick={handleJoinLeave}
+						disabled={loading}>{loading ? 'Updating…' : joinAction}</button
+					>
+				{/if}
+			</section>
+		</aside>
+
+		<section class="standings panel" aria-labelledby="standings-title">
+			<div class="standings-heading">
+				<h2 id="standings-title">Standings</h2>
+				<span>{sortedPlayers.length} {sortedPlayers.length === 1 ? 'player' : 'players'}</span>
+			</div>
+			{#if status === 1 && joined[1]}
+				<p class="arena-queue" role="status">Waiting for an opponent…</p>
+			{/if}
+			{#if status === 2 && sortedPlayers.length}
+				<TopThree
+					players={sortedPlayers
+						.slice(0, 3)
+						.map((player) => ({ username: player.Username, score: player.Score }))}
+					scoreLabel="Points"
+				/>
+			{/if}
+			{#if sortedPlayers.length === 0}
+				<p class="empty-standings">No players yet</p>
+			{:else}
+				<table>
+					<thead>
+						<tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Points</th></tr>
+					</thead>
+					<tbody>
+						{#each sortedPlayers as player, i (player.ID)}
+							<tr>
+								<td>{i + 1}</td>
+								<td>
+									<a href={`/member/${player.Username}`}>{player.Username}</a>
+									<span class="player-meta">
+										{Math.floor(player.Rating)}
+										{#if status === 1 && player.IsActive === false}
+											· Paused{/if}
+									</span>
+									{#if player.Scores?.length}
+										<span class="score-strip" aria-label="Game points">
+											{#each player.Scores as score}<span>{score}</span>{/each}
+										</span>
+									{/if}
+								</td>
+								<td>
+									<span class="points">
+										{#if player.Streak >= 2}<img
+												src={fireImg}
+												alt="Winning streak"
+												width="16"
+												height="16"
+											/>{/if}
+										<strong>{player.Score}</strong>
+									</span>
+								</td>
+							</tr>
 						{/each}
-					</span>
-				</div>
-				<div class="inline-flex justify-end gap-1 justify-self-end">
-					<img
-						src={fireImg}
-						alt="player on streak"
-						class={`h-[24px] w-[24px] ${player.Streak >= 2 ? '' : 'hidden'}`}
-					/>
-					{player.Score}
-				</div>
-			{/each}
-		</div>
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+		<details class="arena-chat panel">
+			<summary>Chat</summary>
+			<Chat hei="clamp(6rem, 24dvh, 14rem)" />
+		</details>
 	</div>
 </div>
 
 <style>
-	.shiny::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		height: 100%;
-		width: 100%;
-		background: linear-gradient(
-			120deg,
-			transparent 0%,
-			rgba(255, 255, 255, 0.8) 30%,
-			transparent 100%
-		);
-		animation: shine 3s linear infinite;
+	.tournament-page {
+		padding-top: clamp(1.25rem, 4dvh, 2.5rem);
 	}
-	@keyframes shine {
-		0% {
-			left: -100%;
-		}
-		100% {
-			left: 100%;
+	.page-heading {
+		overflow-wrap: anywhere;
+	}
+	.tournament-grid {
+		display: grid;
+		grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
+		grid-template-areas: 'details standings' 'chat standings';
+		grid-template-rows: auto 1fr;
+		gap: 1rem;
+		align-items: start;
+		margin-top: 1.25rem;
+	}
+	.tournament-sidebar {
+		grid-area: details;
+	}
+	.arena-chat {
+		grid-area: chat;
+	}
+	.arena-chat summary {
+		padding: 0.75rem 1rem;
+		font-size: 0.875rem;
+	}
+	.arena-details {
+		display: grid;
+		gap: 0.5rem;
+		padding: 1rem;
+		color: var(--muted);
+		font-size: 0.875rem;
+		overflow-wrap: anywhere;
+	}
+	.arena-status {
+		width: fit-content;
+		padding: 0.125rem 0.5rem;
+		border: 1px solid var(--line);
+		border-radius: 5px;
+	}
+	.arena-status.live,
+	.arena-queue {
+		border-color: var(--accent-line);
+		background: var(--accent-surface);
+		color: var(--accent);
+	}
+	.arena-format,
+	.arena-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.arena-format strong {
+		color: #f0f2eb;
+		font-size: 1.125rem;
+	}
+	.arena-countdown {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+		margin-block: 0.375rem;
+		padding-top: 0.625rem;
+		border-top: 1px solid var(--line);
+	}
+	.standings {
+		grid-area: standings;
+		min-width: 0;
+		padding: 1rem;
+	}
+	.standings-heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.875rem;
+	}
+	.standings-heading h2 {
+		font-size: 1.125rem;
+		font-weight: 650;
+	}
+	.standings-heading span,
+	.empty-standings,
+	.player-meta {
+		color: var(--muted);
+		font-size: 0.8125rem;
+	}
+	.empty-standings {
+		padding: 1.5rem 0;
+		text-align: center;
+	}
+	.arena-queue {
+		margin-bottom: 0.875rem;
+		padding: 0.625rem;
+		border-width: 1px;
+		border-radius: 8px;
+		font-size: 0.875rem;
+	}
+	table {
+		width: 100%;
+		text-align: left;
+		font-size: 0.875rem;
+	}
+	th,
+	td {
+		padding: 0.5rem;
+		border-bottom: 1px solid var(--line);
+		vertical-align: top;
+	}
+	th {
+		color: var(--muted);
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+	th:first-child,
+	th:last-child {
+		width: 1%;
+	}
+	th:last-child,
+	td:last-child {
+		text-align: right;
+	}
+	td a {
+		font-weight: 650;
+		overflow-wrap: anywhere;
+	}
+	td a:hover {
+		color: var(--accent);
+	}
+	.player-meta {
+		display: block;
+	}
+	.points,
+	.score-strip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.score-strip {
+		flex-wrap: wrap;
+		margin-top: 0.25rem;
+	}
+	.score-strip > span {
+		padding-inline: 0.25rem;
+		border-radius: 3px;
+		background: var(--surface-raised);
+		color: var(--muted);
+		font-size: 0.75rem;
+	}
+	.points {
+		font-variant-numeric: tabular-nums;
+	}
+	@media (max-width: 760px) {
+		.tournament-grid {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas: 'details' 'standings' 'chat';
 		}
 	}
 </style>

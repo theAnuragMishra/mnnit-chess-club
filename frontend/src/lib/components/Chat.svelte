@@ -54,11 +54,11 @@
 	});
 </script>
 
-<div class="flex-1 rounded bg-[#1c1d1e] p-4 shadow-lg">
+<div class="flex-1 rounded-xl border border-gray-700 bg-gray-800 p-2">
 	<div
 		style={`height: ${hei}`}
 		bind:this={chatContainer}
-		class={`mb-2 overflow-y-auto border-b p-2 text-lg`}
+		class={`mb-2 overflow-y-auto border-b border-gray-700 p-2 text-sm break-words`}
 	>
 		{#each messages as msg}
 			<div class="mb-1">
@@ -73,8 +73,9 @@
 			type="text"
 			bind:value={text}
 			bind:this={chatInput}
-			class="flex-1 rounded border p-2"
-			placeholder="Chat ki maryadaon ka palan krein..."
+			class="form-field min-w-0 flex-1"
+			aria-label="Chat message"
+			placeholder="Type a message"
 			onkeydown={(e) => {
 				if (e.key === 'Enter') handleSend();
 			}}
@@ -89,6 +90,5 @@
 				);
 			}}
 		/>
-		<!-- <button onclick={handleSend} class="rounded bg-blue-500 px-4 py-2 text-white"> Send </button> -->
 	</div>
 </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	const { time, active, lowTime } = $props();
+	const { time, active, lowTime, compact = false } = $props();
 
 	const formatTime = (time: number): string => {
 		const minutes = Math.floor(time / 60000);
@@ -10,10 +10,36 @@
 	};
 </script>
 
-<span
-	class={`inline-block w-fit px-2 py-1 text-2xl md:text-3xl lg:text-4xl ${
-		active ? 'font-bold ' : 'bg-black text-gray-400'
-	} ${active && time > lowTime ? 'bg-white text-black' : ''} ${time < lowTime ? 'bg-red-500 text-white' : ''}`}
->
+<span class="clock" class:compact class:active class:low={time < lowTime}>
 	{formatTime(time)}
 </span>
+
+<style>
+	.clock {
+		display: inline-block;
+		padding: 0.375rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--surface-raised);
+		color: var(--muted);
+		font-size: 1.5rem;
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+		white-space: nowrap;
+	}
+	.clock.compact {
+		padding: 0.25rem 0.5rem;
+		font-size: 1.125rem;
+	}
+	.clock.active {
+		border-color: var(--accent-line);
+		background: var(--accent-surface);
+		color: var(--accent);
+	}
+	.clock.low {
+		border-color: var(--danger-line);
+		background: var(--danger-surface);
+		color: var(--danger);
+	}
+</style>

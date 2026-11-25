@@ -1,11 +1,14 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
+	import Footer from '$lib/components/Footer.svelte';
+	import { page } from '$app/state';
 	import '../app.css';
-
-	let { data, children } = $props();
+	let { children } = $props();
 </script>
 
-<main class="flex min-h-screen flex-col items-center overflow-x-hidden bg-gray-900 text-white">
-	<Navbar {data} />
-	{@render children()}
-</main>
+<div class="app-shell">
+	<a href="#main-content" class="skip-link">Skip to content</a>
+	<Navbar />
+	<main id="main-content" class="site-content" tabindex="-1">{@render children()}</main>
+	{#if !page.url.pathname.startsWith('/game/') && page.url.pathname !== '/board/'}<Footer />{/if}
+</div>

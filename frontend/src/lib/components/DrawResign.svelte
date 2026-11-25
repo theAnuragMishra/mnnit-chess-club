@@ -60,42 +60,52 @@
 	});
 </script>
 
-<div class="flex items-center justify-center gap-2 text-xl text-white md:text-2xl">
+<div
+	class="panel flex flex-wrap items-center justify-center gap-1 p-1"
+	role="group"
+	aria-label="Game actions"
+>
 	<button
+		class="button button-secondary button-compact button-icon"
 		onclick={handleFlip}
-		class="cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:px-4 md:py-2"
-		><img src={flipImg} alt="flip the board" class="h-[32px]" /></button
+		aria-label="Flip the board"
 	>
+		<img src={flipImg} alt="" class="h-5" />
+	</button>
 	<button
-		class={`cursor-pointer rounded-lg p-1  md:px-4 md:py-2 ${offer ? 'animate-pulse bg-blue-600' : offered ? 'bg-red-600' : 'hover:bg-gray-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+		class="button button-compact button-icon"
+		class:button-secondary={!offer && !offered}
+		class:button-accent={offer || offered}
+		aria-label={offered ? 'Cancel draw offer' : offer ? 'Accept draw' : 'Offer draw'}
 		onclick={handleDraw}
 		disabled={isDisabled}
 	>
-		{#if !offer && offered}
-			<img src={crossImg} alt="cancel resignation" class="h-[24px]" />
-		{:else}
-			1/2
-		{/if}
+		{#if !offer && offered}<img src={crossImg} alt="" class="h-5" />{:else}½{/if}
 	</button>
 	<button
-		aria-label="resign"
+		class="button button-compact button-icon"
+		class:button-secondary={!resignSelected}
+		class:button-danger={resignSelected}
+		aria-label={resignSelected ? 'Confirm resignation' : 'Resign'}
 		onclick={handleResign}
 		disabled={isDisabled}
-		class={`cursor-pointer rounded-lg p-1 hover:bg-red-600 md:px-4 md:py-2 ${resignSelected && 'bg-red-600'} disabled:cursor-not-allowed disabled:hover:bg-transparent`}
 	>
-		<img class="h-[32px]" src={resignImg} alt="resign button" />
+		<img src={resignImg} alt="" class="h-5" />
 	</button>
 	{#if resignSelected}
 		<button
-			aria-label="cancel resignation attempt"
-			class="cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:py-2"
-			onclick={() => (resignSelected = false)}
-			><img src={crossImg} alt="cancel resignation" class="h-[24px]" /></button
+			class="button button-secondary button-compact button-icon"
+			aria-label="Cancel resignation"
+			onclick={() => (resignSelected = false)}><img src={crossImg} alt="" class="h-5" /></button
 		>
 	{/if}
 	{#if showBerserkButton}
-		<button onclick={sendBerserk} class="cursor-pointer rounded-lg p-1 hover:bg-gray-600 md:py-2">
-			<img src={berserkImg} alt="berserk button" class="h-[32px]" />
+		<button
+			class="button button-secondary button-compact button-icon"
+			onclick={sendBerserk}
+			aria-label="Berserk"
+		>
+			<img src={berserkImg} alt="" class="h-5" />
 		</button>
 	{/if}
 </div>
