@@ -1,5 +1,4 @@
 services:
-  # Go API Web Service
   - type: web
     name: mnnit-chess-club-api
     runtime: go
@@ -10,34 +9,28 @@ services:
     envVars:
       - key: APP_ENV
         value: prod
-      # SameSite=lax is ideal for first-party/proxied setups (via Cloudflare Pages /api)
+
       - key: COOKIE_SAMESITE
         value: lax
+
       - key: COOKIE_SECURE
         value: "true"
-      # Automatically wire Render Postgres database connection string
+
+      # External Neon PostgreSQL database
       - key: DATABASE_URL
-        fromDatabase:
-          name: mnnit-chess-club-db
-          property: connectionString
-      # Base URL for API callbacks (e.g. https://<your-project>.pages.dev/api when using Pages proxy)
-      - key: BASE_URL
-        sync: false
-      # Frontend URL on Cloudflare Pages (e.g., https://<your-project>.pages.dev)
-      - key: FRONTEND_URL
-        sync: false
-      # Additional comma-separated origins for CORS if needed
-      - key: CORS_ALLOWED_ORIGINS
-        sync: false
-      # Google OAuth Credentials
-      - key: GOOGLE_CLIENT_ID
-        sync: false
-      - key: GOOGLE_CLIENT_SECRET
         sync: false
 
-databases:
-  # Managed PostgreSQL Database
-  - name: mnnit-chess-club-db
-    plan: free
-    databaseName: mnnit_chess_club
-    user: mnnit
+      - key: BASE_URL
+        sync: false
+
+      - key: FRONTEND_URL
+        sync: false
+
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
