@@ -3,11 +3,13 @@ package control
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/ratelimit"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/utils"
 )
 
@@ -18,10 +20,16 @@ func NewChiRouter(authHandler *auth.Handler, controller *Controller) *chi.Mux {
 		AllowedOrigins:   config.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
+		ExposedHeaders:   []string{"Link", "Retry-After"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+	source := rateLimitSource{
+		onRender:    os.Getenv("RENDER") == "true",
+		proxySecret: os.Getenv("RATE_LIMIT_PROXY_SECRET"),
+	}
+	overallLimit := ratelimit.New[struct{}](40, 120, 1)
+	router.Use(source.middleware(8, 60, overallLimit))
 
 	// admin routes
 	adminRouter := chi.NewRouter()
@@ -44,8 +52,9 @@ func NewChiRouter(authHandler *auth.Handler, controller *Controller) *chi.Mux {
 	// routes that don't need authentication
 	router.Get("/profile/{username}", controller.writeProfileInfo)
 	router.Get("/games/{username}", controller.writeGames)
-	router.Get("/auth/login/google", auth.GoogleLogin)
-	router.Get("/auth/callback/google", authHandler.GoogleCallback)
+	oauthRouter := router.With(source.middleware(1, 20, nil))
+	oauthRouter.Get("/auth/login/google", auth.GoogleLogin)
+	oauthRouter.Get("/auth/callback/google", authHandler.GoogleCallback)
 	router.Post("/meow", func(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		log.Println(username)

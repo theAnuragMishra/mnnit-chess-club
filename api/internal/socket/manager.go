@@ -9,6 +9,7 @@ import (
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/auth"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/config"
 	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/database"
+	"github.com/theAnuragMishra/mnnit-chess-club/api/internal/ratelimit"
 )
 
 var webSocketUpgrader = websocket.Upgrader{
@@ -22,6 +23,7 @@ type Manager struct {
 	sync.RWMutex
 	clients            ClientList
 	rooms              map[string]map[*Client]bool
+	messageLimit       *ratelimit.Limiter[int32]
 	OnMessage          func(event Event, client *Client) error
 	OnClientDisconnect func(client *Client)
 }
@@ -31,6 +33,7 @@ func NewManager(onMessage func(event Event, client *Client) error, onClientDisco
 		clients:            make(ClientList),
 		OnMessage:          onMessage,
 		rooms:              make(map[string]map[*Client]bool),
+		messageLimit:       ratelimit.New[int32](10, 25, 4096),
 		OnClientDisconnect: onClientDisconnect,
 	}
 	return m
@@ -50,6 +53,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	conn.SetReadLimit(16 * 1024)
 	client := NewClient(conn, m, session.UserID, *session.Username)
 	client.sessionID = session.ID
 	m.addClient(client)
@@ -76,11 +80,7 @@ func (m *Manager) addClient(client *Client) {
 func (m *Manager) RemoveClient(client *Client) {
 	if clients, ok := m.clients[client.UserID]; ok {
 		if _, ok := clients[client]; ok {
-			err := client.connection.Close()
-			if err != nil {
-				log.Println("error trying to close connection of ", client, err)
-				return
-			}
+			client.connection.Close()
 			delete(m.rooms[client.room], client)
 			delete(m.clients[client.UserID], client)
 			if len(m.rooms[client.room]) == 0 {

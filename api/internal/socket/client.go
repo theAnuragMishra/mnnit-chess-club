@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -18,6 +19,7 @@ type Client struct {
 	UserID     int32
 	manager    *Manager
 	egress     chan Event
+	done       chan struct{}
 	room       string
 	Username   string
 	sessionID  string
@@ -29,15 +31,15 @@ func NewClient(conn *websocket.Conn, manager *Manager, userID int32, username st
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
+		done:       make(chan struct{}),
 		Username:   username,
 	}
 }
 
 func (c *Client) readMessages() {
 	defer func() {
-		//log.Println("client disconnected ", c)
+		close(c.done)
 		c.manager.OnClientDisconnect(c)
-		close(c.egress)
 		c.manager.Lock()
 		c.manager.RemoveClient(c)
 		c.manager.Unlock()
@@ -49,6 +51,12 @@ func (c *Client) readMessages() {
 				log.Println("error", err)
 			}
 			break
+		}
+		if c.manager.messageLimit.Take(c.UserID) > 0 {
+			c.connection.WriteControl(websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "Message rate limit exceeded"),
+				time.Now().Add(time.Second))
+			return
 		}
 
 		var request Event
@@ -69,25 +77,21 @@ func (c *Client) readMessages() {
 }
 
 func (c *Client) writeMessages() {
-	//defer func() {
-	//	log.Println("client disconnected", c)
-	//}()
+	defer c.connection.Close()
 	for {
 		select {
-		case message, ok := <-c.egress:
-			if !ok {
-				// if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-				// 	log.Println("connection closed: ", err)
-				// }
-				return
-			}
+		case <-c.done:
+			return
+		case message := <-c.egress:
 			data, err := json.Marshal(message)
 			if err != nil {
 				log.Println(err)
 				return
 			}
+			c.connection.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := c.connection.WriteMessage(websocket.TextMessage, data); err != nil {
-				log.Println("error writing to client: ", c, string(data), err)
+				log.Printf("error writing to websocket for user %d: %v", c.UserID, err)
+				return
 			}
 		}
 	}
@@ -110,14 +114,17 @@ func (c *Client) RoomLock() string {
 }
 
 func (c *Client) Send(event Event) {
-	c.egress <- event
+	select {
+	case c.egress <- event:
+	case <-c.done:
+	}
 }
 
 func (m *Manager) BroadcastToRoom(event Event, room string) {
 	m.RLock()
 	defer m.RUnlock()
 	for client := range m.rooms[room] {
-		client.egress <- event
+		client.Send(event)
 	}
 }
 
@@ -126,7 +133,7 @@ func (m *Manager) BroadcastToNonPlayers(event Event, room string, player1, playe
 	defer m.RUnlock()
 	for client := range m.rooms[room] {
 		if client.UserID != player2 && client.UserID != player1 {
-			client.egress <- event
+			client.Send(event)
 		}
 	}
 }
@@ -137,7 +144,7 @@ func (m *Manager) Broadcast(event Event) {
 
 	for _, clients := range m.clients {
 		for client := range clients {
-			client.egress <- event
+			client.Send(event)
 		}
 	}
 }
@@ -149,7 +156,7 @@ func (m *Manager) SendToUserClientsInARoom(event Event, room string, id int32) {
 	if ok {
 		for client := range clients {
 			if client.RoomLock() == room {
-				client.egress <- event
+				client.Send(event)
 			}
 		}
 	}
